@@ -1,0 +1,154 @@
+import Fastify, { type FastifyRequest } from "fastify";
+import { join } from "node:path";
+import { z } from "zod";
+import { SearchRequestSchema, type QuotaStatus, type SearchEvent, type Stay, type TripPlan } from "@farescope/shared";
+import { QueryCache, ttlFor } from "./cache.ts";
+import type { Config } from "./config.ts";
+import { openDb } from "./db.ts";
+import { createMockFlightProvider, createMockStayProvider } from "./providers/mock.ts";
+import { createSerpApiFlightProvider } from "./providers/serpapi-flights.ts";
+import { createSerpApiStayProvider } from "./providers/serpapi-hotels.ts";
+import { stayQueryKey, type FlightProvider, type StayProvider } from "./providers/types.ts";
+import { QuotaGuard } from "./quota.ts";
+import { runSearch } from "./search/run.ts";
+import { TripStore } from "./trips.ts";
+
+export interface AppOverrides {
+  flights?: FlightProvider;
+  stays?: StayProvider;
+  dbPath?: string;
+}
+
+const CLIENT_ID = /^[a-zA-Z0-9-]{8,64}$/;
+
+/**
+ * Quota is keyed by IP (not spoofable like a header). Trips are keyed by the browser's anonymous
+ * id until real accounts exist.
+ */
+function clientKey(req: FastifyRequest): string {
+  return `ip:${req.ip}`;
+}
+function ownerId(req: FastifyRequest): string | undefined {
+  const h = req.headers["x-client-id"];
+  return typeof h === "string" && CLIENT_ID.test(h) ? h : undefined;
+}
+
+export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
+  const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? "info" }, trustProxy: true });
+  const db = openDb(overrides.dbPath ?? join(cfg.dataDir, "farescope.sqlite"));
+  const cache = new QueryCache(db);
+  const quota = new QuotaGuard(db, { monthlyBudget: cfg.monthlyBudget, dailyClientBudget: cfg.dailyClientBudget });
+  const trips = new TripStore(db);
+  const flights =
+    overrides.flights ?? (cfg.provider === "serpapi" ? createSerpApiFlightProvider({ apiKey: cfg.serpapiKey }) : createMockFlightProvider());
+  const stays =
+    overrides.stays ?? (cfg.provider === "serpapi" ? createSerpApiStayProvider({ apiKey: cfg.serpapiKey }) : createMockStayProvider());
+
+  app.addHook("onClose", async () => db.close());
+
+  app.get("/api/health", async () => ({ ok: true, provider: flights.name, live: flights.live }));
+
+  app.get("/api/quota", async (req): Promise<QuotaStatus> => ({ provider: flights.name, live: flights.live, ...quota.status(clientKey(req)) }));
+
+  app.post("/api/search", async (req, reply) => {
+    const parsed = SearchRequestSchema.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: parsed.error.issues.map((i) => i.message).join("; ") });
+
+    const abort = new AbortController();
+    // Note: req.raw "close" fires as soon as the body is read; the response's "close" before it
+    // finished means the browser actually went away.
+    reply.raw.on("close", () => {
+      if (!reply.raw.writableFinished) abort.abort();
+    });
+    reply.hijack();
+    reply.raw.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    });
+    const emit = (e: SearchEvent) => {
+      if (!reply.raw.writableEnded) reply.raw.write(`data: ${JSON.stringify(e)}\n\n`);
+    };
+    try {
+      await runSearch(
+        parsed.data,
+        {
+          provider: flights,
+          cache,
+          quota,
+          clientId: clientKey(req),
+          perSearchBudget: cfg.perSearchBudget,
+          freeCallCap: cfg.freeCallCap,
+          signal: abort.signal,
+        },
+        emit,
+      );
+    } catch (e) {
+      req.log.error(e);
+      emit({ type: "error", message: "Search failed unexpectedly." });
+    }
+    reply.raw.end();
+  });
+
+  const StayQuerySchema = z.object({
+    airport: z.string().regex(/^[A-Z]{3}$/),
+    checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    adults: z.coerce.number().int().min(1).max(9).default(1),
+  });
+
+  app.get("/api/stays", async (req, reply) => {
+    const parsed = StayQuerySchema.safeParse(req.query);
+    if (!parsed.success || parsed.data.checkOut <= parsed.data.checkIn) return reply.code(400).send({ error: "Invalid stay query" });
+    const q = parsed.data;
+    const key = stayQueryKey(stays.name, q);
+    const hit = cache.get<Stay[]>(key);
+    if (hit && !hit.expired) return { stays: hit.value, cached: true };
+    if (stays.live) {
+      let d = quota.tryConsume(clientKey(req));
+      for (let i = 1; i < stays.callsPerSearch && d.ok; i++) d = quota.tryConsume(clientKey(req));
+      if (!d.ok) {
+        if (hit) return { stays: hit.value, cached: true, stale: true };
+        return reply.code(429).send({ error: "Live search budget used up. Try again later." });
+      }
+    }
+    try {
+      const result = await stays.search(q);
+      cache.put(key, stays.name, result, ttlFor(q.checkIn, new Date()));
+      return { stays: result, cached: false };
+    } catch (e) {
+      req.log.error(e);
+      if (hit) return { stays: hit.value, cached: true, stale: true };
+      return reply.code(502).send({ error: "Lodging provider failed." });
+    }
+  });
+
+  const TripInput = z.object({
+    name: z.string().min(1).max(120),
+    fare: z.object({ id: z.string(), price: z.number() }).passthrough(),
+    stay: z.object({ id: z.string(), total: z.number() }).passthrough().optional(),
+  });
+
+  app.get("/api/trips", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    return { trips: trips.list(owner) };
+  });
+
+  app.post("/api/trips", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    const parsed = TripInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid trip" });
+    return { trip: trips.create(owner, parsed.data as unknown as Omit<TripPlan, "id" | "createdAt" | "total">) };
+  });
+
+  app.delete<{ Params: { id: string } }>("/api/trips/:id", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    return trips.remove(owner, req.params.id) ? { ok: true } : reply.code(404).send({ error: "Not found" });
+  });
+
+  return app;
+}

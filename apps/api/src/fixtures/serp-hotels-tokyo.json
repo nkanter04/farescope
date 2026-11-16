@@ -1,0 +1,33 @@
+{
+  "_note": "Hand-built to match SerpApi's documented google_hotels response shape. Replace with a recorded response once a key is available.",
+  "properties": [
+    {
+      "type": "hotel",
+      "name": "Shinjuku Example Hotel",
+      "link": "https://example.com/shinjuku",
+      "property_token": "abc123",
+      "gps_coordinates": { "latitude": 35.6938, "longitude": 139.7034 },
+      "rate_per_night": { "lowest": "$142", "extracted_lowest": 142 },
+      "total_rate": { "lowest": "$994", "extracted_lowest": 994 },
+      "overall_rating": 4.3,
+      "reviews": 2311,
+      "extracted_hotel_class": 4,
+      "images": [{ "thumbnail": "https://example.com/t.jpg" }],
+      "amenities": ["Free Wi-Fi", "Air conditioning"]
+    },
+    {
+      "type": "hotel",
+      "name": "Asakusa Sample Hostel",
+      "property_token": "def456",
+      "gps_coordinates": { "latitude": 35.7148, "longitude": 139.7967 },
+      "rate_per_night": { "extracted_lowest": 31 },
+      "overall_rating": 4.6,
+      "reviews": 980
+    },
+    {
+      "type": "hotel",
+      "name": "No Price Inn",
+      "gps_coordinates": { "latitude": 35.68, "longitude": 139.76 }
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "_note": "Hand-built to match SerpApi's documented google_flights response shape. Replace with a recorded response once a key is available.",
+  "search_metadata": {
+    "status": "Success",
+    "google_flights_url": "https://www.google.com/travel/flights?hl=en&gl=us&curr=USD"
+  },
+  "best_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 11:05" },
+          "arrival_airport": { "name": "Dallas/Fort Worth International Airport", "id": "DFW", "time": "2027-03-10 12:15" },
+          "duration": 70,
+          "airline": "American",
+          "flight_number": "AA 2423"
+        },
+        {
+          "departure_airport": { "name": "Dallas/Fort Worth International Airport", "id": "DFW", "time": "2027-03-10 13:40" },
+          "arrival_airport": { "name": "Haneda Airport", "id": "HND", "time": "2027-03-11 17:35" },
+          "duration": 835,
+          "airline": "American",
+          "flight_number": "AA 7"
+        }
+      ],
+      "total_duration": 990,
+      "price": 1184,
+      "departure_token": "tok1"
+    }
+  ],
+  "other_flights": [
+    {
+      "flights": [
+        {
+          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 06:00" },
+          "arrival_airport": { "name": "San Francisco International Airport", "id": "SFO", "time": "2027-03-10 08:05" },
+          "duration": 245,
+          "airline": "United",
+          "flight_number": "UA 1450"
+        },
+        {
+          "departure_airport": { "name": "San Francisco International Airport", "id": "SFO", "time": "2027-03-10 11:00" },
+          "arrival_airport": { "name": "Kansai International Airport", "id": "KIX", "time": "2027-03-11 15:20" },
+          "duration": 680,
+          "airline": "United",
+          "flight_number": "UA 33"
+        }
+      ],
+      "total_duration": 1100,
+      "price": 1032,
+      "departure_token": "tok2"
+    },
+    {
+      "flights": [
+        {
+          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 09:00" },
+          "arrival_airport": { "name": "Narita International Airport", "id": "NRT", "time": "2027-03-11 14:00" },
+          "duration": 840,
+          "airline": "Japan Airlines",
+          "flight_number": "JL 9"
+        }
+      ],
+      "total_duration": 840,
+      "departure_token": "no-price-should-be-skipped"
+    }
+  ],
+  "price_insights": {
+    "lowest_price": 1032,
+    "price_level": "typical",
+    "typical_price_range": [950, 1400]
+  }
+}
