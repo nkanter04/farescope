@@ -5,6 +5,7 @@ import { PriceCalendar } from "./components/PriceCalendar.tsx";
 import { ResultsList } from "./components/ResultsList.tsx";
 import { SearchForm } from "./components/SearchForm.tsx";
 import { TripsView } from "./components/TripsView.tsx";
+import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 
 export function App() {
@@ -27,6 +28,11 @@ export function App() {
           </span>
           Farescope
         </div>
+        {DEMO && (
+          <a className="gh" href="https://github.com/nkanter04/farescope" target="_blank" rel="noreferrer noopener">
+            Source on GitHub ↗
+          </a>
+        )}
         <nav className="tabs">
           <button className={view === "search" ? "on" : ""} onClick={() => setView("search")}>
             Search
@@ -37,7 +43,9 @@ export function App() {
         </nav>
         {quota && (
           <div className={`quota ${quota.live ? "live" : "demo"}`} title="Live price searches this month">
-            {quota.live ? `Live prices · ${quota.monthlyBudget - quota.monthlyUsed} searches left this month` : "Demo prices (mock data)"}
+            {quota.live
+              ? `Live prices · ${quota.monthlyBudget - quota.monthlyUsed} searches left this month`
+              : "Demo · simulated prices"}
           </div>
         )}
       </header>

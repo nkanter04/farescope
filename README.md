@@ -1,8 +1,12 @@
 # Farescope (working name)
 
+### ▶ [Try the live demo](https://nkanter04.github.io/farescope/)
+
 Search whole regions and date windows at once ("Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights") to find the cheapest flights. The app also shows lodging for the chosen dates and saves trips to compare total cost. Results stream onto a 3D globe and a price calendar.
 
-## Run it
+The demo uses simulated prices and runs entirely in your browser. Saved trips stay in that browser. Real prices come from the API server described below.
+
+## Run it locally
 
 ```bash
 npm install
@@ -10,6 +14,7 @@ npm run dev:api   # http://127.0.0.1:8787  (mock prices by default)
 npm run dev:web   # http://localhost:5180  (proxies /api to the API)
 npm test          # vitest: planner, cache, quota, providers, API routes
 npm run typecheck
+npm run build:demo -w @farescope/web   # the static demo that GitHub Pages serves
 ```
 
 ## Real prices (SerpApi)

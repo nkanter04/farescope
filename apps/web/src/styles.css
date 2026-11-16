@@ -40,6 +40,8 @@ h3 { font-size: 0.95rem; margin: 16px 0 8px; }
 .brand { font-weight: 800; font-size: 1.1rem; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; }
 .logo { color: var(--accent); font-size: 1.3rem; }
 .tabs { display: flex; gap: 4px; }
+.gh { order: 3; font-size: 0.8rem; color: var(--muted); text-decoration: none; }
+.gh:hover { color: var(--text); }
 .tabs button { background: none; border: 0; padding: 6px 12px; border-radius: 8px; color: var(--muted); }
 .tabs button.on { background: var(--panel-2); color: var(--text); }
 .quota { margin-left: auto; font-size: 0.8rem; padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }

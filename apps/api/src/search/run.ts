@@ -1,13 +1,27 @@
 import { todayISO, type Fare, type SearchEvent, type SearchRequest } from "@farescope/shared";
-import { ttlFor, type QueryCache } from "../cache.ts";
-import type { QuotaGuard } from "../quota.ts";
+import type { Cabin } from "@farescope/shared";
+import { ttlFor } from "../ttl.ts";
 import type { FlightProvider, FlightResult } from "../providers/types.ts";
 import { planSearch, refineCandidates, sampleCandidates, type Candidate } from "./planner.ts";
 
+/**
+ * What the search needs from storage. SQLite (QueryCache/QuotaGuard) on the server; plain
+ * in-memory versions in the browser-only demo. Keep this file free of Node-only imports.
+ */
+export interface SearchCache {
+  get<T>(key: string): { value: T; fetchedAt: number; expired: boolean } | undefined;
+  put(key: string, provider: string, value: unknown, ttlMs: number): void;
+  recordPrices(fares: Fare[], cabin: Cabin): void;
+}
+export interface SearchQuota {
+  remaining(clientId: string): number;
+  tryConsume(clientId: string): { ok: true } | { ok: false; reason: "monthly" | "daily" };
+}
+
 export interface RunDeps {
   provider: FlightProvider;
-  cache: QueryCache;
-  quota: QuotaGuard;
+  cache: SearchCache;
+  quota: SearchQuota;
   clientId: string;
   /** Max live calls this one search may spend. */
   perSearchBudget: number;
