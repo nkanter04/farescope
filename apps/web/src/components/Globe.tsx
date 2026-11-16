@@ -4,6 +4,7 @@ import { AIRPORT_BY_IATA, resolveAll, type Fare } from "@farescope/shared";
 import { useDerived } from "../derived.ts";
 import { cityOf, money, priceColor } from "../format.ts";
 import { useStore } from "../store.ts";
+import { useGlobeTheme } from "../theme.ts";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -54,6 +55,7 @@ export function Globe() {
   const setFilterDest = useStore((s) => s.setFilterDest);
   const selected = useStore((s) => s.selectedFare);
   const { destBest, destMin, destMax } = useDerived();
+  const theme = useGlobeTheme();
 
   useEffect(() => {
     const el = wrap.current;
@@ -103,17 +105,17 @@ export function Globe() {
         endLng: b.lng,
         color: [priceColor(t, 0.25), priceColor(t, 0.95)],
         fare: f,
-        stroke: selected?.destination === f.destination ? 1.2 : 0.55,
+        stroke: (selected?.destination === f.destination ? 1.2 : 0.55) * theme.arcScale,
       });
     }
     return out;
-  }, [destBest, filterDest, destMin, span, selected]);
+  }, [destBest, filterDest, destMin, span, selected, theme]);
 
   const points: PointDatum[] = useMemo(() => {
     const out: PointDatum[] = [];
     for (const i of origins) {
       const a = AIRPORT_BY_IATA[i];
-      if (a) out.push({ lat: a.lat, lng: a.lng, iata: i, kind: "origin", color: "#7cc4ff" });
+      if (a) out.push({ lat: a.lat, lng: a.lng, iata: i, kind: "origin", color: theme.origin });
     }
     for (const i of destinations) {
       const a = AIRPORT_BY_IATA[i];
@@ -124,13 +126,13 @@ export function Globe() {
           lng: a.lng,
           iata: i,
           kind: "dest",
-          color: f ? priceColor((f.price - destMin) / span) : "rgba(255,255,255,0.35)",
+          color: f ? priceColor((f.price - destMin) / span) : theme.mutedPoint,
           price: f?.price,
         });
       }
     }
     return out;
-  }, [origins, destinations, destBest, destMin, span]);
+  }, [origins, destinations, destBest, destMin, span, theme]);
 
   // Price labels only for the cheapest handful, to avoid clutter.
   const labels = useMemo(
@@ -150,9 +152,9 @@ export function Globe() {
         width={size.w}
         height={size.h}
         backgroundColor="rgba(0,0,0,0)"
-        globeImageUrl={`${BASE}earth-night.jpg`}
+        globeImageUrl={`${BASE}earth-${theme.texture}.jpg`}
         bumpImageUrl={`${BASE}earth-topology.png`}
-        atmosphereColor="#5fa8ff"
+        atmosphereColor={theme.atmosphere}
         atmosphereAltitude={0.18}
         arcsData={arcs}
         arcColor={(d: object) => (d as ArcDatum).color}
@@ -182,7 +184,7 @@ export function Globe() {
         labelText="text"
         labelSize={0.55}
         labelDotRadius={0}
-        labelColor={() => "rgba(255,255,255,0.9)"}
+        labelColor={() => theme.label}
         labelAltitude={0.015}
         labelResolution={2}
       />

@@ -196,3 +196,12 @@ th[scope="row"] { color: var(--muted); font-weight: 500; width: 120px; }
   .single { padding: 16px; }
   .trip-total { position: static; margin: 14px 0 0; border-radius: var(--radius); border: 1px solid var(--line); }
 }
+
+/* Globe (read by the WebGL globe via CSS variables) */
+:root {
+  --globe-texture: night;
+  --globe-atmosphere: #5fa8ff;
+  --globe-origin: #7cc4ff;
+  --globe-label: rgba(255, 255, 255, 0.9);
+  --globe-muted-point: rgba(255, 255, 255, 0.35);
+}

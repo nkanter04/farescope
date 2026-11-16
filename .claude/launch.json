@@ -1,13 +1,55 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "api", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:api"], "port": 8787 },
-    { "name": "web", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:web"], "port": 5180 },
+    {
+      "name": "api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:api"
+      ],
+      "port": 8787
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:web"
+      ],
+      "port": 5180
+    },
     {
       "name": "demo-preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview", "-w", "@farescope/web", "--", "--port", "5181", "--strictPort"],
+      "runtimeArgs": [
+        "run",
+        "preview",
+        "-w",
+        "@farescope/web",
+        "--",
+        "--port",
+        "5181",
+        "--strictPort"
+      ],
       "port": 5181
+    },
+    {
+      "name": "themes",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "@farescope/web",
+        "--",
+        "--mode",
+        "demo",
+        "--port",
+        "5182",
+        "--strictPort"
+      ],
+      "port": 5182
     }
   ]
 }

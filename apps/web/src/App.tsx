@@ -7,6 +7,7 @@ import { SearchForm } from "./components/SearchForm.tsx";
 import { TripsView } from "./components/TripsView.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
+import { ThemePicker } from "./components/ThemePicker.tsx";
 
 export function App() {
   const view = useStore((s) => s.view);
@@ -66,6 +67,7 @@ export function App() {
           <TripsView />
         </main>
       )}
+      <ThemePicker />
     </div>
   );
 }
