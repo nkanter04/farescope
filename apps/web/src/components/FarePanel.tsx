@@ -14,6 +14,7 @@ export function FarePanel() {
   const setStayKind = useStore((s) => s.setStayKind);
   const selectedStay = useStore((s) => s.selectedStay);
   const selectStay = useStore((s) => s.selectStay);
+  const showingQuotedStay = useStore((s) => s.showingQuotedStay);
   const selectFare = useStore((s) => s.selectFare);
   const save = useStore((s) => s.saveCurrentTrip);
   const [saved, setSaved] = useState<string | null>(null);
@@ -66,13 +67,13 @@ export function FarePanel() {
       </div>
 
       <h3>Where to stay in {cityOf(fare.destination)}</h3>
-      <div className="seg small" role="radiogroup" aria-label="Lodging type">
+      {showingQuotedStay ? <button className="link" onClick={() => { void selectFare(fare); setSaved(null); }}>Choose another stay</button> : <div className="seg small" role="radiogroup" aria-label="Lodging type">
         {(["all", "hotel", "hostel", "rental"] as const).map((k) => (
           <button key={k} role="radio" aria-checked={stayKind === k} className={stayKind === k ? "on" : ""} onClick={() => setStayKind(k)}>
             {k === "all" ? "All" : k === "rental" ? "Rentals" : `${k[0].toUpperCase()}${k.slice(1)}s`}
           </button>
         ))}
-      </div>
+      </div>}
       {staysStatus === "loading" && <div className="empty">Finding stays…</div>}
       {staysStatus === "error" && <div className="notice warn">{staysError}</div>}
       {staysStatus === "done" && shown.length === 0 && <div className="empty">No stays of this type found.</div>}
@@ -90,7 +91,7 @@ export function FarePanel() {
                   {s.stars ? ` ${"★".repeat(s.stars)}` : ""}
                   {s.rating ? ` · ${s.rating.toFixed(1)} (${s.reviews?.toLocaleString() ?? 0})` : ""}
                 </span>
-                <span>{money(s.nightly)}/night</span>
+                <span>{s.stale && "Older price · "}{money(s.nightly)}/night</span>
               </div>
             </button>
           </li>

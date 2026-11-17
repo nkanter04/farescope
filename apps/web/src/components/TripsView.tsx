@@ -19,7 +19,7 @@ export function TripsView() {
   const combined = compared.filter((trip) => trip.stay);
   const first = combined[0];
   const comparable = combined.length >= 2 && first.adults !== undefined &&
-    combined.every((trip) => trip.adults === first.adults && trip.fare.provider === first.fare.provider &&
+    combined.every((trip) => !trip.fare.stale && !trip.stay?.stale && trip.adults === first.adults && trip.fare.provider === first.fare.provider &&
       trip.stay?.provider === first.stay?.provider && (trip.stay?.provider === "mock" || trip.stay?.totalBasis === "quoted") &&
       Boolean(trip.fare.returnDate) === Boolean(first.fare.returnDate));
   const cheapest = comparable ? Math.min(...combined.map((trip) => trip.total)) : undefined;

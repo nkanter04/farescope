@@ -7,6 +7,7 @@ export const travelerCount = (adults?: number) =>
 
 export const priceScope = (stay?: Stay | null) => {
   if (!stay) return "Flight only";
+  if (stay.stale) return stay.totalBasis === "nightly-estimate" ? "Flight + older stay estimate" : "Flight + older stay price";
   if (stay.totalBasis === "nightly-estimate") return "Flight + estimated stay";
   return "Flight + stay";
 };

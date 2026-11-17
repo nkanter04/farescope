@@ -15,11 +15,13 @@ interface State {
   progress: { done: number; total: number; providerCalls: number; planned: number; candidates: number };
   notices: Notice[];
   fares: Fare[];
+  shortlist?: Extract<SearchEvent, { type: "shortlist" }>;
   filterDest: string | null;
   filterDate: string | null;
   selectedFare: Fare | null;
   stays: Stay[];
   staysStatus: "idle" | "loading" | "done" | "error";
+  showingQuotedStay: boolean;
   staysError?: string;
   stayKind: "all" | "hotel" | "hostel" | "rental";
   selectedStay: Stay | null;
@@ -33,7 +35,7 @@ interface State {
   cancelSearch(): void;
   setFilterDest(d: string | null): void;
   setFilterDate(d: string | null): void;
-  selectFare(f: Fare | null): Promise<void>;
+  selectFare(f: Fare | null, quotedStay?: Stay): Promise<void>;
   setStayKind(k: State["stayKind"]): void;
   selectStay(s: Stay | null): void;
   saveCurrentTrip(name: string): Promise<void>;
@@ -69,6 +71,7 @@ export const useStore = create<State>((set, get) => ({
   selectedFare: null,
   stays: [],
   staysStatus: "idle",
+  showingQuotedStay: false,
   stayKind: "all",
   selectedStay: null,
   trips: [],
@@ -86,6 +89,7 @@ export const useStore = create<State>((set, get) => ({
       submitted,
       status: "searching",
       fares: [],
+      shortlist: undefined,
       notices: [],
       filterDest: null,
       filterDate: null,
@@ -114,6 +118,9 @@ export const useStore = create<State>((set, get) => ({
         case "fare":
           pending.push(e.fare);
           if (!raf) raf = requestAnimationFrame(flush);
+          break;
+        case "shortlist":
+          set({ shortlist: e });
           break;
         case "progress":
           set({ progress: { ...get().progress, done: e.done, total: e.total, providerCalls: e.providerCalls } });
@@ -149,9 +156,10 @@ export const useStore = create<State>((set, get) => ({
   setFilterDest: (filterDest) => set({ filterDest }),
   setFilterDate: (filterDate) => set({ filterDate }),
 
-  async selectFare(fare) {
-    set({ selectedFare: fare, selectedStay: null, stays: [], staysStatus: fare ? "loading" : "idle", staysError: undefined });
-    if (!fare) return;
+  async selectFare(fare, quotedStay) {
+    set({ selectedFare: fare, selectedStay: quotedStay ?? null, showingQuotedStay: !!quotedStay, stays: quotedStay ? [quotedStay] : [],
+      stayKind: quotedStay ? "all" : get().stayKind, staysStatus: quotedStay ? "done" : fare ? "loading" : "idle", staysError: undefined });
+    if (!fare || quotedStay) return;
     const submitted = get().submitted;
     if (!submitted) return;
     const r = await fetchStays(fare, submitted.adults).catch(() => ({ stays: [] as Stay[], error: "Could not load stays." }));

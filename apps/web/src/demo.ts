@@ -31,6 +31,7 @@ export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent)
     parsed.data,
     {
       provider: flights,
+      stays,
       cache,
       quota: { remaining: () => Infinity, tryConsume: () => ({ ok: true }) },
       clientId: "demo",

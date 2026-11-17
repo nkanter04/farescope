@@ -1,14 +1,15 @@
 import Fastify, { type FastifyRequest } from "fastify";
 import { join } from "node:path";
 import { z } from "zod";
-import { SearchRequestSchema, type QuotaStatus, type SearchEvent, type Stay, type TripPlan } from "@farescope/shared";
-import { QueryCache, ttlFor } from "./cache.ts";
+import { SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { QueryCache } from "./cache.ts";
 import type { Config } from "./config.ts";
 import { openDb } from "./db.ts";
 import { createMockFlightProvider, createMockStayProvider } from "./providers/mock.ts";
 import { createSerpApiFlightProvider } from "./providers/serpapi-flights.ts";
 import { createSerpApiStayProvider } from "./providers/serpapi-hotels.ts";
-import { stayQueryKey, type FlightProvider, type StayProvider } from "./providers/types.ts";
+import type { FlightProvider, StayProvider } from "./providers/types.ts";
+import { lookupStays } from "./search/stays.ts";
 import { QuotaGuard } from "./quota.ts";
 import { runSearch } from "./search/run.ts";
 import { TripStore } from "./trips.ts";
@@ -75,6 +76,7 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
         parsed.data,
         {
           provider: flights,
+          stays,
           cache,
           quota,
           clientId: clientKey(req),
@@ -101,27 +103,9 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
   app.get("/api/stays", async (req, reply) => {
     const parsed = StayQuerySchema.safeParse(req.query);
     if (!parsed.success || parsed.data.checkOut <= parsed.data.checkIn) return reply.code(400).send({ error: "Invalid stay query" });
-    const q = parsed.data;
-    const key = stayQueryKey(stays.name, q);
-    const hit = cache.get<Stay[]>(key);
-    if (hit && !hit.expired) return { stays: hit.value, cached: true };
-    if (stays.live) {
-      let d = quota.tryConsume(clientKey(req));
-      for (let i = 1; i < stays.callsPerSearch && d.ok; i++) d = quota.tryConsume(clientKey(req));
-      if (!d.ok) {
-        if (hit) return { stays: hit.value, cached: true, stale: true };
-        return reply.code(429).send({ error: "Live search budget used up. Try again later." });
-      }
-    }
-    try {
-      const result = await stays.search(q);
-      cache.put(key, stays.name, result, ttlFor(q.checkIn, new Date()));
-      return { stays: result, cached: false };
-    } catch (e) {
-      req.log.error(e);
-      if (hit) return { stays: hit.value, cached: true, stale: true };
-      return reply.code(502).send({ error: "Lodging provider failed." });
-    }
+    const result = await lookupStays(parsed.data, stays, cache, quota, clientKey(req), Infinity, new Date());
+    if (result.status) return reply.code(result.status).send({ error: result.error });
+    return { stays: result.stays, cached: result.cached, stale: result.stale };
   });
 
   const TripInput = z.object({

@@ -90,8 +90,7 @@ export function App() {
             </div>
             {searching && !editing && <button className="link mobile-cancel" onClick={cancel}>Stop search</button>}
             {panel === "List" && (selected ? <FarePanel key={selected.id} /> : <>
-              <h2>Flight results</h2>
-              {!submitted && <p className="muted">Search your date range to compare airfares, then select a flight to price a stay.</p>}
+              {!submitted && <p className="muted">Search your date range to compare airfares. For round trips, you’ll also see flight and stay prices together.</p>}
               <ResultsList />
             </>)}
             {panel === "Calendar" && <PriceCalendar />}
