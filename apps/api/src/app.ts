@@ -126,6 +126,7 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
 
   const TripInput = z.object({
     name: z.string().min(1).max(120),
+    adults: z.number().int().min(1).max(9).optional(),
     fare: z.object({ id: z.string(), price: z.number() }).passthrough(),
     stay: z.object({ id: z.string(), total: z.number() }).passthrough().optional(),
   });

@@ -78,12 +78,13 @@ export function listTrips(): TripPlan[] {
   return readTrips();
 }
 
-export function saveTrip(name: string, fare: Fare, stay?: Stay): TripPlan {
+export function saveTrip(name: string, fare: Fare, stay?: Stay, adults?: number): TripPlan {
   const trip: TripPlan = {
     id: crypto.randomUUID ? crypto.randomUUID() : `t-${Date.now()}`,
     name,
     fare,
     stay,
+    adults,
     total: fare.price + (stay?.total ?? 0),
     createdAt: new Date().toISOString(),
   };

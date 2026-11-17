@@ -77,9 +77,9 @@ export async function listTrips(): Promise<TripPlan[]> {
   return r.ok ? (await r.json()).trips : [];
 }
 
-export async function saveTrip(name: string, fare: Fare, stay?: Stay): Promise<TripPlan> {
-  if (DEMO) return (await demo()).saveTrip(name, fare, stay);
-  const r = await fetch("/api/trips", { method: "POST", headers: headers(), body: JSON.stringify({ name, fare, stay }) });
+export async function saveTrip(name: string, fare: Fare, stay?: Stay, adults?: number): Promise<TripPlan> {
+  if (DEMO) return (await demo()).saveTrip(name, fare, stay, adults);
+  const r = await fetch("/api/trips", { method: "POST", headers: headers(), body: JSON.stringify({ name, fare, stay, adults }) });
   if (!r.ok) throw new Error((await r.json()).error ?? "Could not save trip");
   return (await r.json()).trip;
 }

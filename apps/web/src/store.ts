@@ -10,6 +10,7 @@ export interface Notice {
 interface State {
   view: "search" | "trips";
   request: SearchRequest;
+  submitted?: SearchRequest;
   status: "idle" | "searching" | "done" | "error";
   progress: { done: number; total: number; providerCalls: number; planned: number; candidates: number };
   notices: Notice[];
@@ -80,7 +81,9 @@ export const useStore = create<State>((set, get) => ({
     controller?.abort();
     controller = new AbortController();
     const signal = controller.signal;
+    const submitted = get().request;
     set({
+      submitted,
       status: "searching",
       fares: [],
       notices: [],
@@ -97,12 +100,13 @@ export const useStore = create<State>((set, get) => ({
     let raf = 0;
     const flush = () => {
       raf = 0;
-      if (pending.length) {
+      if (controller?.signal === signal && pending.length) {
         set({ fares: [...get().fares, ...pending] });
         pending = [];
       }
     };
     const onEvent = (e: SearchEvent) => {
+      if (signal.aborted) return;
       switch (e.type) {
         case "start":
           set({ progress: { ...get().progress, planned: e.plannedCalls, candidates: e.totalCandidates } });
@@ -125,12 +129,12 @@ export const useStore = create<State>((set, get) => ({
       }
     };
     try {
-      await streamSearch(get().request, onEvent, signal);
+      await streamSearch(submitted, onEvent, signal);
       flush();
-      if (get().status === "searching") set({ status: "done" });
+      if (!signal.aborted && get().status === "searching") set({ status: "done" });
     } catch (err) {
       flush();
-      if ((err as Error).name !== "AbortError") {
+      if (!signal.aborted && (err as Error).name !== "AbortError") {
         set({ status: "error", notices: [...get().notices, { level: "error", message: "Could not reach the search server." }] });
       }
     }
@@ -148,8 +152,10 @@ export const useStore = create<State>((set, get) => ({
   async selectFare(fare) {
     set({ selectedFare: fare, selectedStay: null, stays: [], staysStatus: fare ? "loading" : "idle", staysError: undefined });
     if (!fare) return;
-    const r = await fetchStays(fare, get().request.adults).catch(() => ({ stays: [] as Stay[], error: "Could not load stays." }));
-    if (get().selectedFare?.id !== fare.id) return;
+    const submitted = get().submitted;
+    if (!submitted) return;
+    const r = await fetchStays(fare, submitted.adults).catch(() => ({ stays: [] as Stay[], error: "Could not load stays." }));
+    if (get().selectedFare !== fare || get().submitted !== submitted) return;
     set({ stays: r.stays, staysStatus: "error" in r && r.error ? "error" : "done", staysError: "error" in r ? r.error : undefined });
     void get().refreshQuota();
   },
@@ -160,7 +166,7 @@ export const useStore = create<State>((set, get) => ({
   async saveCurrentTrip(name) {
     const { selectedFare, selectedStay } = get();
     if (!selectedFare) return;
-    const trip = await saveTrip(name, selectedFare, selectedStay ?? undefined);
+    const trip = await saveTrip(name, selectedFare, selectedStay ?? undefined, get().submitted?.adults);
     set({ trips: [trip, ...get().trips] });
   },
 

@@ -69,6 +69,7 @@ export function parseHotels(json: SerpHotelsResponse, q: StayQuery, rentals: boo
       lng: p.gps_coordinates.longitude,
       nightly,
       total: p.total_rate?.extracted_lowest ?? nightly * nights,
+      totalBasis: p.total_rate?.extracted_lowest == null ? "nightly-estimate" : "quoted",
       rating: p.overall_rating,
       reviews: p.reviews,
       stars: p.extracted_hotel_class,

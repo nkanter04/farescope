@@ -4,7 +4,7 @@ import { PlaceInput } from "./PlaceInput.tsx";
 
 const CABIN_LABEL: Record<Cabin, string> = { economy: "Economy", premium: "Premium economy", business: "Business", first: "First" };
 
-export function SearchForm() {
+export function SearchForm({ onSearch }: { onSearch: () => void }) {
   const r = useStore((s) => s.request);
   const set = useStore((s) => s.setRequest);
   const run = useStore((s) => s.runSearch);
@@ -18,6 +18,7 @@ export function SearchForm() {
       className="search-form"
       onSubmit={(e) => {
         e.preventDefault();
+        onSearch();
         void run();
       }}
     >
@@ -122,7 +123,7 @@ export function SearchForm() {
         </button>
       ) : (
         <button type="submit" className="primary" disabled={!r.origins.length || !r.destinations.length}>
-          Find the cheapest trips
+          Search flights
         </button>
       )}
     </form>

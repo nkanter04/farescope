@@ -17,12 +17,12 @@ export function ResultsList() {
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
-    <section className="results" aria-live="polite">
+    <section className="results">
       {status === "searching" && (
         <div className="progress">
           <div className="bar" style={{ width: `${pct}%` }} />
           <span>
-            Searching {progress.candidates.toLocaleString()} date and route combinations… {pct}%
+            Checking selected routes and dates… {pct}%
           </span>
         </div>
       )}

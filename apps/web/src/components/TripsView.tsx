@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { cityOf, duration, money, shortDate, stopsLabel } from "../format.ts";
+import { daysBetween } from "@farescope/shared";
+import { cityOf, duration, money, priceScope, shortDate, stopsLabel, travelerCount } from "../format.ts";
 import { useStore } from "../store.ts";
 
 /** Saved trips, with side-by-side comparison of up to three. */
@@ -15,23 +16,30 @@ export function TripsView() {
   }, [load]);
 
   const compared = trips.filter((t) => compare.includes(t.id));
-  const cheapest = Math.min(...compared.map((t) => t.total));
+  const combined = compared.filter((trip) => trip.stay);
+  const first = combined[0];
+  const comparable = combined.length >= 2 && first.adults !== undefined &&
+    combined.every((trip) => trip.adults === first.adults && trip.fare.provider === first.fare.provider &&
+      trip.stay?.provider === first.stay?.provider && (trip.stay?.provider === "mock" || trip.stay?.totalBasis === "quoted") &&
+      Boolean(trip.fare.returnDate) === Boolean(first.fare.returnDate));
+  const cheapest = comparable ? Math.min(...combined.map((trip) => trip.total)) : undefined;
 
   return (
     <div className="trips-view">
       <h2>My trips</h2>
       <p className="muted">
-        Saved on this browser. Tick up to three to compare. Accounts that sync across devices are coming soon.
+        Saved on this browser. Choose up to three trips to compare.
       </p>
       {trips.length === 0 && <div className="empty">No saved trips yet. Pick a flight, add a stay, and press Save trip.</div>}
       <ul className="trip-cards">
         {trips.map((t) => (
           <li key={t.id} className={`card ${compare.includes(t.id) ? "sel" : ""}`}>
             <label className="cmp">
-              <input type="checkbox" checked={compare.includes(t.id)} onChange={() => toggle(t.id)} /> Compare
+              <input type="checkbox" checked={compare.includes(t.id)} disabled={compare.length >= 3 && !compare.includes(t.id)} onChange={() => toggle(t.id)} /> Compare
             </label>
             <h3>{t.name}</h3>
             <div className="big">{money(t.total)}</div>
+            <div className="muted small">{priceScope(t.stay)} · {travelerCount(t.adults)}</div>
             <div className="muted small">
               {t.fare.origin} → {t.fare.destination} · {shortDate(t.fare.departDate)}
               {t.fare.returnDate && ` – ${shortDate(t.fare.returnDate)}`}
@@ -58,7 +66,9 @@ export function TripsView() {
                 </tr>
               </thead>
               <tbody>
-                <Row label="Total" cells={compared.map((t) => <b className={t.total === cheapest ? "best" : ""}>{money(t.total)}</b>)} />
+                <Row label="Flight + stay" cells={compared.map((t) => t.stay ? <b className={t.total === cheapest ? "best" : ""}>{t.stay.totalBasis === "nightly-estimate" && "Est. "}{money(t.total)}{t.total === cheapest && " · Lowest"}</b> : "Stay excluded")} />
+                <Row label="Travelers" cells={compared.map((t) => travelerCount(t.adults))} />
+                <Row label="Hotel nights" cells={compared.map((t) => t.stay ? daysBetween(t.stay.checkIn, t.stay.checkOut) : "–")} />
                 <Row label="Flight" cells={compared.map((t) => money(t.fare.price))} />
                 <Row label="Stay" cells={compared.map((t) => (t.stay ? money(t.stay.total) : "–"))} />
                 <Row label="Route" cells={compared.map((t) => `${t.fare.origin} → ${cityOf(t.fare.destination)}`)} />

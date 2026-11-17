@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { cityOf, duration, money, shortDate, stopsLabel } from "../format.ts";
+import { daysBetween } from "@farescope/shared";
+import { cityOf, duration, money, priceScope, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
 import { useStore } from "../store.ts";
 
 /** Selected flight -> lodging at the destination for those nights -> trip total -> save. */
 export function FarePanel() {
   const fare = useStore((s) => s.selectedFare);
+  const adults = useStore((s) => s.submitted?.adults);
   const stays = useStore((s) => s.stays);
   const staysStatus = useStore((s) => s.staysStatus);
   const staysError = useStore((s) => s.staysError);
@@ -58,7 +60,7 @@ export function FarePanel() {
         {fare.returnDate && <p className="muted small">Price is the round-trip total. Return flight options are shown on the booking site.</p>}
         {fare.bookingUrl && (
           <a className="button secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer noopener">
-            View on Google Flights ↗
+            Search these dates on Google Flights ↗
           </a>
         )}
       </div>
@@ -80,7 +82,7 @@ export function FarePanel() {
             <button className={`stay ${selectedStay?.id === s.id ? "sel" : ""}`} onClick={() => selectStay(selectedStay?.id === s.id ? null : s)}>
               <div className="fare-main">
                 <span className="stay-name">{s.name}</span>
-                <span className="price">{money(s.total)}</span>
+                <span className="price">{s.totalBasis === "nightly-estimate" && "Est. "}{money(s.total)}</span>
               </div>
               <div className="fare-sub muted">
                 <span>
@@ -97,12 +99,13 @@ export function FarePanel() {
 
       <div className="trip-total">
         <div>
-          <div className="muted small">Trip total</div>
+          <div className="muted small">{priceScope(selectedStay)} · {travelerCount(adults)}</div>
           <div className="big">{money(total)}</div>
           <div className="muted small">
             Flight {money(fare.price)}
-            {selectedStay ? ` + stay ${money(selectedStay.total)}` : " · pick a stay to add it"}
+            {selectedStay ? ` + stay ${money(selectedStay.total)} · ${daysBetween(selectedStay.checkIn, selectedStay.checkOut)} hotel nights` : " · lodging excluded"}
           </div>
+          <div className="muted small">{fare.provider === "mock" ? "Simulated airfare" : "Airfare checked"} · {relativeAge(fare.fetchedAt)}</div>
         </div>
         <button
           className="primary"

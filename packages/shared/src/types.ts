@@ -77,6 +77,7 @@ export interface Stay {
   lng: number;
   nightly: number;
   total: number;
+  totalBasis?: "quoted" | "nightly-estimate";
   rating?: number;
   reviews?: number;
   stars?: number;
@@ -90,6 +91,8 @@ export interface Stay {
 export interface TripPlan {
   id: string;
   name: string;
+  /** Older saves predate the traveler-count snapshot. */
+  adults?: number;
   fare: Fare;
   stay?: Stay;
   total: number;

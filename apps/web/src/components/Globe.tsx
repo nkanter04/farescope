@@ -50,7 +50,7 @@ export function Globe() {
   const wrap = useRef<HTMLDivElement>(null);
   const globe = useRef<GlobeMethods | undefined>(undefined);
   const [size, setSize] = useState({ w: 600, h: 400 });
-  const request = useStore((s) => s.request);
+  const request = useStore((s) => s.submitted ?? s.request);
   const filterDest = useStore((s) => s.filterDest);
   const setFilterDest = useStore((s) => s.setFilterDest);
   const selected = useStore((s) => s.selectedFare);

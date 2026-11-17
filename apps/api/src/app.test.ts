@@ -49,10 +49,11 @@ describe("api", () => {
   it("saves, lists and deletes trips per client", async () => {
     const fare = { id: "f1", price: 1000, origin: "AUS", destination: "HND" };
     const stay = { id: "s1", total: 700 };
-    const created = await app.inject({ method: "POST", url: "/api/trips", headers: CLIENT, payload: { name: "Japan", fare, stay } });
+    const created = await app.inject({ method: "POST", url: "/api/trips", headers: CLIENT, payload: { name: "Japan", adults: 2, fare, stay } });
     expect(created.json().trip.total).toBe(1700);
     const list = await app.inject({ url: "/api/trips", headers: CLIENT });
     expect(list.json().trips).toHaveLength(1);
+    expect(list.json().trips[0].adults).toBe(2);
     const other = await app.inject({ url: "/api/trips", headers: { "x-client-id": "someone-else-999" } });
     expect(other.json().trips).toHaveLength(0);
     const del = await app.inject({ method: "DELETE", url: `/api/trips/${created.json().trip.id}`, headers: CLIENT });
