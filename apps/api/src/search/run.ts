@@ -72,7 +72,9 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
   const firstPassSize = provider.live ? Math.max(1, Math.ceil(budget * 0.6)) : budget;
   const firstPass = budget > 0 ? sampleCandidates(uncached, firstPassSize) : [];
 
-  emit({ type: "start", totalCandidates: plan.candidates.length, plannedCalls: Math.min(budget, uncached.length), live: provider.live });
+  emit({ type: "start", totalCandidates: plan.totalCandidates, plannedCalls: Math.min(budget, uncached.length), live: provider.live });
+  if (plan.totalCandidates > plan.candidates.length) emit({ type: "notice", level: "info", message: "This broad search samples routes and dates. Narrow the airports or date window for more coverage." });
+  if (!provider.live) emit({ type: "notice", level: "info", message: "Demo prices and flight times are simulated. Connections use a historical 2014 route network. Current service may differ." });
   if (provider.live && budget === 0 && uncached.length) {
     emit({ type: "notice", level: "warn", message: "Live search budget used up. Showing cached prices only." });
   }
@@ -92,7 +94,8 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
 
   const consider = (c: Candidate, fares: Fare[], flags: { cached: boolean; stale?: boolean }) => {
     if (!fares.length) return;
-    const sorted = [...fares].sort((a, b) => a.price - b.price);
+    const sorted = fares.filter(fare => req.maxStops === null || fare.stops <= req.maxStops).sort((a, b) => a.price - b.price);
+    if (!sorted.length) return;
     const cheapest = sorted[0];
     bestForRefine.push({ routeGroup: c.routeGroup, departDate: c.query.departDate, nights: c.nights, price: cheapest.price });
     const send = new Map<string, Fare>();

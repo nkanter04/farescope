@@ -12,9 +12,17 @@ export interface Place {
 }
 
 const norm = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+const CITY_ALIASES: Record<string, string> = { philly: "philadelphia", "st petersburg": "saint petersburg", "st. petersburg": "saint petersburg" };
+const byCity = new Map<string, string[]>();
+const byCountry = new Map<string, string[]>();
+for (const airport of AIRPORTS) {
+  const cityKey = `${airport.city}|${airport.country}`;
+  byCity.set(cityKey, [...(byCity.get(cityKey) ?? []), airport.iata]);
+  byCountry.set(airport.country, [...(byCountry.get(airport.country) ?? []), airport.iata]);
+}
 
 function cityPlace(city: string, country: string): Place {
-  const airports = AIRPORTS.filter((a) => a.city === city && a.country === country).map((a) => a.iata);
+  const airports = byCity.get(`${city}|${country}`) ?? [];
   return {
     kind: "city",
     token: `city:${city}|${country}`,
@@ -25,7 +33,7 @@ function cityPlace(city: string, country: string): Place {
 }
 
 function countryPlace(code: string): Place {
-  const airports = AIRPORTS.filter((a) => a.country === code).map((a) => a.iata);
+  const airports = byCountry.get(code) ?? [];
   return { kind: "country", token: `country:${code}`, label: COUNTRIES[code].name, sublabel: `${airports.length} airports`, airports };
 }
 
@@ -84,7 +92,7 @@ export function resolvePlace(input: string): Place | undefined {
   );
   if (countryCode) return countryPlace(countryCode);
 
-  const cityAirport = AIRPORTS.find((a) => norm(a.city) === n);
+  const cityAirport = AIRPORTS.find((a) => norm(a.city) === (CITY_ALIASES[n] ?? n));
   if (cityAirport) return cityPlace(cityAirport.city, cityAirport.country);
 
   return undefined;
@@ -92,7 +100,7 @@ export function resolvePlace(input: string): Place | undefined {
 
 /** Autocomplete suggestions, best matches first. */
 export function suggestPlaces(query: string, limit = 8): Place[] {
-  const n = norm(query);
+  const n = CITY_ALIASES[norm(query)] ?? norm(query);
   if (!n) return [];
   const out: { place: Place; score: number }[] = [];
   const seen = new Set<string>();

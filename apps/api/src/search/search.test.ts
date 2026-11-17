@@ -14,7 +14,7 @@ const TODAY = "2026-11-16";
 
 const req = SearchRequestSchema.parse({
   origins: ["AUS"],
-  destinations: ["Japan"],
+  destinations: ["NRT", "HND", "KIX"],
   departFrom: "2027-03-01",
   departTo: "2027-03-31",
   tripType: "roundtrip",
@@ -23,6 +23,13 @@ const req = SearchRequestSchema.parse({
 });
 
 describe("planner", () => {
+  it("bounds the work list for global searches while retaining its full size", () => {
+    const plan = planSearch({ ...req, origins: ["anywhere"], destinations: ["anywhere"] },
+      { name: "mock", maxAirportsPerSide: 50 }, TODAY);
+    expect(plan.candidates).toHaveLength(40_000);
+    expect(plan.totalCandidates).toBeGreaterThan(40_000);
+    expect(new Set(plan.candidates.map(candidate => candidate.key)).size).toBe(40_000);
+  });
   it("expands places x dates x trip lengths", () => {
     const plan = planSearch(req, { name: "mock", maxAirportsPerSide: 50 }, TODAY);
     expect(plan.routeGroups).toBe(1);

@@ -44,7 +44,8 @@ export interface StayProvider {
 export function flightQueryKey(provider: string, q: FlightQuery): string {
   return [
     "f",
-    provider,
+    // Retire cached synthetic nonstops from the previous mock generator.
+    provider === "mock" ? "mock-routes-v2" : provider,
     [...q.origins].sort().join(","),
     [...q.destinations].sort().join(","),
     q.departDate,

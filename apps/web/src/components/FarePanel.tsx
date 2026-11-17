@@ -41,7 +41,7 @@ export function FarePanel() {
         </div>
         <div className="fare-sub muted">
           {shortDate(fare.departDate)}
-          {fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {stopsLabel(fare.stops)} · {duration(fare.durationMin)}
+          {fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {stopsLabel(fare.stops)} outbound · {duration(fare.durationMin)}
         </div>
         <ol className="legs">
           {fare.outbound.map((l, i) => (

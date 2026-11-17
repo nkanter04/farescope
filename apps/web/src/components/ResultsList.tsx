@@ -15,6 +15,9 @@ export function ResultsList() {
   const selected = useStore((s) => s.selectedFare);
   const shortlist = useStore((s) => s.shortlist);
   const adults = useStore((s) => s.submitted?.adults);
+  const submitted = useStore((s) => s.submitted);
+  const setRequest = useStore((s) => s.setRequest);
+  const runSearch = useStore((s) => s.runSearch);
   const quotes = shortlist?.quotes.filter(({ fare }) =>
     (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate));
   const { list } = useDerived();
@@ -65,6 +68,7 @@ export function ResultsList() {
                 <strong className="price">{stay.totalBasis === "nightly-estimate" && "Est. "}{money(fare.price + stay.total)}</strong>
                 <span>{money(fare.price)} flight + {money(stay.total)} stay · {travelerCount(adults)}</span>
                 <span className="muted">{daysBetween(stay.checkIn, stay.checkOut)} nights · {stay.name}</span>
+                <span className="muted">{stopsLabel(fare.stops)} outbound{fare.stops > 0 && ` via ${fare.outbound.slice(0, -1).map(leg => leg.to).join(" → ")}`}</span>
                 {(fare.stale || stay.stale) && <span className="stale">Includes an older price</span>}
               </button>
             </li>
@@ -74,7 +78,13 @@ export function ResultsList() {
         </section>
       )}
       {status !== "idle" && <h2 className="airfare-heading">Flight-only results</h2>}
-      {status === "done" && list.length === 0 && <div className="empty">No fares found. Try a wider date window or more destinations.</div>}
+      {status === "done" && list.length === 0 && <div className="empty">
+        <p>{submitted?.maxStops === 0 ? "No nonstop fares found for these dates and airports." : "No fares found with these search settings."}</p>
+        {submitted && submitted.maxStops !== null && <button className="secondary" onClick={() => {
+          setRequest({ ...submitted, maxStops: submitted.maxStops === 0 ? 1 : null });
+          void runSearch();
+        }}>{submitted.maxStops === 0 ? "Search with up to 1 stop" : "Search with any number of stops"}</button>}
+      </div>}
       <ol className="fare-list">
         {list.map((f) => (
           <li key={f.id}>
@@ -94,14 +104,18 @@ export function ResultsList() {
               </div>
               <div className="fare-sub muted">
                 <span>
-                  {f.airlines.join(", ")} · {stopsLabel(f.stops)} · {duration(f.durationMin)}
+                  {f.airlines.join(", ")} · {stopsLabel(f.stops)} outbound · {duration(f.durationMin)}
                 </span>
                 {f.cached && <span className={f.stale ? "stale" : ""}>{f.stale ? "stale · " : ""}{relativeAge(f.fetchedAt)}</span>}
               </div>
+              {f.stops > 0 && <div className="fare-sub muted">Via {f.outbound.slice(0, -1).map(leg => `${cityOf(leg.to)} (${leg.to})`).join(" → ")}</div>}
             </button>
           </li>
         ))}
       </ol>
+      {list.some(fare => fare.provider === "mock") && <p className="muted small">
+        Demo connections use <a href="https://openflights.org/data" target="_blank" rel="noreferrer">OpenFlights’ 2014 route data</a>.
+      </p>}
     </section>
   );
 }

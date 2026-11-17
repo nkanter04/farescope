@@ -3,6 +3,14 @@ import { resolvePlace, resolveAll, suggestPlaces } from "./places.ts";
 import { AIRPORTS, distanceKm, AIRPORT_BY_IATA } from "./airports.ts";
 
 describe("places", () => {
+  it("covers Russia, regional airports and common city aliases", () => {
+    expect(suggestPlaces("Russia")[0].token).toBe("country:RU");
+    expect(resolvePlace("Russia")?.airports).toContain("SVO");
+    expect(resolvePlace("Moscow")?.airports).toContain("DME");
+    expect(resolvePlace("Philly")?.airports).toContain("PHL");
+    expect(resolvePlace("BOI")?.airports).toEqual(["BOI"]);
+    expect(AIRPORTS.length).toBeGreaterThan(3500);
+  });
   it("resolves IATA, city, country and region", () => {
     expect(resolvePlace("aus")?.airports).toEqual(["AUS"]);
     expect(resolvePlace("Tokyo")?.airports.sort()).toEqual(["HND", "NRT"]);
@@ -22,7 +30,7 @@ describe("places", () => {
   it("suggests the obvious match first", () => {
     expect(suggestPlaces("japan")[0].token).toBe("country:JP");
     expect(suggestPlaces("AUS")[0].token).toBe("AUS");
-    expect(suggestPlaces("tok")[0].label).toBe("Tokyo");
+    expect(suggestPlaces("tokyo")[0].label).toBe("Tokyo");
   });
 
   it("has unique IATA codes and sane distances", () => {

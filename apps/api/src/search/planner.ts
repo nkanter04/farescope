@@ -11,6 +11,7 @@ export interface Candidate {
 
 export interface Plan {
   candidates: Candidate[];
+  totalCandidates: number;
   routeGroups: number;
   originAirports: string[];
   destinationAirports: string[];
@@ -44,27 +45,31 @@ export function planSearch(req: SearchRequest, provider: { name: string; maxAirp
   const oChunks = chunk(origins, provider.maxAirportsPerSide);
   const dChunks = chunk(destinations, provider.maxAirportsPerSide);
   const candidates: Candidate[] = [];
-  let group = 0;
-  for (const oc of oChunks) {
-    for (const dc of dChunks) {
-      for (const p of datePairs) {
-        const query: FlightQuery = {
-          origins: oc,
-          destinations: dc,
-          departDate: p.depart,
-          returnDate: p.ret,
-          cabin: req.cabin,
-          maxStops: req.maxStops,
-          adults: req.adults,
-        };
-        candidates.push({ key: flightQueryKey(provider.name, query), query, routeGroup: group, nights: p.nights });
-      }
-      group++;
-    }
+  const routeGroups = oChunks.length * dChunks.length;
+  const totalCandidates = routeGroups * datePairs.length;
+  const count = Math.min(totalCandidates, 40_000);
+  // Index the Cartesian product so broad global searches never allocate millions of candidates.
+  for (let i = 0; i < count; i++) {
+    const index = count === 1 ? 0 : Math.round(i * (totalCandidates - 1) / (count - 1));
+    const group = Math.floor(index / datePairs.length);
+    const oc = oChunks[Math.floor(group / dChunks.length)];
+    const dc = dChunks[group % dChunks.length];
+    const p = datePairs[index % datePairs.length];
+    const query: FlightQuery = {
+      origins: oc,
+      destinations: dc,
+      departDate: p.depart,
+      returnDate: p.ret,
+      cabin: req.cabin,
+      maxStops: req.maxStops,
+      adults: req.adults,
+    };
+    candidates.push({ key: flightQueryKey(provider.name, query), query, routeGroup: group, nights: p.nights });
   }
   return {
     candidates,
-    routeGroups: group,
+    routeGroups,
+    totalCandidates,
     originAirports: origins,
     destinationAirports: destinations,
     unknown: [...o.unknown, ...d.unknown],

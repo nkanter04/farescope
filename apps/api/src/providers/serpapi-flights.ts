@@ -64,6 +64,7 @@ export function parseFlights(json: SerpFlightsResponse, q: FlightQuery, fetchedA
   const fares: Fare[] = [];
   itineraries.forEach((it, i) => {
     if (typeof it.price !== "number" || !it.flights?.length) return;
+    if (q.maxStops !== null && it.flights.length - 1 > q.maxStops) return;
     const first = it.flights[0];
     const last = it.flights[it.flights.length - 1];
     const legs: FlightLeg[] = it.flights.map((s) => ({
