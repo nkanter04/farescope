@@ -1,6 +1,7 @@
 import { cityOf, money, shortDate, stopsLabel } from "../format.ts";
 import { useInsights } from "../insights.ts";
 import { useStore } from "../store.ts";
+import { FareAirlines } from "./AirlineLogo.tsx";
 
 function checkedAgo(iso: string): string {
   const mins = Math.round((Date.now() - Date.parse(iso)) / 60_000);
@@ -30,8 +31,9 @@ export function WatchedFlights() {
                 <strong>{cityOf(w.fare.origin)} → {cityOf(w.fare.destination)}</strong>
                 <strong className="price">{money(w.lastPrice)}</strong>
               </div>
+              <p className="fare-carrier-line"><FareAirlines fare={w.fare} /></p>
               <p className="muted small">
-                {shortDate(w.fare.departDate)}{w.fare.returnDate && ` – ${shortDate(w.fare.returnDate)}`} · {w.fare.airlines.join(", ")} · {stopsLabel(w.fare.stops)}
+                {shortDate(w.fare.departDate)}{w.fare.returnDate && ` – ${shortDate(w.fare.returnDate)}`} · {stopsLabel(w.fare.stops)}
               </p>
               {w.status === "departed" ? (
                 <p className="small muted">This flight has departed.</p>

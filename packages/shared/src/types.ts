@@ -22,6 +22,8 @@ export const SearchRequestSchema = z
     /** null = any number of stops. */
     maxStops: z.union([z.literal(0), z.literal(1), z.literal(2), z.null()]).default(null),
     adults: z.number().int().min(1).max(9).default(1),
+    /** Only show itineraries flown entirely by these airlines (IATA codes). Empty = any airline. */
+    airlines: z.array(z.string().regex(/^[A-Z0-9]{2}$/)).max(40).default([]),
   })
   .refine((r) => r.departFrom <= r.departTo, { message: "departFrom must be on or before departTo" })
   .refine((r) => r.minNights <= r.maxNights, { message: "minNights must be <= maxNights" });
@@ -37,6 +39,10 @@ export interface FlightLeg {
   airline: string;
   flightNumber: string;
   durationMin: number;
+  /** IATA code of the operating airline, when known. */
+  airlineCode?: string;
+  /** Logo URL supplied by the provider (live data). */
+  airlineLogo?: string;
 }
 
 export interface Fare {
@@ -80,6 +86,7 @@ export const FareSchema = z.object({
   outbound: z.array(z.object({
     from: z.string().max(8), to: z.string().max(8), depart: z.string().max(40), arrive: z.string().max(40),
     airline: z.string().max(80), flightNumber: z.string().max(20), durationMin: z.number().nonnegative().finite(),
+    airlineCode: z.string().max(3).optional(), airlineLogo: z.string().max(500).optional(),
   })).max(10),
   bookingUrl: z.string().max(2000).optional(),
   fetchedAt: z.string().max(40),

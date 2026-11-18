@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { daysBetween, type Fare, type Stay } from "@farescope/shared";
+import { daysBetween, fareMatchesAirlines, type Fare, type Stay } from "@farescope/shared";
+import { AirlineFilter } from "./AirlineFilter.tsx";
+import { FareAirlines } from "./AirlineLogo.tsx";
 import { useDerived } from "../derived.ts";
 import { cityOf, duration, money, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
-import { useStore } from "../store.ts";
+import { ANY_AIRLINE, useStore } from "../store.ts";
 
 export function ResultsList() {
   const status = useStore((s) => s.status);
@@ -20,9 +22,11 @@ export function ResultsList() {
   const setRequest = useStore((s) => s.setRequest);
   const runSearch = useStore((s) => s.runSearch);
   const sort = useStore(s => s.sort);
+  const fares = useStore((s) => s.fares);
   const setSort = useStore(s => s.setSort);
+  const airlines = useStore((s) => s.request.airlines ?? ANY_AIRLINE);
   const quotes = shortlist?.quotes.filter(({ fare }) =>
-    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate))
+    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate) && fareMatchesAirlines(fare, airlines))
     .sort((a, b) => (sort === "duration" ? a.fare.durationMin - b.fare.durationMin : sort === "stops" ? a.fare.stops - b.fare.stops :
       sort === "airfare" ? a.fare.price - b.fare.price : a.fare.price + a.stay.total - b.fare.price - b.stay.total) || a.fare.price - b.fare.price);
   const { list } = useDerived();
@@ -31,10 +35,13 @@ export function ResultsList() {
 
   return (
     <section className="results">
-      {status !== "idle" && <label className="field results-sort">Sort results by<select value={sort} onChange={event => setSort(event.target.value as typeof sort)}>
-        <option value="price">Lowest combined price</option><option value="airfare">Lowest airfare</option>
-        <option value="duration">Shortest outbound flight</option><option value="stops">Fewest outbound stops</option>
-      </select><span className="muted small">Flight-only results use airfare when sorting by price.</span></label>}
+      {status !== "idle" && <div className="results-controls">
+        <label className="field results-sort">Sort results by<select value={sort} onChange={event => setSort(event.target.value as typeof sort)}>
+          <option value="price">Lowest combined price</option><option value="airfare">Lowest airfare</option>
+          <option value="duration">Shortest outbound flight</option><option value="stops">Fewest outbound stops</option>
+        </select><span className="muted small">Flight-only results use airfare when sorting by price.</span></label>
+        <AirlineFilter />
+      </div>}
       {status === "searching" && !shortlist && (
         <div className="progress">
           <div className="bar" style={{ width: `${pct}%` }} />
@@ -74,6 +81,7 @@ export function ResultsList() {
             <li key={fare.id}>
               <button className="fare quote" onClick={() => void selectFare(fare, stay)}>
                 <span className="route">{cityOf(fare.destination)} <small>{fare.destination}</small></span>
+                <FareAirlines fare={fare} size={20} />
                 <span>{shortDate(fare.departDate)} – {shortDate(fare.returnDate!)}</span>
                 <strong className="price">{stay.totalBasis === "nightly-estimate" && "Est. "}{money(fare.price + stay.total)}</strong>
                 <span>{money(fare.price)} flight + {money(stay.total)} stay · {travelerCount(adults)}</span>
@@ -90,7 +98,11 @@ export function ResultsList() {
         </section>
       )}
       {status !== "idle" && <h2 className="airfare-heading">Flight-only results</h2>}
-      {status === "done" && list.length === 0 && <div className="empty">
+      {status === "done" && list.length === 0 && airlines.length > 0 && fares.length > 0 && <div className="empty">
+        <p>No results on the selected airlines.</p>
+        <button className="secondary" onClick={() => setRequest({ airlines: [] })}>Show all airlines</button>
+      </div>}
+      {status === "done" && list.length === 0 && !(airlines.length > 0 && fares.length > 0) && <div className="empty">
         <p>{submitted?.maxStops === 0 ? "No nonstop fares found for these dates and airports." : "No fares found with these search settings."}</p>
         {submitted && submitted.maxStops !== null && <button className="secondary" onClick={() => {
           setRequest({ ...submitted, maxStops: submitted.maxStops === 0 ? 1 : null });
@@ -115,8 +127,8 @@ export function ResultsList() {
                 <span>{cityOf(f.destination)}</span>
               </div>
               <div className="fare-sub muted">
-                <span>
-                  {f.airlines.join(", ")} · {stopsLabel(f.stops)} outbound · {duration(f.durationMin)}
+                <span className="fare-carrier-line">
+                  <FareAirlines fare={f} /> · {stopsLabel(f.stops)} outbound · {duration(f.durationMin)}
                 </span>
                 {f.cached && <span className={f.stale ? "stale" : ""}>{f.stale ? "stale · " : ""}{relativeAge(f.fetchedAt)}</span>}
               </div>

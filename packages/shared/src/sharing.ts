@@ -20,7 +20,9 @@ export const TripShareSchema = z.object({
       departDate: date, returnDate: date.optional(), price: amount, currency: z.literal("USD"),
       airlines: z.array(text).max(10), stops: z.number().int().min(0).max(10), durationMin: amount,
       outbound: z.array(z.object({ from: text, to: text, depart: text, arrive: text,
-        airline: text, flightNumber: text, durationMin: amount })).max(10),
+        airline: text, flightNumber: text, durationMin: amount,
+        // Airline code only: logo URLs are stripped like other URLs and rebuilt from the catalog.
+        airlineCode: z.string().regex(/^[A-Z0-9]{2}$/).optional() })).max(10),
       fetchedAt: text, cached: z.boolean(), stale: z.boolean().optional(),
     }),
     stay: stay.optional(),

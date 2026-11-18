@@ -1,4 +1,4 @@
-import type { Cabin, Fare, FlightLeg, PriceInsights, PricePoint } from "@farescope/shared";
+import { codeFromFlightNumber, fareMatchesAirlines, type Cabin, type Fare, type FlightLeg, type PriceInsights, type PricePoint } from "@farescope/shared";
 import type { FlightProvider, FlightQuery, FlightResult } from "./types.ts";
 
 /**
@@ -18,6 +18,7 @@ interface SerpFlightSegment {
   arrival_airport: SerpAirport;
   duration?: number;
   airline?: string;
+  airline_logo?: string;
   flight_number?: string;
 }
 interface SerpItinerary {
@@ -57,6 +58,8 @@ export function buildFlightParams(q: FlightQuery, apiKey: string): URLSearchPara
     api_key: apiKey,
   });
   if (q.returnDate) p.set("return_date", q.returnDate);
+  // Let Google filter airlines so no quota is spent on itineraries the user doesn't want.
+  if (q.airlines?.length) p.set("include_airlines", q.airlines.join(","));
   return p;
 }
 
@@ -80,6 +83,8 @@ export function parseFlights(json: SerpFlightsResponse, q: FlightQuery, fetchedA
       arrive: s.arrival_airport.time ?? "",
       airline: s.airline ?? "",
       flightNumber: s.flight_number ?? "",
+      airlineCode: codeFromFlightNumber(s.flight_number),
+      airlineLogo: s.airline_logo?.startsWith("https://") ? s.airline_logo : undefined,
       durationMin: s.duration ?? 0,
     }));
     const airlines = [...new Set(legs.map((l) => l.airline).filter(Boolean))];
@@ -111,7 +116,8 @@ export function parseFlights(json: SerpFlightsResponse, q: FlightQuery, fetchedA
         history: parsePriceHistory(pi.price_history),
       }
     : undefined;
-  return { fares: fares.sort((a, b) => a.price - b.price), insights };
+  const allowed = q.airlines ?? [];
+  return { fares: fares.filter((f) => fareMatchesAirlines(f, allowed)).sort((a, b) => a.price - b.price), insights };
 }
 
 /** Google's price history: free with every search, so it costs no extra quota. */

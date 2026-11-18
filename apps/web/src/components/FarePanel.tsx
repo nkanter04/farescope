@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { addDays, AIRPORT_BY_IATA, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
+import { addDays, AIRPORT_BY_IATA, carrierFrom, codeFromFlightNumber, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
+import { AirlineLogo, FareAirlines } from "./AirlineLogo.tsx";
 import { cityOf, duration, money, shortDate, stopsLabel, travelerCount, tripPriceNote } from "../format.ts";
 import { useStore } from "../store.ts";
 import { LodgingEditor } from "./LodgingEditor.tsx";
@@ -31,9 +32,11 @@ export function FarePanel() {
     <button className="link" onClick={() => void selectFare(null)}>← Back to results</button>
     <div className="card flight-summary">
       <div className="fare-main"><strong>{cityOf(fare.origin)} → {cityOf(fare.destination)}</strong><strong className="price">{money(fare.price)}</strong></div>
+      <p className="fare-carrier-line"><FareAirlines fare={fare} size={28} /></p>
       <p>{shortDate(fare.departDate)}{fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {stopsLabel(fare.stops)} outbound · {duration(fare.durationMin)}</p>
-      <details><summary>Flight segments</summary><ol>{fare.outbound.map((leg, i) => <li key={i}>
-        {leg.from} → {leg.to} · {leg.airline} {leg.flightNumber} · {leg.depart} – {leg.arrive}
+      <details><summary>Flight segments</summary><ol className="segments">{fare.outbound.map((leg, i) => <li key={i}>
+        <AirlineLogo carrier={carrierFrom(leg.airline, leg.airlineCode ?? codeFromFlightNumber(leg.flightNumber), leg.airlineLogo)} size={20} label />
+        <span>{leg.from} → {leg.to} · {leg.airline} {leg.flightNumber} · {leg.depart} – {leg.arrive}</span>
       </li>)}</ol></details>
       {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
       {fare.bookingUrl?.startsWith("https://") && <a className="secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer">Search these flight dates ↗</a>}

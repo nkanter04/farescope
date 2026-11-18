@@ -20,13 +20,15 @@ async function mockFares(today = TODAY) {
 }
 
 describe("mock price history", () => {
-  it("is deterministic, covers the past 60 days and stays near today's price", async () => {
+  it("is deterministic, covers the whole on-sale window and stays near today's price", async () => {
     const [fare] = await mockFares();
     const a = mockPriceHistory(fare, TODAY);
     expect(a).toEqual(mockPriceHistory(fare, TODAY));
-    expect(a).toHaveLength(60);
-    expect(a[0].date).toBe(addDays(TODAY, -60));
+    // Departs 2027-03-10, 112 days after TODAY: on sale since 330 days before departure.
+    expect(a).toHaveLength(330 - 112);
+    expect(a[0].date).toBe(addDays(fare.departDate, -330));
     expect(a.at(-1)!.date).toBe(addDays(TODAY, -1));
+    expect(mockPriceHistory(fare, TODAY, 60)).toHaveLength(60);
     for (const p of a) expect(p.price / fare.price).toBeGreaterThan(0.75);
   });
 });
@@ -37,7 +39,7 @@ describe("buildPriceTrend", () => {
     const provider = createMockFlightProvider({ today: () => TODAY });
     const cache = new QueryCache(openDb(":memory:"));
     const trend = buildPriceTrend(fares[0], fares, { provider, cache, now: () => NOW });
-    expect(trend.history).toHaveLength(61);
+    expect(trend.history).toHaveLength(330 - 112 + 1);
     expect(trend.history.at(-1)).toEqual({ date: TODAY, price: fares[0].price });
     expect(trend.forecast.at(-1)!.date).toBe(fares[0].departDate);
     expect(trend.basis.simulated).toBe(true);

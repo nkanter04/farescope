@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import type { Fare } from "@farescope/shared";
-import { useStore } from "./store.ts";
+import { fareMatchesAirlines, type Fare } from "@farescope/shared";
+import { ANY_AIRLINE, useStore } from "./store.ts";
 
 export interface DayCell {
   date: string;
@@ -15,14 +15,17 @@ export function useDerived() {
   const filterDest = useStore((s) => s.filterDest);
   const filterDate = useStore((s) => s.filterDate);
   const sort = useStore((s) => s.sort);
+  const airlines = useStore((s) => s.request.airlines ?? ANY_AIRLINE);
 
   return useMemo(() => {
+    // Globe, calendar and list all respect the airline filter.
+    const shown = airlines.length ? fares.filter((f) => fareMatchesAirlines(f, airlines)) : fares;
     const destBest = new Map<string, Fare>();
     const byDay = new Map<string, DayCell>();
     const byNights = new Map<number, number>();
     let min = Infinity;
     let max = 0;
-    for (const f of fares) {
+    for (const f of shown) {
       const nights = f.returnDate ? Math.round((Date.parse(f.returnDate) - Date.parse(f.departDate)) / 86_400_000) : null;
       if (!filterDest || f.destination === filterDest) {
         const cur = byDay.get(f.departDate);
@@ -39,7 +42,7 @@ export function useDerived() {
     const dayMax = Math.max(...dayPrices);
 
     const seen = new Set<string>();
-    const list = fares
+    const list = shown
       .filter((f) => (!filterDest || f.destination === filterDest) && (!filterDate || f.departDate === filterDate))
       .sort((a, b) => (sort === "duration" ? a.durationMin - b.durationMin : sort === "stops" ? a.stops - b.stops : 0) || a.price - b.price)
       .filter((f) => {
@@ -65,5 +68,5 @@ export function useDerived() {
       destMax: Math.max(...destPrices),
       cheapest: list.reduce<Fare | undefined>((best, fare) => !best || fare.price < best.price ? fare : best, undefined),
     };
-  }, [fares, filterDest, filterDate, sort]);
+  }, [fares, filterDest, filterDate, sort, airlines]);
 }

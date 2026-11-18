@@ -21,6 +21,10 @@ To regenerate, download these files into a local directory and run the import sc
 ./scripts/import-airports.ps1 -SourceDirectory /path/to/downloads
 ```
 
+## Airline logos
+
+Airline names and logos are the airlines' trademarks, shown only to identify which airline operates a flight. With live data, each flight segment's logo URL comes from the provider (SerpApi returns Google Flights' logo URLs). The demo uses the same public CDN (`www.gstatic.com/flights/airline_logos/70px/<IATA>.png`) for airlines in `packages/shared/src/airlines.ts` only, and falls back to a brand-colored badge with the IATA code. Before a commercial launch, confirm the terms for displaying logos or switch to a licensed logo source.
+
 ## Airport tiers
 
 `scripts/airport-tiers.ts` (run automatically by the import script) tags each airport by how many distinct airports it connects to nonstop in the route snapshot. Airports with 20 or more are **major**, those with 5 or more are **regional**, and the rest are **local**. Hand-curated airports in `packages/shared/src/airports.ts` are always major, which covers airports that opened after 2014, such as BER.

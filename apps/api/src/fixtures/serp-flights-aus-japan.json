@@ -20,7 +20,8 @@
           },
           "duration": 70,
           "airline": "American",
-          "flight_number": "AA 2423"
+          "flight_number": "AA 2423",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/AA.png"
         },
         {
           "departure_airport": {
@@ -35,7 +36,8 @@
           },
           "duration": 835,
           "airline": "American",
-          "flight_number": "AA 7"
+          "flight_number": "AA 7",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/AA.png"
         }
       ],
       "total_duration": 990,
@@ -59,7 +61,8 @@
           },
           "duration": 245,
           "airline": "United",
-          "flight_number": "UA 1450"
+          "flight_number": "UA 1450",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/UA.png"
         },
         {
           "departure_airport": {
@@ -74,7 +77,8 @@
           },
           "duration": 680,
           "airline": "United",
-          "flight_number": "UA 33"
+          "flight_number": "UA 33",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/UA.png"
         }
       ],
       "total_duration": 1100,
@@ -96,7 +100,8 @@
           },
           "duration": 840,
           "airline": "Japan Airlines",
-          "flight_number": "JL 9"
+          "flight_number": "JL 9",
+          "airline_logo": "https://www.gstatic.com/flights/airline_logos/70px/JL.png"
         }
       ],
       "total_duration": 840,

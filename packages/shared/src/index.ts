@@ -5,3 +5,5 @@ export * from "./dates.ts";
 export * from "./trips.ts";
 export * from "./sharing.ts";
 export * from "./forecast.ts";
+export * from "./airlines.ts";
+export * from "./forecast-eval.ts";

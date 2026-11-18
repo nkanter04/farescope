@@ -19,6 +19,7 @@ npm test               # Vitest (all workspaces)
 npx vitest run apps/api/src/search             # a single test folder/file
 npm run typecheck      # tsc for shared, api, web
 npm run build:demo -w @farescope/web           # static GitHub Pages build
+npm run backtest       # price-forecast accuracy (real price_history if ≥30 flights, else simulated)
 ```
 
 Requires Node 22.13+ (built-in `node:sqlite`). Before calling work done, run `npm run typecheck` and `npm test`. If the UI changed, check it in a browser at desktop width and at 375px (no horizontal scroll, no console errors).
@@ -27,6 +28,7 @@ Requires Node 22.13+ (built-in `node:sqlite`). Before calling work done, run `np
 
 npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import extensions (TS source runs directly via Vite/tsx, with no compile step).
 
+- **Airlines:** `packages/shared/src/airlines.ts` is the catalog (IATA code, name, brand color, alliance), with `fareCarriers()` and `fareMatchesAirlines()`. `SearchRequest.airlines` (IATA codes, empty = any) filters results instantly in the UI (`AirlineFilter`) and is sent to providers (SerpApi `include_airlines`; the mock honors it). Legs carry `airlineCode` and a provider `airlineLogo`. Logos come from the provider, else Google's airline-logo CDN for catalog codes only, else a brand-colored code badge (`AirlineLogo`).
 - `packages/shared`: types and zod schemas (`SearchRequestSchema`, `Fare`, `Stay`, `TripPlan`, `LodgingStop`, `SearchEvent`, `TripShareSchema`), trip math (`tripStops`, `tripTotal`, `lodgingCoverage`, `comparableTrips` in `trips.ts`), the place resolver (tokens `AUS`, `city:Tokyo|JP`, `country:JP`, `region:Asia`, `anywhere`), and UTC date helpers.
   - **Airports:** 4,007 scheduled-service airports from OurAirports (`src/data/airports.json`, `countries.json`), merged with a hand-curated list in `airports.ts`. Each airport has a `tier` (major/regional/local) computed from route counts. **Country, region and "Anywhere" expand to major airports only**, while cities and IATA codes reach every airport. See `DATA_SOURCES.md`. To regenerate, run `scripts/import-airports.ps1`, which also runs `scripts/airport-tiers.ts`.
 - `apps/api`: Fastify server.
@@ -35,7 +37,8 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
   - For round trips, `search/shortlist.ts` + `search/stays.ts` then price lodging for up to 4 varied fares (a `shortlist` event, ranked by flight + stay). Lodging reserves its quota units up front and may use at most half the search's live budget.
   - `providers/` holds `mock`, `serpapi-flights` and `serpapi-hotels`, behind the `FlightProvider`/`StayProvider` interfaces. The mock builds connections from `providers/routes.ts` (OpenFlights 2014 route graph in `providers/data/routes.json`, ODbL; the demo must keep crediting OpenFlights).
   - `cache.ts`/`ttl.ts`, `quota.ts`, `trips.ts`, `db.ts` handle SQLite storage. `history.ts` reads `price_history` for predictions and stores price watches.
-  - **Price predictions:** `packages/shared/src/forecast.ts` (pure) learns a booking curve (price vs days-before-departure) from previous flights' price series, blended with a prior, then forecasts one fare from its own history (`PriceTrend`: history, forecast with an 80% band, lowest predicted price, verdict `book | wait | steady`). `search/trend.ts` gathers the data. Live fares use Google's `price_insights.price_history` from the cached search (free, scaled to the fare) plus `price_history` rows. The mock simulates history (`mockPriceHistory`). Route: `POST /api/price-trend {fare, peers}`.
+  - **Price predictions:** `packages/shared/src/forecast.ts` (pure) learns a booking curve (price vs days-before-departure) from previous flights' price series, blended with a prior, then forecasts one fare from its own history (`PriceTrend`: history, forecast with an 80% band, lowest predicted price, verdict `book | wait | steady`). `search/trend.ts` gathers the data. Live fares use Google's `price_insights.price_history` from the cached search (free, scaled to the fare) plus `price_history` rows. The mock simulates history over the whole ~330-day on-sale window (`mockPriceHistory`); real data has ~60 days from Google plus whatever we've recorded. Route: `POST /api/price-trend {fare, peers}`.
+  - **Forecast accuracy:** `shared/forecast-eval.ts` backtests on past prices (k-fold, no future data) against a "no change" baseline, 80%-band coverage and verdict hit rates. Run `npm run backtest`. Judge model changes on **real** `price_history`; tuning on simulated data mostly fits the mock.
   - **Price watches:** `search/watch.ts` re-prices watched flights cache-first, at most every 6 hours, **1 quota unit per live check**. Up to 10 per browser. Routes: `GET/POST/DELETE /api/watches`, `POST /api/watches/check`.
   - `engine.ts` is the browser-safe export (`@farescope/api/engine`).
 - `apps/web`: React 19 + Zustand + react-globe.gl.

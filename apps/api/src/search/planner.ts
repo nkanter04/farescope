@@ -63,6 +63,7 @@ export function planSearch(req: SearchRequest, provider: { name: string; maxAirp
       cabin: req.cabin,
       maxStops: req.maxStops,
       adults: req.adults,
+      airlines: req.airlines?.length ? req.airlines : undefined,
     };
     candidates.push({ key: flightQueryKey(provider.name, query), query, routeGroup: group, nights: p.nights });
   }

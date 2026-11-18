@@ -64,6 +64,28 @@ describe("mock provider", () => {
   });
 });
 
+describe("airline filter", () => {
+  it("mock only returns itineraries on allowed airlines, with real codes", async () => {
+    const p = createMockFlightProvider({ today: () => "2026-11-16" });
+    const all = (await p.search(q)).fares;
+    const codes = new Set(all.flatMap((f) => f.outbound.map((l) => l.airlineCode)));
+    expect(codes.size).toBeGreaterThan(1);
+    const pick = [...codes][0]!;
+    const only = (await p.search({ ...q, airlines: [pick] })).fares;
+    expect(only.length).toBeGreaterThan(0);
+    expect(only.every((f) => f.outbound.every((l) => l.airlineCode === pick && l.flightNumber.startsWith(pick)))).toBe(true);
+    expect((await p.search({ ...q, airlines: ["ZZ"] })).fares).toEqual([]);
+  });
+
+  it("asks SerpApi to filter airlines and keeps provider logos", () => {
+    expect(buildFlightParams({ ...q, airlines: ["UA", "NH"] }, "K").get("include_airlines")).toBe("UA,NH");
+    expect(buildFlightParams(q, "K").has("include_airlines")).toBe(false);
+    const r = parseFlights(flightsFixture, { ...q, airlines: ["UA"] }, "2026-11-16T00:00:00Z");
+    expect(r.fares.map((f) => f.airlines)).toEqual([["United"]]);
+    expect(r.fares[0].outbound[0]).toMatchObject({ airlineCode: "UA", airlineLogo: expect.stringMatching(/UA\.png$/) });
+  });
+});
+
 describe("serpapi flights", () => {
   it("rejects connecting offers when nonstop is requested", () => {
     expect(parseFlights(flightsFixture, { ...q, maxStops: 0 }).fares).toEqual([]);

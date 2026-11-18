@@ -5,6 +5,7 @@ import {
   curveAt,
   daysBetween,
   distanceKm,
+  findAirline,
   parseISODate,
   regionOf,
   resolvePlace,
@@ -97,11 +98,16 @@ function advanceMult(from: string, to: string, departDate: string, today: string
   return curveAt(routeCurve(from, to), daysBetween(today, departDate));
 }
 
+/** Airlines open sales about 11 months (330 days) before departure. */
+export const ON_SALE_DAYS = 330;
+
 /**
- * Simulated price history: what this same flight would have cost on each of the past `days` days,
- * following the route's booking curve plus smooth market noise. Deterministic per flight.
+ * Simulated price history: what this same flight would have cost on each past day since it went
+ * on sale (or the last `days` days), following the route's booking curve plus smooth market noise.
+ * Deterministic per flight. Real data is shorter: Google returns ~2 months, plus whatever we've
+ * recorded ourselves.
  */
-export function mockPriceHistory(fare: Fare, today: string, days = 60): PricePoint[] {
+export function mockPriceHistory(fare: Fare, today: string, days = ON_SALE_DAYS): PricePoint[] {
   const curve = routeCurve(fare.origin, fare.destination);
   const nowOut = daysBetween(today, fare.departDate);
   const seed = `${fare.origin}${fare.destination}${fare.departDate}${fare.returnDate ?? ""}`;
@@ -113,7 +119,7 @@ export function mockPriceHistory(fare: Fare, today: string, days = 60): PricePoi
   for (let age = days; age >= 1; age--) {
     const date = addDays(today, -age);
     const daysOut = nowOut + age;
-    if (daysOut > 330) continue; // fares go on sale ~11 months out
+    if (daysOut > ON_SALE_DAYS) continue; // not on sale yet
     const ratio = curveAt(curve, daysOut) / curveAt(curve, nowOut);
     out.push({ date, price: Math.round(fare.price * ratio * (1 + noise(date, age) - noise(today, 0))) });
   }
@@ -127,7 +133,7 @@ function airlinesFor(from: string, to: string, km: number): string[] {
   return km > 4_500 ? all.filter((a) => !LOW_COST.has(a)) : all;
 }
 
-function makeFare(q: FlightQuery, points: string[], option: number, today: string): Fare {
+function makeFare(q: FlightQuery, points: string[], option: number, today: string): Fare | undefined {
   const from = points[0];
   const to = points.at(-1)!;
   const seed = `${points.join("|")}|${q.departDate}|${q.returnDate ?? ""}|${option}`;
@@ -142,8 +148,12 @@ function makeFare(q: FlightQuery, points: string[], option: number, today: strin
   price *= CABIN_MULT[q.cabin] * (0.85 + 0.3 * r) * q.adults;
   price = Math.round(price);
 
-  const airlines = airlinesFor(from, to, km);
-  const airline = airlines[Math.floor(hash01(seed + "al") * airlines.length)] ?? "Mock Air";
+  // Pick an airline serving this route, honoring the search's airline filter (no match = no fare).
+  const allowed = q.airlines?.length ? new Set(q.airlines) : undefined;
+  const airlines = airlinesFor(from, to, km).filter((name) => !allowed || allowed.has(findAirline(name)?.code ?? ""));
+  if (!airlines.length) return undefined;
+  const airline = airlines[Math.floor(hash01(seed + "al") * airlines.length)];
+  const code = findAirline(airline)?.code ?? airline.slice(0, 2).toUpperCase();
   const departMin = 6 * 60 + Math.floor(r * 16 * 60);
 
   const legs: FlightLeg[] = [];
@@ -158,7 +168,8 @@ function makeFare(q: FlightQuery, points: string[], option: number, today: strin
       depart: stamp(t),
       arrive: stamp(t + legDur),
       airline,
-      flightNumber: `${airline.slice(0, 2).toUpperCase()}${100 + Math.floor(hash01(seed + i) * 8900)}`,
+      airlineCode: code,
+      flightNumber: `${code} ${100 + Math.floor(hash01(seed + i) * 8900)}`,
       durationMin: legDur,
     });
     t += legDur + (i < points.length - 2 ? 70 + Math.floor(r2 * 120) : 0);
@@ -201,7 +212,10 @@ export function createMockFlightProvider(opts: { today?: () => string; latencyMs
           if (from === to || !AIRPORT_BY_IATA[from] || !AIRPORT_BY_IATA[to]) continue;
           const paths = demoPaths(from, to, q.maxStops ?? 2);
           if (q.returnDate && !demoPaths(to, from, q.maxStops ?? 2).length) continue;
-          for (const [i, path] of paths.entries()) fares.push(makeFare(q, path, i, today()));
+          for (const [i, path] of paths.entries()) {
+            const fare = makeFare(q, path, i, today());
+            if (fare) fares.push(fare);
+          }
         }
       }
       fares.sort((a, b) => a.price - b.price);

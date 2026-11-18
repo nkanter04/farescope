@@ -9,6 +9,8 @@ export interface FlightQuery {
   cabin: Cabin;
   maxStops: 0 | 1 | 2 | null;
   adults: number;
+  /** Only itineraries flown entirely by these airlines (IATA codes); empty/undefined = any. */
+  airlines?: string[];
 }
 
 export interface FlightResult {
@@ -48,10 +50,10 @@ export interface StayProvider {
 }
 
 export function flightQueryKey(provider: string, q: FlightQuery): string {
-  return [
+  const key = [
     "f",
     // Retire cached synthetic nonstops from the previous mock generator.
-    provider === "mock" ? "mock-routes-v3" : provider,
+    provider === "mock" ? "mock-routes-v4" : provider,
     [...q.origins].sort().join(","),
     [...q.destinations].sort().join(","),
     q.departDate,
@@ -60,6 +62,8 @@ export function flightQueryKey(provider: string, q: FlightQuery): string {
     q.maxStops ?? "any",
     q.adults,
   ].join("|");
+  // Airline-filtered searches are different provider calls; unfiltered keys stay unchanged.
+  return q.airlines?.length ? `${key}|al:${[...q.airlines].sort().join(",")}` : key;
 }
 
 export function stayQueryKey(provider: string, q: StayQuery): string {

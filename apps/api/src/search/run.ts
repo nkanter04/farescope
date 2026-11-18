@@ -1,4 +1,4 @@
-import { todayISO, type Fare, type SearchEvent, type SearchRequest, type TripQuote } from "@farescope/shared";
+import { fareMatchesAirlines, todayISO, type Fare, type SearchEvent, type SearchRequest, type TripQuote } from "@farescope/shared";
 import type { Cabin } from "@farescope/shared";
 import { ttlFor } from "../ttl.ts";
 import type { FlightProvider, FlightResult, StayProvider } from "../providers/types.ts";
@@ -94,7 +94,9 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
 
   const consider = (c: Candidate, fares: Fare[], flags: { cached: boolean; stale?: boolean }) => {
     if (!fares.length) return;
-    const sorted = fares.filter(fare => req.maxStops === null || fare.stops <= req.maxStops).sort((a, b) => a.price - b.price);
+    const sorted = fares
+      .filter(fare => (req.maxStops === null || fare.stops <= req.maxStops) && fareMatchesAirlines(fare, req.airlines ?? []))
+      .sort((a, b) => a.price - b.price);
     if (!sorted.length) return;
     const cheapest = sorted[0];
     bestForRefine.push({ routeGroup: c.routeGroup, departDate: c.query.departDate, nights: c.nights, price: cheapest.price });

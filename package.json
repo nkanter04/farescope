@@ -12,7 +12,8 @@
     "dev:web": "npm run dev -w @farescope/web",
     "build": "npm run build -w @farescope/web",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p apps/api && tsc --noEmit -p apps/web"
+    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p apps/api && tsc --noEmit -p apps/web",
+    "backtest": "tsx scripts/backtest-forecast.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

@@ -2,6 +2,9 @@ import { create } from "zustand";
 import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
 import { deleteTrip, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
 
+/** Shared empty airline filter (stable identity for React selectors). */
+export const ANY_AIRLINE: string[] = [];
+
 export type TripDraft = Omit<TripPlan, "id" | "total" | "createdAt"> & { id?: string };
 
 export interface Notice {
@@ -61,6 +64,7 @@ export const useStore = create<State>((set, get) => ({
     cabin: "economy",
     maxStops: null,
     adults: 1,
+    airlines: [],
   },
   status: "idle",
   progress: { done: 0, total: 0, providerCalls: 0, planned: 0, candidates: 0 },
@@ -74,7 +78,11 @@ export const useStore = create<State>((set, get) => ({
   compare: [],
 
   setView: (view) => set({ view }),
-  setRequest: (patch) => set({ request: { ...get().request, ...patch } }),
+  // Older saved searches predate the airline filter, so always keep it an array.
+  setRequest: (patch) => {
+    const request = { ...get().request, ...patch };
+    set({ request: { ...request, airlines: request.airlines ?? [] } });
+  },
 
   async runSearch() {
     controller?.abort();
