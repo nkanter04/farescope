@@ -85,7 +85,12 @@ describe("serpapi flights", () => {
       ["AUS", "HND", 1184, 1],
     ]);
     expect(r.fares[0].airlines).toEqual(["United"]);
-    expect(r.insights).toEqual({ lowestPrice: 1032, typicalRange: [950, 1400], priceLevel: "typical" });
+    expect(r.insights).toMatchObject({ lowestPrice: 1032, typicalRange: [950, 1400], priceLevel: "typical" });
+    // Google's price history: one lowest price per day, malformed and zero rows dropped.
+    const history = r.insights!.history!;
+    expect(history).toHaveLength(10);
+    expect(history[0]).toEqual({ date: "2026-10-21", price: 1180 });
+    expect(history.at(-1)).toEqual({ date: "2026-10-30", price: 1032 });
   });
 
   it("treats no-results as empty and other errors as failures", () => {

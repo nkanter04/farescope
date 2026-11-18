@@ -34,12 +34,15 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
   - `search/run.ts` runs them in this order: fresh cache hits → an evenly spread sample within budget → refinement near the cheapest results. It streams `SearchEvent`s as SSE. Very broad searches are capped at 40,000 candidates.
   - For round trips, `search/shortlist.ts` + `search/stays.ts` then price lodging for up to 4 varied fares (a `shortlist` event, ranked by flight + stay). Lodging reserves its quota units up front and may use at most half the search's live budget.
   - `providers/` holds `mock`, `serpapi-flights` and `serpapi-hotels`, behind the `FlightProvider`/`StayProvider` interfaces. The mock builds connections from `providers/routes.ts` (OpenFlights 2014 route graph in `providers/data/routes.json`, ODbL; the demo must keep crediting OpenFlights).
-  - `cache.ts`/`ttl.ts`, `quota.ts`, `trips.ts`, `db.ts` handle SQLite storage.
+  - `cache.ts`/`ttl.ts`, `quota.ts`, `trips.ts`, `db.ts` handle SQLite storage. `history.ts` reads `price_history` for predictions and stores price watches.
+  - **Price predictions:** `packages/shared/src/forecast.ts` (pure) learns a booking curve (price vs days-before-departure) from previous flights' price series, blended with a prior, then forecasts one fare from its own history (`PriceTrend`: history, forecast with an 80% band, lowest predicted price, verdict `book | wait | steady`). `search/trend.ts` gathers the data. Live fares use Google's `price_insights.price_history` from the cached search (free, scaled to the fare) plus `price_history` rows. The mock simulates history (`mockPriceHistory`). Route: `POST /api/price-trend {fare, peers}`.
+  - **Price watches:** `search/watch.ts` re-prices watched flights cache-first, at most every 6 hours, **1 quota unit per live check**. Up to 10 per browser. Routes: `GET/POST/DELETE /api/watches`, `POST /api/watches/check`.
   - `engine.ts` is the browser-safe export (`@farescope/api/engine`).
 - `apps/web`: React 19 + Zustand + react-globe.gl.
   - `store.ts` holds state, including the trip `draft` being edited (multi-stop `lodging`, notes, saved `search`).
   - Trip UI: `FarePanel`, `LodgingEditor` (stays per stop, or "arranged" costs), `TripTimeline` (route with Google Maps transfer links), `TripsView`/`TripComparison`, and read-only share links (`share.ts`, which stores a compressed snapshot in the URL hash and is validated by `TripShareSchema`).
   - The globe (`Globe.tsx`) is lazy-loaded for the Map view.
+  - `insights.ts` (a separate Zustand store) holds price trends and watches. UI: `PriceInsight` (verdict card + watch switch, in `FarePanel`), `PriceTrendChart` (SVG, drawn at real pixel width), `WatchedFlights` (in My trips). Watches are re-checked on load and every 30 min while open, and drops trigger a browser notification if allowed.
   - `derived.ts` holds the aggregates shared by the globe, calendar and list.
   - `api.ts` routes calls to `demo.ts` (the in-browser engine) when `MODE === "demo"`.
 - **Themes:** `apps/web/src/themes/daylight.css` is the only shipped stylesheet, loaded at runtime by `theme.ts`. The globe reads `--globe-texture`, `--globe-atmosphere`, `--globe-origin`, `--globe-label`, `--globe-muted-point` and `--globe-arc-scale` from `:root`. Unused drafts live in `design/theme-drafts/`.
@@ -69,6 +72,7 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 - **Stale mock data:** mock results are cached. After editing `providers/mock.ts`, delete `apps/api/.local-data/farescope.sqlite*`.
 - **SerpApi round trips:** the price is the round-trip total, but only outbound legs are returned. Return legs would need a second call, which we skip to save quota.
 - **Broad places and quota:** a live provider covers about 7 airports per call. Don't widen country/region expansion beyond major airports without accounting for the per-search budget.
+- **Predictions are estimates:** the UI must always say what data a prediction used (and "simulated" in the demo), and never present it as a guarantee.
 - **No Amadeus:** its Self-Service API closed on 2026-07-17. Airlines publish about 11 months out, so the UI caps dates at today + 330 days.
 
 ## Next up

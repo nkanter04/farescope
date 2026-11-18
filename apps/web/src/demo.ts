@@ -2,8 +2,8 @@
  * Browser-only "backend" for the static GitHub Pages demo. It runs the same search engine and
  * mock providers as the API server, with an in-memory cache and trips kept in localStorage.
  */
-import { createMockFlightProvider, createMockStayProvider, runSearch, ttlFor, type SearchCache } from "@farescope/api/engine";
-import { SearchRequestSchema, tripTotal, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
+import { buildPriceTrend, checkWatch, createMockFlightProvider, createMockStayProvider, MAX_WATCHES, newWatch, runSearch, ttlFor, type SearchCache } from "@farescope/api/engine";
+import { SearchRequestSchema, tripTotal, type Cabin, type Fare, type PriceTrend, type PriceWatch, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
 
 const memory = new Map<string, { value: unknown; fetchedAt: number; expiresAt: number }>();
 const cache: SearchCache = {
@@ -94,4 +94,54 @@ export function saveTrip(input: Omit<TripPlan, "id" | "total" | "createdAt">, id
 
 export function deleteTrip(id: string) {
   writeTrips(readTrips().filter((t) => t.id !== id));
+}
+
+export function priceTrend(fare: Fare, peers: Fare[]): PriceTrend {
+  return buildPriceTrend(fare, peers, { provider: flights, cache });
+}
+
+const WATCHES_KEY = "farescope.demoWatches";
+let memoryWatches: PriceWatch[] = [];
+function readWatches(): PriceWatch[] {
+  try {
+    return JSON.parse(localStorage.getItem(WATCHES_KEY) ?? "[]") as PriceWatch[];
+  } catch {
+    return memoryWatches;
+  }
+}
+function writeWatches(watches: PriceWatch[]) {
+  memoryWatches = watches;
+  try {
+    localStorage.setItem(WATCHES_KEY, JSON.stringify(watches));
+  } catch {
+    /* private mode: keep in memory only */
+  }
+}
+
+export function listWatches(): PriceWatch[] {
+  return readWatches();
+}
+
+export function addWatch(fare: Fare, cabin: Cabin, adults: number): PriceWatch {
+  const existing = readWatches();
+  if (existing.length >= MAX_WATCHES) throw new Error(`You can watch up to ${MAX_WATCHES} flights.`);
+  const watch = newWatch(fare, cabin, adults, crypto.randomUUID());
+  writeWatches([watch, ...existing]);
+  return watch;
+}
+
+export function removeWatch(id: string) {
+  writeWatches(readWatches().filter((w) => w.id !== id));
+}
+
+export async function checkWatches(): Promise<PriceWatch[]> {
+  const out: PriceWatch[] = [];
+  for (const watch of readWatches()) {
+    const { watch: next } = await checkWatch(watch, {
+      provider: flights, cache, quota: { remaining: () => Infinity, tryConsume: () => ({ ok: true }) }, clientId: "demo",
+    });
+    out.push(next);
+  }
+  writeWatches(out);
+  return out;
 }

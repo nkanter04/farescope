@@ -8,15 +8,31 @@
     {
       "flights": [
         {
-          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 11:05" },
-          "arrival_airport": { "name": "Dallas/Fort Worth International Airport", "id": "DFW", "time": "2027-03-10 12:15" },
+          "departure_airport": {
+            "name": "Austin-Bergstrom International Airport",
+            "id": "AUS",
+            "time": "2027-03-10 11:05"
+          },
+          "arrival_airport": {
+            "name": "Dallas/Fort Worth International Airport",
+            "id": "DFW",
+            "time": "2027-03-10 12:15"
+          },
           "duration": 70,
           "airline": "American",
           "flight_number": "AA 2423"
         },
         {
-          "departure_airport": { "name": "Dallas/Fort Worth International Airport", "id": "DFW", "time": "2027-03-10 13:40" },
-          "arrival_airport": { "name": "Haneda Airport", "id": "HND", "time": "2027-03-11 17:35" },
+          "departure_airport": {
+            "name": "Dallas/Fort Worth International Airport",
+            "id": "DFW",
+            "time": "2027-03-10 13:40"
+          },
+          "arrival_airport": {
+            "name": "Haneda Airport",
+            "id": "HND",
+            "time": "2027-03-11 17:35"
+          },
           "duration": 835,
           "airline": "American",
           "flight_number": "AA 7"
@@ -31,15 +47,31 @@
     {
       "flights": [
         {
-          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 06:00" },
-          "arrival_airport": { "name": "San Francisco International Airport", "id": "SFO", "time": "2027-03-10 08:05" },
+          "departure_airport": {
+            "name": "Austin-Bergstrom International Airport",
+            "id": "AUS",
+            "time": "2027-03-10 06:00"
+          },
+          "arrival_airport": {
+            "name": "San Francisco International Airport",
+            "id": "SFO",
+            "time": "2027-03-10 08:05"
+          },
           "duration": 245,
           "airline": "United",
           "flight_number": "UA 1450"
         },
         {
-          "departure_airport": { "name": "San Francisco International Airport", "id": "SFO", "time": "2027-03-10 11:00" },
-          "arrival_airport": { "name": "Kansai International Airport", "id": "KIX", "time": "2027-03-11 15:20" },
+          "departure_airport": {
+            "name": "San Francisco International Airport",
+            "id": "SFO",
+            "time": "2027-03-10 11:00"
+          },
+          "arrival_airport": {
+            "name": "Kansai International Airport",
+            "id": "KIX",
+            "time": "2027-03-11 15:20"
+          },
           "duration": 680,
           "airline": "United",
           "flight_number": "UA 33"
@@ -52,8 +84,16 @@
     {
       "flights": [
         {
-          "departure_airport": { "name": "Austin-Bergstrom International Airport", "id": "AUS", "time": "2027-03-10 09:00" },
-          "arrival_airport": { "name": "Narita International Airport", "id": "NRT", "time": "2027-03-11 14:00" },
+          "departure_airport": {
+            "name": "Austin-Bergstrom International Airport",
+            "id": "AUS",
+            "time": "2027-03-10 09:00"
+          },
+          "arrival_airport": {
+            "name": "Narita International Airport",
+            "id": "NRT",
+            "time": "2027-03-11 14:00"
+          },
           "duration": 840,
           "airline": "Japan Airlines",
           "flight_number": "JL 9"
@@ -66,6 +106,63 @@
   "price_insights": {
     "lowest_price": 1032,
     "price_level": "typical",
-    "typical_price_range": [950, 1400]
+    "typical_price_range": [
+      950,
+      1400
+    ],
+    "price_history": [
+      [
+        1792540800,
+        1180
+      ],
+      [
+        1792627200,
+        1165
+      ],
+      [
+        1792713600,
+        1165
+      ],
+      [
+        1792800000,
+        1140
+      ],
+      [
+        1792886400,
+        1102
+      ],
+      [
+        1792972800,
+        1098
+      ],
+      [
+        1793059200,
+        1110
+      ],
+      [
+        1793145600,
+        1075
+      ],
+      [
+        1793232000,
+        1060
+      ],
+      [
+        1793318400,
+        1032
+      ],
+      [
+        1793322000,
+        1050
+      ],
+      [
+        "bad",
+        1
+      ],
+      [
+        1792540800,
+        0
+      ]
+    ]
   }
 }

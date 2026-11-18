@@ -5,3 +5,5 @@
 export { runSearch, type RunDeps, type SearchCache, type SearchQuota } from "./search/run.ts";
 export { createMockFlightProvider, createMockStayProvider } from "./providers/mock.ts";
 export { ttlFor } from "./ttl.ts";
+export { buildPriceTrend, fareHistory, type TrendDeps } from "./search/trend.ts";
+export { checkWatch, matchFare, newWatch, MAX_WATCHES, WATCH_RECHECK_MS, type WatchDeps } from "./search/watch.ts";

@@ -4,3 +4,4 @@ export * from "./places.ts";
 export * from "./dates.ts";
 export * from "./trips.ts";
 export * from "./sharing.ts";
+export * from "./forecast.ts";

@@ -2,14 +2,17 @@ import {
   AIRPORT_BY_IATA,
   COUNTRIES,
   addDays,
+  curveAt,
   daysBetween,
   distanceKm,
   parseISODate,
   regionOf,
   resolvePlace,
   todayISO,
+  type BookingCurve,
   type Fare,
   type FlightLeg,
+  type PricePoint,
   type Stay,
   type StayKind,
 } from "@farescope/shared";
@@ -67,13 +70,54 @@ function seasonMult(date: string): number {
   return mult;
 }
 
-function advanceMult(departDate: string, today: string): number {
-  const days = daysBetween(today, departDate);
-  if (days < 7) return 1.6;
-  if (days < 21) return 1.3;
-  if (days < 45) return 1.08;
-  if (days > 300) return 1.12; // fares far out tend to sit at a standard level
-  return 1.0;
+/**
+ * The demo's "true" booking curve (price multiplier by days before departure). It deliberately
+ * differs from the forecast's prior so the demo shows the forecast learning from data. Each route
+ * gets its own steepness for the last-minute rise.
+ */
+const DEMO_CURVE = [1.6, 1.3, 1.12, 0.99, 0.93, 0.98, 1.1];
+const routeCurves = new Map<string, BookingCurve>();
+function routeCurve(from: string, to: string): BookingCurve {
+  const key = `${from}${to}`;
+  let curve = routeCurves.get(key);
+  if (!curve) {
+    const steep = 0.8 + 0.4 * hash01(`${key}curve`);
+    curve = {
+      multipliers: DEMO_CURVE.map((m, i) => (i < 3 ? 1 + (m - 1) * steep : m)),
+      observations: DEMO_CURVE.map(() => 0),
+      series: 0,
+    };
+    if (routeCurves.size > 5000) routeCurves.clear();
+    routeCurves.set(key, curve);
+  }
+  return curve;
+}
+
+function advanceMult(from: string, to: string, departDate: string, today: string): number {
+  return curveAt(routeCurve(from, to), daysBetween(today, departDate));
+}
+
+/**
+ * Simulated price history: what this same flight would have cost on each of the past `days` days,
+ * following the route's booking curve plus smooth market noise. Deterministic per flight.
+ */
+export function mockPriceHistory(fare: Fare, today: string, days = 60): PricePoint[] {
+  const curve = routeCurve(fare.origin, fare.destination);
+  const nowOut = daysBetween(today, fare.departDate);
+  const seed = `${fare.origin}${fare.destination}${fare.departDate}${fare.returnDate ?? ""}`;
+  const phase1 = hash01(`${seed}p1`) * Math.PI * 2;
+  const phase2 = hash01(`${seed}p2`) * Math.PI * 2;
+  const noise = (d: string, age: number) =>
+    0.045 * Math.sin(age / 9 + phase1) + 0.025 * Math.sin(age / 3.7 + phase2) + (hash01(`${seed}${d}`) - 0.5) * 0.02;
+  const out: PricePoint[] = [];
+  for (let age = days; age >= 1; age--) {
+    const date = addDays(today, -age);
+    const daysOut = nowOut + age;
+    if (daysOut > 330) continue; // fares go on sale ~11 months out
+    const ratio = curveAt(curve, daysOut) / curveAt(curve, nowOut);
+    out.push({ date, price: Math.round(fare.price * ratio * (1 + noise(date, age) - noise(today, 0))) });
+  }
+  return out;
 }
 
 const LOW_COST = new Set(["Southwest", "JetBlue", "Alaska", "Ryanair", "Volaris", "GOL"]);
@@ -93,7 +137,7 @@ function makeFare(q: FlightQuery, points: string[], option: number, today: strin
   const stops = points.length - 2;
   const stopMult = stops === 0 ? 1.18 : stops === 1 ? 1.0 : 0.88;
 
-  let price = basePrice(from, to) * seasonMult(q.departDate) * advanceMult(q.departDate, today) * stopMult;
+  let price = basePrice(from, to) * seasonMult(q.departDate) * advanceMult(from, to, q.departDate, today) * stopMult;
   if (q.returnDate) price *= 1.75 * (0.92 + 0.16 * seasonMult(q.returnDate));
   price *= CABIN_MULT[q.cabin] * (0.85 + 0.3 * r) * q.adults;
   price = Math.round(price);
@@ -148,6 +192,7 @@ export function createMockFlightProvider(opts: { today?: () => string; latencyMs
     name: "mock",
     live: false,
     maxAirportsPerSide: 50,
+    priceHistory: (fare: Fare) => mockPriceHistory(fare, today()),
     async search(q: FlightQuery): Promise<FlightResult> {
       if (opts.latencyMs) await new Promise((r) => setTimeout(r, opts.latencyMs));
       const fares: Fare[] = [];

@@ -4,6 +4,7 @@ import { money, shortDate, travelerCount, tripPriceNote } from "../format.ts";
 import { useStore } from "../store.ts";
 import { TripComparison } from "./TripComparison.tsx";
 import { ShareButton } from "./ShareButton.tsx";
+import { WatchedFlights } from "./WatchedFlights.tsx";
 
 export function TripsView() {
   const trips = useStore(s => s.trips);
@@ -41,5 +42,6 @@ export function TripsView() {
       </li>;
     })}</ul>
     {compared.length >= 2 && <><TripComparison trips={compared} /><ShareButton key={compared.map(trip => trip.id).join()} trips={compared} /></>}
+    <WatchedFlights />
   </div>;
 }

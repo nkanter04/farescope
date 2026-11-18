@@ -448,3 +448,67 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
   --globe-muted-point: rgba(255, 255, 255, 0.6);
   --globe-arc-scale: 1.8;
 }
+
+
+/* ---------- Price prediction & watch ---------- */
+.price-insight { margin-top: 12px; display: grid; gap: 12px; }
+.insight-head { display: grid; grid-template-columns: 48px 1fr; gap: 14px; align-items: start; }
+.insight-head p { margin: 0 0 6px; }
+.insight-title { font-size: 0.98rem; line-height: 1.45; color: var(--text); }
+.insight-icon {
+  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 1.35rem; font-weight: 800;
+}
+.insight-icon.book { background: var(--good-soft); color: var(--good); }
+.insight-icon.wait { background: var(--accent-soft); color: var(--accent); }
+.insight-icon.steady { background: var(--panel-3); color: var(--text-2); }
+.insight-icon.pending { background: var(--panel-3); animation: pulse 1.2s var(--ease) infinite alternate; }
+@keyframes pulse { from { opacity: .45; } to { opacity: 1; } }
+.level-chip { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 600; margin-right: 6px; }
+.level-chip.low { background: var(--good-soft); color: var(--good); }
+.level-chip.typical { background: var(--panel-3); color: var(--text-2); }
+.level-chip.high { background: var(--warn-soft); color: var(--warn); }
+.insight-chart { border-top: 1px solid var(--line); padding-top: 12px; }
+.insight-chart h3 { margin: 0 0 4px; font-size: 1.15rem; letter-spacing: -0.01em; }
+.insight-chart .basis { margin: 8px 0 0; }
+
+.trend-chart { margin: 10px 0 0; }
+.trend-chart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.trend-chart .grid { stroke: var(--line-strong); stroke-width: 1; }
+.trend-chart .avg { stroke: var(--text-2); stroke-width: 1; }
+.trend-chart .axis { fill: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.trend-chart .avg-label { fill: var(--text-2); }
+.trend-chart .history { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.trend-chart .forecast { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 2 5; stroke-linecap: round; }
+.trend-chart .band { fill: var(--accent); opacity: 0.1; }
+.trend-chart .today { stroke: var(--text); stroke-width: 1.2; }
+.trend-chart .now { fill: var(--accent); stroke: #fff; stroke-width: 2.5; }
+.trend-chart .lowest { fill: #fff; stroke: var(--good); stroke-width: 2.5; }
+.trend-chart .hover line { stroke: var(--muted); stroke-dasharray: 3 3; }
+.trend-chart .hover circle { fill: var(--text); }
+.trend-readout { min-height: 1.5em; font-size: 0.85rem; margin-top: 4px; }
+.trend-readout .key { display: inline-block; width: 16px; height: 0; vertical-align: middle; margin: 0 4px 0 10px; border-top: 2.5px solid var(--accent); }
+.trend-readout .key:first-child { margin-left: 0; }
+.trend-readout .key-forecast { border-top-style: dotted; }
+.trend-readout .key-band { height: 10px; border: 0; background: var(--accent); opacity: .15; border-radius: 2px; }
+
+.watch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.switch {
+  position: relative; flex: 0 0 auto; width: 52px; height: 30px; border-radius: 999px; border: 0; padding: 0;
+  background: var(--line-strong); transition: background .15s var(--ease);
+}
+.switch.on { background: var(--accent); }
+.switch .knob {
+  position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; font-size: 0.72rem; font-weight: 800; color: var(--muted);
+  box-shadow: var(--shadow-xs); transition: transform .15s var(--ease);
+}
+.switch.on .knob { transform: translateX(22px); color: var(--accent); }
+.switch:disabled { opacity: .6; }
+.delta.down { color: var(--good); font-weight: 600; }
+.delta.up { color: var(--bad); font-weight: 600; }
+.bad-text { color: var(--bad); }
+
+.watched { margin-top: 28px; }
+.watch-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.watch-card p { margin: 6px 0 0; }

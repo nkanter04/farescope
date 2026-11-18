@@ -73,4 +73,40 @@ describe("api", () => {
     expect((await app.inject({ method: "PUT", url, headers: CLIENT, payload: invalid })).statusCode).toBe(400);
     expect((await app.inject("/api/stays?airport=HND&location=Kyoto&checkIn=2027-02-30&checkOut=2027-03-04")).statusCode).toBe(400);
   });
+
+  async function searchFares() {
+    const res = await app.inject({ method: "POST", url: "/api/search", payload: {
+      origins: ["AUS"], destinations: ["Tokyo"], departFrom: "2027-04-01", departTo: "2027-04-03",
+      tripType: "roundtrip", minNights: 6, maxNights: 7 } });
+    return res.body.split("\n\n").filter((b) => b.startsWith("data: ")).map((b) => JSON.parse(b.slice(6)) as SearchEvent)
+      .flatMap((e) => (e.type === "fare" ? [e.fare] : []));
+  }
+
+  it("predicts prices for a fare from the search results", async () => {
+    const fares = await searchFares();
+    expect(fares[0].queryKey).toMatch(/^f\|/);
+    const res = await app.inject({ method: "POST", url: "/api/price-trend", payload: { fare: fares[0], peers: fares.slice(1, 20) } });
+    expect(res.statusCode).toBe(200);
+    const { trend } = res.json();
+    expect(trend.history.length).toBeGreaterThan(30);
+    expect(trend.forecast.at(-1).date).toBe(fares[0].departDate);
+    expect(["book", "wait", "steady"]).toContain(trend.verdict);
+    expect(trend.basis.simulated).toBe(true);
+    expect((await app.inject({ method: "POST", url: "/api/price-trend", payload: { fare: { ...fares[0], price: -1 } } })).statusCode).toBe(400);
+  });
+
+  it("watches flights per browser and re-checks them", async () => {
+    const [fare] = await searchFares();
+    const created = await app.inject({ method: "POST", url: "/api/watches", headers: CLIENT, payload: { fare, cabin: "economy", adults: 1 } });
+    expect(created.statusCode).toBe(200);
+    const watch = created.json().watch;
+    expect(watch).toMatchObject({ priceAtWatch: fare.price, lastPrice: fare.price, status: "active" });
+    expect((await app.inject({ url: "/api/watches", headers: CLIENT })).json().watches).toHaveLength(1);
+    expect((await app.inject({ url: "/api/watches", headers: { "x-client-id": "someone-else-999" } })).json().watches).toHaveLength(0);
+    const checked = await app.inject({ method: "POST", url: "/api/watches/check", headers: CLIENT });
+    expect(checked.json().watches[0].id).toBe(watch.id);
+    expect((await app.inject({ method: "DELETE", url: `/api/watches/${watch.id}`, headers: { "x-client-id": "someone-else-999" } })).statusCode).toBe(404);
+    expect((await app.inject({ method: "DELETE", url: `/api/watches/${watch.id}`, headers: CLIENT })).statusCode).toBe(200);
+    expect((await app.inject({ method: "POST", url: "/api/watches", headers: CLIENT, payload: { fare, cabin: "coach", adults: 1 } })).statusCode).toBe(400);
+  });
 });

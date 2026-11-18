@@ -1,4 +1,4 @@
-import type { LodgingStop, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
+import type { Cabin, Fare, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
 function clientId(): string {
   const make = () => (crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
@@ -81,4 +81,37 @@ export async function deleteTrip(id: string): Promise<void> {
   if (DEMO) return (await demo()).deleteTrip(id);
   const response = await fetch(`/api/trips/${id}`, { method: "DELETE", headers: headers() });
   if (!response.ok) throw new Error("Could not delete trip.");
+}
+
+/** Price history and prediction for one fare; `peers` (other fares from the search) teach the booking curve. */
+export async function fetchPriceTrend(fare: Fare, peers: Fare[]): Promise<PriceTrend> {
+  if (DEMO) return (await demo()).priceTrend(fare, peers);
+  const r = await fetch("/api/price-trend", { method: "POST", headers: headers(), body: JSON.stringify({ fare, peers }) });
+  if (!r.ok) throw new Error("Could not load the price prediction.");
+  return (await r.json()).trend;
+}
+
+export async function listWatches(): Promise<PriceWatch[]> {
+  if (DEMO) return (await demo()).listWatches();
+  const r = await fetch("/api/watches", { headers: headers() });
+  return r.ok ? (await r.json()).watches : [];
+}
+
+export async function addWatch(fare: Fare, cabin: Cabin, adults: number): Promise<PriceWatch> {
+  if (DEMO) return (await demo()).addWatch(fare, cabin, adults);
+  const r = await fetch("/api/watches", { method: "POST", headers: headers(), body: JSON.stringify({ fare, cabin, adults }) });
+  if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error ?? "Could not watch this flight.");
+  return (await r.json()).watch;
+}
+
+export async function removeWatch(id: string): Promise<void> {
+  if (DEMO) return (await demo()).removeWatch(id);
+  await fetch(`/api/watches/${encodeURIComponent(id)}`, { method: "DELETE", headers: headers() });
+}
+
+/** Re-price watched flights (cache-first; at most once per 6 hours per flight). */
+export async function checkWatches(): Promise<PriceWatch[]> {
+  if (DEMO) return (await demo()).checkWatches();
+  const r = await fetch("/api/watches/check", { method: "POST", headers: headers() });
+  return r.ok ? (await r.json()).watches : [];
 }

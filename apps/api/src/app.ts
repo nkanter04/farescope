@@ -1,7 +1,11 @@
 import Fastify, { type FastifyRequest } from "fastify";
 import { join } from "node:path";
 import { z } from "zod";
-import { SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { CABINS, FareSchema, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { randomUUID } from "node:crypto";
+import { PriceHistory, WatchStore } from "./history.ts";
+import { buildPriceTrend } from "./search/trend.ts";
+import { checkWatch, MAX_WATCHES, newWatch } from "./search/watch.ts";
 import { QueryCache } from "./cache.ts";
 import type { Config } from "./config.ts";
 import { openDb } from "./db.ts";
@@ -40,6 +44,8 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
   const cache = new QueryCache(db);
   const quota = new QuotaGuard(db, { monthlyBudget: cfg.monthlyBudget, dailyClientBudget: cfg.dailyClientBudget });
   const trips = new TripStore(db);
+  const watches = new WatchStore(db);
+  const priceHistory = new PriceHistory(db);
   const flights =
     overrides.flights ?? (cfg.provider === "serpapi" ? createSerpApiFlightProvider({ apiKey: cfg.serpapiKey }) : createMockFlightProvider());
   const stays =
@@ -151,6 +157,57 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     if (!parsed.success) return reply.code(400).send({ error: "Invalid trip" });
     const trip = trips.update(owner, req.params.id, parsed.data as unknown as Omit<TripPlan, "id" | "createdAt" | "total">);
     return trip ? { trip } : reply.code(404).send({ error: "Trip not found" });
+  });
+
+  // ---- Price predictions ----
+  const TrendInput = z.object({ fare: FareSchema, peers: z.array(FareSchema).max(60).default([]) });
+  app.post("/api/price-trend", async (req, reply) => {
+    const parsed = TrendInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid fare" });
+    const live = flights.live;
+    const trend = buildPriceTrend(parsed.data.fare, parsed.data.peers, {
+      provider: flights,
+      cache,
+      storedHistory: live ? (fare) => priceHistory.forFare(fare) : undefined,
+      storedSeries: live ? () => priceHistory.series() : undefined,
+    });
+    return { trend };
+  });
+
+  // ---- Price watches (in-app alerts) ----
+  const WatchInput = z.object({ fare: FareSchema, cabin: z.enum(CABINS), adults: z.number().int().min(1).max(9) });
+  app.get("/api/watches", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    return { watches: watches.list(owner) };
+  });
+  app.post("/api/watches", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    const parsed = WatchInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid watch" });
+    if (watches.count(owner) >= MAX_WATCHES) return reply.code(409).send({ error: `You can watch up to ${MAX_WATCHES} flights.` });
+    const watch = newWatch(parsed.data.fare, parsed.data.cabin, parsed.data.adults, randomUUID());
+    watches.save(owner, watch);
+    return { watch };
+  });
+  app.delete<{ Params: { id: string } }>("/api/watches/:id", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    return watches.remove(owner, req.params.id) ? { ok: true } : reply.code(404).send({ error: "Not found" });
+  });
+  /** Re-price this browser's watches (cache-first; live calls go through the quota guard). */
+  app.post("/api/watches/check", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    const out = [];
+    for (const watch of watches.list(owner)) {
+      if (watch.status === "departed") { out.push(watch); continue; }
+      const result = await checkWatch(watch, { provider: flights, cache, quota, clientId: clientKey(req) });
+      if (result.watch !== watch) watches.save(owner, result.watch);
+      out.push(result.watch);
+    }
+    return { watches: out };
   });
 
   return app;

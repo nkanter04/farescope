@@ -46,6 +46,13 @@ export function openDb(path: string): DatabaseSync {
       created_at INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_trips_owner ON trips (owner, created_at);
+    CREATE TABLE IF NOT EXISTS watches (
+      id TEXT PRIMARY KEY,
+      owner TEXT NOT NULL,
+      data TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_watches_owner ON watches (owner, created_at);
   `);
   return db;
 }

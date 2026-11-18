@@ -1,4 +1,4 @@
-import type { Cabin, Fare, FlightLeg, PriceInsights } from "@farescope/shared";
+import type { Cabin, Fare, FlightLeg, PriceInsights, PricePoint } from "@farescope/shared";
 import type { FlightProvider, FlightQuery, FlightResult } from "./types.ts";
 
 /**
@@ -32,7 +32,13 @@ export interface SerpFlightsResponse {
   search_metadata?: { google_flights_url?: string; status?: string };
   best_flights?: SerpItinerary[];
   other_flights?: SerpItinerary[];
-  price_insights?: { lowest_price?: number; price_level?: string; typical_price_range?: [number, number] };
+  price_insights?: {
+    lowest_price?: number;
+    price_level?: string;
+    typical_price_range?: [number, number];
+    /** [unix seconds, price] pairs: the search's lowest price per day over recent weeks. */
+    price_history?: [number, number][];
+  };
 }
 
 export function buildFlightParams(q: FlightQuery, apiKey: string): URLSearchParams {
@@ -102,9 +108,23 @@ export function parseFlights(json: SerpFlightsResponse, q: FlightQuery, fetchedA
         lowestPrice: pi.lowest_price,
         typicalRange: pi.typical_price_range,
         priceLevel: level === "low" || level === "typical" || level === "high" ? level : undefined,
+        history: parsePriceHistory(pi.price_history),
       }
     : undefined;
   return { fares: fares.sort((a, b) => a.price - b.price), insights };
+}
+
+/** Google's price history: free with every search, so it costs no extra quota. */
+export function parsePriceHistory(raw: unknown): PricePoint[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const byDay = new Map<string, number>();
+  for (const row of raw) {
+    if (!Array.isArray(row) || typeof row[0] !== "number" || typeof row[1] !== "number" || !(row[1] > 0)) continue;
+    const date = new Date(row[0] * 1000).toISOString().slice(0, 10);
+    byDay.set(date, Math.min(byDay.get(date) ?? Infinity, row[1]));
+  }
+  const points = [...byDay.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, price]) => ({ date, price }));
+  return points.length ? points : undefined;
 }
 
 export function createSerpApiFlightProvider(opts: { apiKey: string; fetchImpl?: typeof fetch; timeoutMs?: number }): FlightProvider {

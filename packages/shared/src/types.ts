@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PricePoint } from "./forecast.ts";
 
 export const CABINS = ["economy", "premium", "business", "first"] as const;
 export type Cabin = (typeof CABINS)[number];
@@ -58,12 +59,41 @@ export interface Fare {
   cached: boolean;
   /** True when served from an expired cache entry because the budget ran out. */
   stale?: boolean;
+  /** Cache key of the provider query that produced this fare (for its price history). */
+  queryKey?: string;
 }
+
+const iata = z.string().regex(/^[A-Z]{3}$/);
+/** Validates a Fare sent back to the API (price trend, watches). */
+export const FareSchema = z.object({
+  id: z.string().max(200),
+  provider: z.string().max(40),
+  origin: iata,
+  destination: iata,
+  departDate: z.string().date(),
+  returnDate: z.string().date().optional(),
+  price: z.number().positive().finite(),
+  currency: z.literal("USD"),
+  airlines: z.array(z.string().max(80)).max(10),
+  stops: z.number().int().min(0).max(10),
+  durationMin: z.number().nonnegative().finite(),
+  outbound: z.array(z.object({
+    from: z.string().max(8), to: z.string().max(8), depart: z.string().max(40), arrive: z.string().max(40),
+    airline: z.string().max(80), flightNumber: z.string().max(20), durationMin: z.number().nonnegative().finite(),
+  })).max(10),
+  bookingUrl: z.string().max(2000).optional(),
+  fetchedAt: z.string().max(40),
+  cached: z.boolean(),
+  stale: z.boolean().optional(),
+  queryKey: z.string().max(500).optional(),
+});
 
 export interface PriceInsights {
   lowestPrice?: number;
   priceLevel?: "low" | "typical" | "high";
   typicalRange?: [number, number];
+  /** Daily lowest price for this search over recent weeks (Google Flights' price_history). */
+  history?: PricePoint[];
 }
 
 export type StayKind = "hotel" | "hostel" | "rental";
@@ -111,6 +141,23 @@ export interface LodgingStop {
   stay?: Stay;
   /** A user-entered cost for accommodation arranged separately, including zero. */
   ownCost?: number;
+}
+
+/** A flight the user is watching for price changes. */
+export interface PriceWatch {
+  id: string;
+  fare: Fare;
+  cabin: Cabin;
+  adults: number;
+  priceAtWatch: number;
+  lastPrice: number;
+  /** ISO timestamp of the last successful re-check. */
+  lastChecked: string;
+  /** Prices seen at each check (oldest first, capped). */
+  checks: PricePoint[];
+  createdAt: string;
+  /** Set when the flight has departed or can no longer be found. */
+  status?: "active" | "departed" | "unavailable";
 }
 
 export interface QuotaStatus {

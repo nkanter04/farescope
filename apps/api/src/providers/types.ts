@@ -1,4 +1,4 @@
-import type { Cabin, Fare, PriceInsights, Stay } from "@farescope/shared";
+import type { Cabin, Fare, PriceInsights, PricePoint, Stay } from "@farescope/shared";
 
 /** One provider call: a set of origin airports x a set of destination airports on one date pair. */
 export interface FlightQuery {
@@ -23,6 +23,11 @@ export interface FlightProvider {
   /** Max airports per side the provider accepts in a single call. */
   maxAirportsPerSide: number;
   search(q: FlightQuery): Promise<FlightResult>;
+  /**
+   * Optional per-fare price history. The mock simulates it; live providers instead get history
+   * from the cached search response (Google's price_history) and the price_history table.
+   */
+  priceHistory?(fare: Fare): PricePoint[];
 }
 
 export interface StayQuery {
@@ -46,7 +51,7 @@ export function flightQueryKey(provider: string, q: FlightQuery): string {
   return [
     "f",
     // Retire cached synthetic nonstops from the previous mock generator.
-    provider === "mock" ? "mock-routes-v2" : provider,
+    provider === "mock" ? "mock-routes-v3" : provider,
     [...q.origins].sort().join(","),
     [...q.destinations].sort().join(","),
     q.departDate,

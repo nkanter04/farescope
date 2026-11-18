@@ -8,6 +8,7 @@ import { TripsView } from "./components/TripsView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
+import { useInsights } from "./insights.ts";
 import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
@@ -40,6 +41,8 @@ export function App() {
   useEffect(() => {
     void refreshQuota();
   }, [refreshQuota]);
+  const initWatches = useInsights((s) => s.initWatches);
+  useEffect(() => { void initWatches(); }, [initWatches]);
   useEffect(() => { if (selected) { setPanel("List"); setEditing(false); } }, [selected]);
   useEffect(() => { if (submitted) { setPanel("List"); setEditing(false); } }, [submitted]);
   useEffect(() => {

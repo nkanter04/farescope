@@ -118,7 +118,7 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
     }
     for (const f of send.values()) {
       fareCount++;
-      const fare = { ...f, cached: flags.cached, stale: flags.stale };
+      const fare = { ...f, cached: flags.cached, stale: flags.stale, queryKey: c.key };
       if (stayProvider) shortlistFares.push(fare);
       emit({ type: "fare", fare });
     }
