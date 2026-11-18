@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolvePlace, resolveAll, suggestPlaces } from "./places.ts";
-import { AIRPORTS, distanceKm, AIRPORT_BY_IATA } from "./airports.ts";
+import { AIRPORTS, COUNTRIES, distanceKm, AIRPORT_BY_IATA } from "./airports.ts";
 
 describe("places", () => {
   it("covers Russia, regional airports and common city aliases", () => {
@@ -11,13 +11,41 @@ describe("places", () => {
     expect(resolvePlace("BOI")?.airports).toEqual(["BOI"]);
     expect(AIRPORTS.length).toBeGreaterThan(3500);
   });
+  it("expands broad places to main airports but keeps small ones reachable", () => {
+    // Countries use major airports only: the 8 travelers know, not all 83 in the catalog.
+    expect(resolvePlace("Japan")?.airports.sort()).toEqual(["CTS", "FUK", "HND", "ITM", "KIX", "NGO", "NRT", "OKA"]);
+    expect(resolvePlace("Japan")?.sublabel).toBe("8 main airports");
+    expect(resolvePlace("region:Europe")!.airports.length).toBeLessThan(200);
+    expect(AIRPORT_BY_IATA.SHB.tier).toBe("local");
+    expect(resolvePlace("SHB")?.airports).toEqual(["SHB"]);
+    expect(resolvePlace("Nakashibetsu")?.airports).toEqual(["SHB"]);
+    // Curated airports stay major even when the 2014 route snapshot predates them.
+    expect(AIRPORT_BY_IATA.BER.tier).toBe("major");
+    // A country without major or regional airports still resolves to its airports.
+    const small = Object.keys(COUNTRIES).find((c) => {
+      const all = AIRPORTS.filter((x) => x.country === c);
+      return all.length > 0 && all.every((x) => x.tier === "local");
+    })!;
+    expect(resolvePlace(`country:${small}`)!.airports.length).toBeGreaterThan(0);
+  });
+
+  it("puts Middle East countries in the Middle East region", () => {
+    for (const code of ["SA", "JO", "OM", "KW", "BH", "AE", "QA", "IL"]) expect(COUNTRIES[code].region).toBe("Middle East");
+    const me = resolvePlace("Middle East")!.airports;
+    for (const iata of ["RUH", "JED", "AMM", "MCT", "KWI", "DXB", "DOH"]) expect(me).toContain(iata);
+    expect(COUNTRIES.GL.region).toBe("North America");
+    expect(COUNTRIES.CY.region).toBe("Europe");
+    expect(COUNTRIES.TR.region).toBe("Europe");
+    expect(COUNTRIES.EG.region).toBe("Africa");
+  });
+
   it("resolves IATA, city, country and region", () => {
     expect(resolvePlace("aus")?.airports).toEqual(["AUS"]);
     expect(resolvePlace("Tokyo")?.airports.sort()).toEqual(["HND", "NRT"]);
     expect(resolvePlace("Japan")?.airports).toContain("KIX");
     expect(resolvePlace("country:JP")?.kind).toBe("country");
     expect(resolvePlace("region:Asia")?.airports).toContain("BKK");
-    expect(resolvePlace("anywhere")?.airports.length).toBe(AIRPORTS.length);
+    expect(resolvePlace("anywhere")?.airports.length).toBe(AIRPORTS.filter((x) => x.tier === "major").length);
     expect(resolvePlace("Atlantis")).toBeUndefined();
   });
 

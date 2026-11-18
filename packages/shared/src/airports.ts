@@ -11,6 +11,12 @@ export type Region =
   | "Asia"
   | "Oceania";
 
+/**
+ * Size tier from the number of nonstop routes in the OpenFlights snapshot (scripts/airport-tiers.ts).
+ * Country, region and "Anywhere" searches use major airports; cities and airport codes use all.
+ */
+export type AirportTier = "major" | "regional" | "local";
+
 export interface Airport {
   iata: string;
   name: string;
@@ -18,6 +24,7 @@ export interface Airport {
   country: string; // ISO 3166-1 alpha-2
   lat: number;
   lng: number;
+  tier: AirportTier;
 }
 
 const COUNTRY_OVERRIDES: Record<string, { name: string; region: Region; aliases?: string[]; costIndex: number }> = {
@@ -86,8 +93,9 @@ const COUNTRY_OVERRIDES: Record<string, { name: string; region: Region; aliases?
   PF: { name: "French Polynesia", region: "Oceania", aliases: ["tahiti"], costIndex: 1.5 },
 };
 
+// Hand-curated airports are always major (some, like BER, opened after the 2014 route snapshot).
 const A = (iata: string, name: string, city: string, country: string, lat: number, lng: number): Airport => ({
-  iata, name, city, country, lat, lng,
+  iata, name, city, country, lat, lng, tier: "major",
 });
 
 const CURATED_AIRPORTS: Airport[] = [
@@ -230,13 +238,22 @@ const CURATED_AIRPORTS: Airport[] = [
 const CONTINENT_REGION: Record<string, Region> = {
   AF: "Africa", AS: "Asia", EU: "Europe", NA: "Central America & Caribbean", SA: "South America", OC: "Oceania",
 };
+/**
+ * OurAirports only has continents, so travel regions that cut across them are set per country.
+ * Countries listed in COUNTRY_OVERRIDES keep their own region.
+ */
+const REGION_BY_COUNTRY: Record<string, Region> = {
+  ...Object.fromEntries(["SA", "JO", "OM", "KW", "BH", "IQ", "IR", "LB", "SY", "YE", "PS"].map((c) => [c, "Middle East" as Region])),
+  ...Object.fromEntries(["GL", "BM", "PM"].map((c) => [c, "North America" as Region])),
+  CY: "Europe",
+};
 export const COUNTRIES: typeof COUNTRY_OVERRIDES = Object.fromEntries(countryCatalog
   .filter(country => CONTINENT_REGION[country.continent])
   .map(country => [country.code, COUNTRY_OVERRIDES[country.code] ??
-    { name: country.name, region: CONTINENT_REGION[country.continent], costIndex: 1 }]));
+    { name: country.name, region: REGION_BY_COUNTRY[country.code] ?? CONTINENT_REGION[country.continent], costIndex: 1 }]));
 
 // Country cost indexes are illustrative mock-price inputs, including the neutral default of 1.
-const byCode = new Map<string, Airport>(airportCatalog.map(airport => [airport.iata, airport]));
+const byCode = new Map<string, Airport>((airportCatalog as Airport[]).map(airport => [airport.iata, airport]));
 for (const airport of CURATED_AIRPORTS) byCode.set(airport.iata, { ...byCode.get(airport.iata), ...airport });
 export const AIRPORTS: Airport[] = [...byCode.values()].filter(airport => COUNTRIES[airport.country]);
 export const AIRPORT_BY_IATA: Record<string, Airport> = Object.fromEntries(AIRPORTS.map((a) => [a.iata, a]));

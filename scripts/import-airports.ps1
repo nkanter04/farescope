@@ -35,3 +35,6 @@ $routeLines = @($routes.Keys | ForEach-Object { (ConvertTo-Json $_ -Compress) + 
 $newline = [Environment]::NewLine
 [IO.File]::WriteAllText((Join-Path $routeDirectory 'routes.json'), '{' + $newline + ($routeLines -join (',' + $newline)) + $newline + '}' + $newline)
 Write-Output "$($airports.Count) airports, $($countries.Count) countries and territories, $($routes.Count) route origins"
+# Tag airports as major / regional / local from their route counts (see scripts/airport-tiers.ts).
+Push-Location (Join-Path $PSScriptRoot '..')
+try { npx tsx scripts/airport-tiers.ts; if ($LASTEXITCODE -ne 0) { throw "airport-tiers.ts failed" } } finally { Pop-Location }

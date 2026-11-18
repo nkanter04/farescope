@@ -24,8 +24,9 @@ const req = SearchRequestSchema.parse({
 
 describe("planner", () => {
   it("bounds the work list for global searches while retaining its full size", () => {
+    // 7 airports per call (SerpApi's chunk size) keeps anywhere x anywhere well above the cap.
     const plan = planSearch({ ...req, origins: ["anywhere"], destinations: ["anywhere"] },
-      { name: "mock", maxAirportsPerSide: 50 }, TODAY);
+      { name: "mock", maxAirportsPerSide: 7 }, TODAY);
     expect(plan.candidates).toHaveLength(40_000);
     expect(plan.totalCandidates).toBeGreaterThan(40_000);
     expect(new Set(plan.candidates.map(candidate => candidate.key)).size).toBe(40_000);

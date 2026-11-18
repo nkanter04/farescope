@@ -14,12 +14,29 @@ export interface Place {
 const norm = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const CITY_ALIASES: Record<string, string> = { philly: "philadelphia", "st petersburg": "saint petersburg", "st. petersburg": "saint petersburg" };
 const byCity = new Map<string, string[]>();
-const byCountry = new Map<string, string[]>();
+const byCountry = new Map<string, Airport[]>();
+const byRegion = new Map<string, Airport[]>();
 for (const airport of AIRPORTS) {
   const cityKey = `${airport.city}|${airport.country}`;
   byCity.set(cityKey, [...(byCity.get(cityKey) ?? []), airport.iata]);
-  byCountry.set(airport.country, [...(byCountry.get(airport.country) ?? []), airport.iata]);
+  byCountry.set(airport.country, [...(byCountry.get(airport.country) ?? []), airport]);
+  const region = COUNTRIES[airport.country]?.region;
+  if (region) byRegion.set(region, [...(byRegion.get(region) ?? []), airport]);
 }
+
+/**
+ * Broad places expand to the airports travelers actually use: major ones, falling back to regional,
+ * then to everything for places that have no larger airport. Every airport stays reachable by its
+ * city name or IATA code. This keeps "Japan" at 8 airports instead of 83, which matters because a
+ * live provider covers only a few airports per call and the free tier allows only a few calls.
+ */
+function mainAirports(list: Airport[]): string[] {
+  const major = list.filter((a) => a.tier === "major");
+  if (major.length) return major.map((a) => a.iata);
+  const regional = list.filter((a) => a.tier !== "local");
+  return (regional.length ? regional : list).map((a) => a.iata);
+}
+const airportWord = (n: number) => `${n} main airport${n === 1 ? "" : "s"}`;
 
 function cityPlace(city: string, country: string): Place {
   const airports = byCity.get(`${city}|${country}`) ?? [];
@@ -33,13 +50,13 @@ function cityPlace(city: string, country: string): Place {
 }
 
 function countryPlace(code: string): Place {
-  const airports = byCountry.get(code) ?? [];
-  return { kind: "country", token: `country:${code}`, label: COUNTRIES[code].name, sublabel: `${airports.length} airports`, airports };
+  const airports = mainAirports(byCountry.get(code) ?? []);
+  return { kind: "country", token: `country:${code}`, label: COUNTRIES[code].name, sublabel: airportWord(airports.length), airports };
 }
 
 function regionPlace(region: string): Place {
-  const airports = AIRPORTS.filter((a) => COUNTRIES[a.country]?.region === region).map((a) => a.iata);
-  return { kind: "region", token: `region:${region}`, label: region, sublabel: `${airports.length} airports`, airports };
+  const airports = mainAirports(byRegion.get(region) ?? []);
+  return { kind: "region", token: `region:${region}`, label: region, sublabel: airportWord(airports.length), airports };
 }
 
 function airportPlace(a: Airport): Place {
@@ -52,12 +69,13 @@ function airportPlace(a: Airport): Place {
   };
 }
 
+const ANYWHERE_AIRPORTS = mainAirports(AIRPORTS);
 const ANYWHERE: Place = {
   kind: "anywhere",
   token: "anywhere",
   label: "Anywhere",
-  sublabel: `All ${AIRPORTS.length} airports`,
-  airports: AIRPORTS.map((a) => a.iata),
+  sublabel: `${ANYWHERE_AIRPORTS.length} main airports worldwide`,
+  airports: ANYWHERE_AIRPORTS,
 };
 
 /** Resolve a canonical token (or a loose user string) into a set of airports. */

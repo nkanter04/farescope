@@ -27,15 +27,19 @@ Requires Node 22.13+ (built-in `node:sqlite`). Before calling work done, run `np
 
 npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import extensions (TS source runs directly via Vite/tsx, with no compile step).
 
-- `packages/shared`: types and zod schemas (`SearchRequestSchema`, `Fare`, `Stay`, `TripPlan`, `SearchEvent`), the curated airport list, the place resolver (tokens `AUS`, `city:Tokyo|JP`, `country:JP`, `region:Asia`, `anywhere`), and UTC date helpers.
+- `packages/shared`: types and zod schemas (`SearchRequestSchema`, `Fare`, `Stay`, `TripPlan`, `LodgingStop`, `SearchEvent`, `TripShareSchema`), trip math (`tripStops`, `tripTotal`, `lodgingCoverage`, `comparableTrips` in `trips.ts`), the place resolver (tokens `AUS`, `city:Tokyo|JP`, `country:JP`, `region:Asia`, `anywhere`), and UTC date helpers.
+  - **Airports:** 4,007 scheduled-service airports from OurAirports (`src/data/airports.json`, `countries.json`), merged with a hand-curated list in `airports.ts`. Each airport has a `tier` (major/regional/local) computed from route counts. **Country, region and "Anywhere" expand to major airports only**, while cities and IATA codes reach every airport. See `DATA_SOURCES.md`. To regenerate, run `scripts/import-airports.ps1`, which also runs `scripts/airport-tiers.ts`.
 - `apps/api`: Fastify server.
   - `search/planner.ts` expands a request into provider calls: (origin chunk × destination chunk) × (date × nights).
-  - `search/run.ts` runs them in this order: fresh cache hits → an evenly spread sample within budget → refinement near the cheapest results. It streams `SearchEvent`s as SSE.
-  - `providers/` holds `mock`, `serpapi-flights` and `serpapi-hotels`, behind the `FlightProvider`/`StayProvider` interfaces.
+  - `search/run.ts` runs them in this order: fresh cache hits → an evenly spread sample within budget → refinement near the cheapest results. It streams `SearchEvent`s as SSE. Very broad searches are capped at 40,000 candidates.
+  - For round trips, `search/shortlist.ts` + `search/stays.ts` then price lodging for up to 4 varied fares (a `shortlist` event, ranked by flight + stay). Lodging reserves its quota units up front and may use at most half the search's live budget.
+  - `providers/` holds `mock`, `serpapi-flights` and `serpapi-hotels`, behind the `FlightProvider`/`StayProvider` interfaces. The mock builds connections from `providers/routes.ts` (OpenFlights 2014 route graph in `providers/data/routes.json`, ODbL; the demo must keep crediting OpenFlights).
   - `cache.ts`/`ttl.ts`, `quota.ts`, `trips.ts`, `db.ts` handle SQLite storage.
   - `engine.ts` is the browser-safe export (`@farescope/api/engine`).
 - `apps/web`: React 19 + Zustand + react-globe.gl.
-  - `store.ts` holds state.
+  - `store.ts` holds state, including the trip `draft` being edited (multi-stop `lodging`, notes, saved `search`).
+  - Trip UI: `FarePanel`, `LodgingEditor` (stays per stop, or "arranged" costs), `TripTimeline` (route with Google Maps transfer links), `TripsView`/`TripComparison`, and read-only share links (`share.ts`, which stores a compressed snapshot in the URL hash and is validated by `TripShareSchema`).
+  - The globe (`Globe.tsx`) is lazy-loaded for the Map view.
   - `derived.ts` holds the aggregates shared by the globe, calendar and list.
   - `api.ts` routes calls to `demo.ts` (the in-browser engine) when `MODE === "demo"`.
 - **Themes:** `apps/web/src/themes/daylight.css` is the only shipped stylesheet, loaded at runtime by `theme.ts`. The globe reads `--globe-texture`, `--globe-atmosphere`, `--globe-origin`, `--globe-label`, `--globe-muted-point` and `--globe-arc-scale` from `:root`. Unused drafts live in `design/theme-drafts/`.
@@ -44,7 +48,7 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 ## Rules (must follow)
 
 1. **Never put API keys in the web app or the repo.** The repo is public. Keys belong only in `apps/api/.env` (gitignored); document new ones in `.env.example`.
-2. **Every live provider call goes through `QuotaGuard.tryConsume`.** The SerpApi free tier is about 100–250 searches a month. When the budget runs out, serve expired cache entries marked `stale` with a notice. Don't fail.
+2. **Every live provider call goes through `QuotaGuard.tryConsume(clientId, units)`** (reserve all units of a multi-call lookup at once). The SerpApi free tier is about 100–250 searches a month. When the budget runs out, serve expired cache entries marked `stale` with a notice. Don't fail.
 3. **Keep `search/run.ts`, `search/planner.ts`, `providers/mock.ts`, `ttl.ts` and `engine.ts` free of `node:*` value imports.** The Pages demo bundles them for the browser. `run.ts` depends only on the `SearchCache`/`SearchQuota` interfaces.
 4. **UI code must not depend on which provider is active.** Add new data sources as provider adapters.
 5. **Tests and scripts must never hit live SerpApi.** Use the mock provider or the fixtures in `apps/api/src/fixtures/`. Those fixtures are hand-built from SerpApi's documented response shape, not recorded.
@@ -64,11 +68,12 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 - **Grid overflow:** grid areas that contain the horizontally scrolling calendar need `minmax(0, 1fr)` columns and `min-width: 0`.
 - **Stale mock data:** mock results are cached. After editing `providers/mock.ts`, delete `apps/api/.local-data/farescope.sqlite*`.
 - **SerpApi round trips:** the price is the round-trip total, but only outbound legs are returned. Return legs would need a second call, which we skip to save quota.
+- **Broad places and quota:** a live provider covers about 7 airports per call. Don't widen country/region expansion beyond major airports without accounting for the per-search budget.
 - **No Amadeus:** its Self-Service API closed on 2026-07-17. Airlines publish about 11 months out, so the UI caps dates at today + 330 days.
 
 ## Next up
 
-1. Itinerary model and builder UI (stops with nights ranges, a flight/drive mode per leg, a start window). New shared types go in `packages/shared`.
+1. Itinerary builder: extend the existing `LodgingStop` trips with flexible nights ranges, a flight/drive mode per leg and a start window. New shared types go in `packages/shared`.
 2. Cheapest-dates optimizer: **dynamic programming** over (stop, arrival date), choosing nights per stop. It must be exact, pure and browser-safe. Don't use an LLM for the price math.
 3. Driving legs (OSRM) and a 2D map (MapLibre).
 4. Real SerpApi data with budget-aware price-grid fetching.
