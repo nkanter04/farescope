@@ -59,4 +59,18 @@ describe("api", () => {
     const del = await app.inject({ method: "DELETE", url: `/api/trips/${created.json().trip.id}`, headers: CLIENT });
     expect(del.statusCode).toBe(200);
   });
+  it("updates multi-location trips in place and restricts writes to the owner", async () => {
+    const input = { name: "Japan loop", fare: { id: "f2", price: 900 }, notes: "Train to Kyoto",
+      lodging: [{ id: "stop", place: "Kyoto, Japan", checkIn: "2027-04-03", checkOut: "2027-04-06", ownCost: 300 }] };
+    const created = (await app.inject({ method: "POST", url: "/api/trips", headers: CLIENT, payload: input })).json().trip;
+    expect(created.total).toBe(1200);
+    const url = `/api/trips/${created.id}`;
+    expect((await app.inject({ method: "PUT", url, headers: { "x-client-id": "someone-else-999" }, payload: input })).statusCode).toBe(404);
+    const updated = (await app.inject({ method: "PUT", url, headers: CLIENT, payload: { ...input, name: "Kyoto and friends", lodging: [{ ...input.lodging[0], ownCost: 0 }] } })).json().trip;
+    expect(updated).toMatchObject({ id: created.id, createdAt: created.createdAt, name: "Kyoto and friends", total: 900, notes: input.notes });
+    expect((await app.inject({ url: "/api/trips", headers: CLIENT })).json().trips).toHaveLength(1);
+    const invalid = { ...input, lodging: [{ ...input.lodging[0], stay: { id: "wrong-dates", total: 10, checkIn: "2027-04-02", checkOut: "2027-04-06" } }] };
+    expect((await app.inject({ method: "PUT", url, headers: CLIENT, payload: invalid })).statusCode).toBe(400);
+    expect((await app.inject("/api/stays?airport=HND&location=Kyoto&checkIn=2027-02-30&checkOut=2027-03-04")).statusCode).toBe(400);
+  });
 });

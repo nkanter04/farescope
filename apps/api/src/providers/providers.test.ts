@@ -8,6 +8,7 @@ const flightsFixture = flightsJson as unknown as SerpFlightsResponse;
 import { buildHotelParams, createSerpApiStayProvider, parseHotels } from "./serpapi-hotels.ts";
 import type { FlightQuery } from "./types.ts";
 import routes from "./data/routes.json";
+import { stayQueryKey } from "./types.ts";
 
 const q: FlightQuery = {
   origins: ["AUS"],
@@ -111,6 +112,15 @@ describe("serpapi hotels", () => {
   it("searches by city name", () => {
     expect(buildHotelParams(sq, "K", false).get("q")).toBe("Tokyo, Japan hotels and hostels");
     expect(buildHotelParams(sq, "K", true).get("vacation_rentals")).toBe("true");
+  });
+  it("honors locations outside the arrival city and separates their caches", async () => {
+    const kyoto = { ...sq, location: "Kyoto, Japan" };
+    expect(buildHotelParams(kyoto, "K", false).get("q")).toBe("Kyoto, Japan hotels and hostels");
+    expect(stayQueryKey("mock", kyoto)).not.toBe(stayQueryKey("mock", sq));
+    expect(stayQueryKey("mock", kyoto)).not.toBe(stayQueryKey("mock", { ...sq, location: "Nara, Japan" }));
+    const stays = await createMockStayProvider().search(kyoto);
+    expect(stays.every(stay => stay.name.includes("Kyoto, Japan"))).toBe(true);
+    expect(stays[0].lat).toBeUndefined();
   });
   it("parses properties, detects hostels, skips unpriced", () => {
     const stays = parseHotels(hotelsFixture, sq, false);

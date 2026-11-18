@@ -73,8 +73,8 @@ export interface Stay {
   provider: string;
   name: string;
   kind: StayKind;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   nightly: number;
   total: number;
   totalBasis?: "quoted" | "nightly-estimate";
@@ -96,8 +96,21 @@ export interface TripPlan {
   adults?: number;
   fare: Fare;
   stay?: Stay;
+  lodging?: LodgingStop[];
+  notes?: string;
+  search?: SearchRequest;
   total: number;
   createdAt: string;
+}
+
+export interface LodgingStop {
+  id: string;
+  place: string;
+  checkIn: string;
+  checkOut: string;
+  stay?: Stay;
+  /** A user-entered cost for accommodation arranged separately, including zero. */
+  ownCost?: number;
 }
 
 export interface QuotaStatus {

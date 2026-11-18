@@ -1,4 +1,5 @@
-import { daysBetween } from "@farescope/shared";
+import { useState } from "react";
+import { daysBetween, type Fare, type Stay } from "@farescope/shared";
 import { useDerived } from "../derived.ts";
 import { cityOf, duration, money, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
 import { useStore } from "../store.ts";
@@ -18,14 +19,22 @@ export function ResultsList() {
   const submitted = useStore((s) => s.submitted);
   const setRequest = useStore((s) => s.setRequest);
   const runSearch = useStore((s) => s.runSearch);
+  const sort = useStore(s => s.sort);
+  const setSort = useStore(s => s.setSort);
   const quotes = shortlist?.quotes.filter(({ fare }) =>
-    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate));
+    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate))
+    .sort((a, b) => (sort === "duration" ? a.fare.durationMin - b.fare.durationMin : sort === "stops" ? a.fare.stops - b.fare.stops :
+      sort === "airfare" ? a.fare.price - b.fare.price : a.fare.price + a.stay.total - b.fare.price - b.stay.total) || a.fare.price - b.fare.price);
   const { list } = useDerived();
 
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
 
   return (
     <section className="results">
+      {status !== "idle" && <label className="field results-sort">Sort results by<select value={sort} onChange={event => setSort(event.target.value as typeof sort)}>
+        <option value="price">Lowest combined price</option><option value="airfare">Lowest airfare</option>
+        <option value="duration">Shortest outbound flight</option><option value="stops">Fewest outbound stops</option>
+      </select><span className="muted small">Flight-only results use airfare when sorting by price.</span></label>}
       {status === "searching" && !shortlist && (
         <div className="progress">
           <div className="bar" style={{ width: `${pct}%` }} />
@@ -57,6 +66,7 @@ export function ResultsList() {
       {shortlist && shortlist.planned > 0 && (
         <section className="combined-results" aria-labelledby="combined-heading">
           <h2 id="combined-heading">Flight + stay</h2>
+          <p className="muted small">These starting options assume one location. Open a trip to split your stay across places and dates.</p>
           <p className="muted small" role="status">{status === "searching" && shortlist.checked < shortlist.planned
             ? `Checking stays for ${shortlist.planned} date and destination options…`
             : `${shortlist.quotes.length} combined prices found · ${shortlist.planned} of ${shortlist.eligible} date and destination options shortlisted.`}</p>
@@ -69,8 +79,10 @@ export function ResultsList() {
                 <span>{money(fare.price)} flight + {money(stay.total)} stay · {travelerCount(adults)}</span>
                 <span className="muted">{daysBetween(stay.checkIn, stay.checkOut)} nights · {stay.name}</span>
                 <span className="muted">{stopsLabel(fare.stops)} outbound{fare.stops > 0 && ` via ${fare.outbound.slice(0, -1).map(leg => leg.to).join(" → ")}`}</span>
+                <span className="muted">{duration(fare.durationMin)} outbound</span>
                 {(fare.stale || stay.stale) && <span className="stale">Includes an older price</span>}
               </button>
+              <SaveResult fare={fare} stay={stay} />
             </li>
           ))}</ol>}
           {!quotes?.length && status !== "searching" && <p className="muted small">{shortlist.quotes.length
@@ -110,6 +122,7 @@ export function ResultsList() {
               </div>
               {f.stops > 0 && <div className="fare-sub muted">Via {f.outbound.slice(0, -1).map(leg => `${cityOf(leg.to)} (${leg.to})`).join(" → ")}</div>}
             </button>
+            <SaveResult fare={f} />
           </li>
         ))}
       </ol>
@@ -118,4 +131,14 @@ export function ResultsList() {
       </p>}
     </section>
   );
+}
+
+function SaveResult({ fare, stay }: { fare: Fare; stay?: Stay }) {
+  const save = useStore(state => state.saveResult);
+  const [status, setStatus] = useState("");
+  return <div className="result-save"><button className="link" disabled={status === "Saving…" || status === "Saved"} onClick={async () => {
+    setStatus("Saving…");
+    try { await save(fare, stay); setStatus("Saved"); } catch { setStatus("Could not save. Try again."); }
+  }}>{status === "Saved" ? "Saved to My trips" : status === "Saving…" ? status : "Save to shortlist"}</button>
+    {status.startsWith("Could") && <span role="alert">{status}</span>}</div>;
 }

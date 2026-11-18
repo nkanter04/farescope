@@ -95,8 +95,9 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
 
   const StayQuerySchema = z.object({
     airport: z.string().regex(/^[A-Z]{3}$/),
-    checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    location: z.string().trim().min(2).max(160).optional(),
+    checkIn: z.string().date(),
+    checkOut: z.string().date(),
     adults: z.coerce.number().int().min(1).max(9).default(1),
   });
 
@@ -113,6 +114,15 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     adults: z.number().int().min(1).max(9).optional(),
     fare: z.object({ id: z.string(), price: z.number() }).passthrough(),
     stay: z.object({ id: z.string(), total: z.number() }).passthrough().optional(),
+    lodging: z.array(z.object({
+      id: z.string(), place: z.string().trim().min(1).max(160),
+      checkIn: z.string().date(), checkOut: z.string().date(),
+      stay: z.object({ id: z.string(), total: z.number().nonnegative(), checkIn: z.string().date(), checkOut: z.string().date() }).passthrough().optional(),
+      ownCost: z.number().nonnegative().optional(),
+    }).refine(stop => stop.checkOut > stop.checkIn && (!stop.stay ||
+      (stop.stay.checkIn === stop.checkIn && stop.stay.checkOut === stop.checkOut)))).max(30).optional(),
+    notes: z.string().max(5000).optional(),
+    search: SearchRequestSchema.optional(),
   });
 
   app.get("/api/trips", async (req, reply) => {
@@ -133,6 +143,14 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     const owner = ownerId(req);
     if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
     return trips.remove(owner, req.params.id) ? { ok: true } : reply.code(404).send({ error: "Not found" });
+  });
+  app.put<{ Params: { id: string } }>("/api/trips/:id", async (req, reply) => {
+    const owner = ownerId(req);
+    if (!owner) return reply.code(400).send({ error: "Missing X-Client-Id" });
+    const parsed = TripInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid trip" });
+    const trip = trips.update(owner, req.params.id, parsed.data as unknown as Omit<TripPlan, "id" | "createdAt" | "total">);
+    return trip ? { trip } : reply.code(404).send({ error: "Trip not found" });
   });
 
   return app;

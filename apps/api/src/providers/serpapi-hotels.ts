@@ -28,7 +28,7 @@ export interface SerpHotelsResponse {
 
 export function buildHotelParams(q: StayQuery, apiKey: string, rentals: boolean): URLSearchParams {
   const ap = AIRPORT_BY_IATA[q.airport];
-  const where = ap ? `${ap.city}, ${COUNTRIES[ap.country]?.name ?? ap.country}` : q.airport;
+  const where = q.location || (ap ? `${ap.city}, ${COUNTRIES[ap.country]?.name ?? ap.country}` : q.airport);
   const p = new URLSearchParams({
     engine: "google_hotels",
     q: rentals ? where : `${where} hotels and hostels`,

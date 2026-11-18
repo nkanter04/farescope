@@ -6,6 +6,7 @@ import {
   distanceKm,
   parseISODate,
   regionOf,
+  resolvePlace,
   todayISO,
   type Fare,
   type FlightLeg,
@@ -180,30 +181,32 @@ export function createMockStayProvider(): StayProvider {
     live: false,
     callsPerSearch: 0,
     async search(q: StayQuery): Promise<Stay[]> {
-      const ap = AIRPORT_BY_IATA[q.airport];
+      const locationAirport = q.location ? resolvePlace(q.location)?.airports[0] : q.airport;
+      const ap = AIRPORT_BY_IATA[locationAirport ?? q.airport];
       if (!ap) return [];
+      const city = q.location || ap.city;
       const cost = COUNTRIES[ap.country]?.costIndex ?? 1;
       const nights = Math.max(1, daysBetween(q.checkIn, q.checkOut));
       const season = seasonMult(q.checkIn);
       const out: Stay[] = [];
       const kindCount: Record<StayKind, number> = { hotel: 0, hostel: 0, rental: 0 };
       for (let i = 0; i < 14; i++) {
-        const seed = `${ap.city}|${i}`;
+        const seed = `${city}|${i}`;
         const kind: StayKind = i % 7 === 3 || i % 7 === 6 ? "hostel" : i % 3 === 1 ? "rental" : "hotel";
         const stars = kind === "hotel" ? 2 + Math.floor(hash01(seed + "st") * 4) : undefined;
         const base = kind === "hostel" ? 32 : kind === "rental" ? 115 : 70 + (stars ?? 3) * 38;
         const nightly = Math.round(base * cost * season * (0.75 + 0.5 * hash01(seed + q.checkIn)));
         const names = STAY_NAMES[kind];
-        const label = names[(kindCount[kind]++ + Math.floor(hash01(ap.city) * names.length)) % names.length];
+        const label = names[(kindCount[kind]++ + Math.floor(hash01(city) * names.length)) % names.length];
         const name =
-          kind === "hotel" ? `${label} Hotel ${ap.city}` : kind === "hostel" ? `${ap.city} ${label} Hostel` : `${label} near ${ap.city} center`;
+          kind === "hotel" ? `${label} Hotel ${city}` : kind === "hostel" ? `${city} ${label} Hostel` : `${label} near ${city} center`;
         out.push({
           id: `mockstay-${ap.iata}-${i}`,
           provider: "mock",
           name,
           kind,
-          lat: ap.lat + (hash01(seed + "lat") - 0.5) * 0.25,
-          lng: ap.lng + (hash01(seed + "lng") - 0.5) * 0.25,
+          lat: locationAirport ? ap.lat + (hash01(seed + "lat") - 0.5) * 0.25 : undefined,
+          lng: locationAirport ? ap.lng + (hash01(seed + "lng") - 0.5) * 0.25 : undefined,
           nightly,
           total: nightly * nights * Math.max(1, Math.ceil(q.adults / 2)),
           rating: Math.round((3.4 + hash01(seed + "rt") * 1.55) * 10) / 10,

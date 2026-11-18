@@ -1,6 +1,8 @@
 import { create } from "zustand";
-import { addDays, todayISO, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
-import { deleteTrip, fetchQuota, fetchStays, listTrips, saveTrip, streamSearch } from "./api.ts";
+import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
+import { deleteTrip, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
+
+export type TripDraft = Omit<TripPlan, "id" | "total" | "createdAt"> & { id?: string };
 
 export interface Notice {
   level: "info" | "warn" | "error";
@@ -19,12 +21,8 @@ interface State {
   filterDest: string | null;
   filterDate: string | null;
   selectedFare: Fare | null;
-  stays: Stay[];
-  staysStatus: "idle" | "loading" | "done" | "error";
-  showingQuotedStay: boolean;
-  staysError?: string;
-  stayKind: "all" | "hotel" | "hostel" | "rental";
-  selectedStay: Stay | null;
+  draft?: TripDraft;
+  sort: "price" | "airfare" | "duration" | "stops";
   trips: TripPlan[];
   compare: string[];
   quota?: QuotaStatus;
@@ -36,9 +34,11 @@ interface State {
   setFilterDest(d: string | null): void;
   setFilterDate(d: string | null): void;
   selectFare(f: Fare | null, quotedStay?: Stay): Promise<void>;
-  setStayKind(k: State["stayKind"]): void;
-  selectStay(s: Stay | null): void;
-  saveCurrentTrip(name: string): Promise<void>;
+  setSort(sort: State["sort"]): void;
+  setDraft(patch: Partial<TripDraft>): void;
+  openTrip(trip: TripPlan): void;
+  saveCurrentTrip(): Promise<boolean>;
+  saveResult(fare: Fare, stay?: Stay): Promise<void>;
   loadTrips(): Promise<void>;
   removeTrip(id: string): Promise<void>;
   toggleCompare(id: string): void;
@@ -69,11 +69,7 @@ export const useStore = create<State>((set, get) => ({
   filterDest: null,
   filterDate: null,
   selectedFare: null,
-  stays: [],
-  staysStatus: "idle",
-  showingQuotedStay: false,
-  stayKind: "all",
-  selectedStay: null,
+  sort: "price",
   trips: [],
   compare: [],
 
@@ -94,9 +90,7 @@ export const useStore = create<State>((set, get) => ({
       filterDest: null,
       filterDate: null,
       selectedFare: null,
-      selectedStay: null,
-      stays: [],
-      staysStatus: "idle",
+      draft: undefined,
       progress: { done: 0, total: 0, providerCalls: 0, planned: 0, candidates: 0 },
     });
     // Batch incoming fares into one state update per animation frame.
@@ -157,24 +151,32 @@ export const useStore = create<State>((set, get) => ({
   setFilterDate: (filterDate) => set({ filterDate }),
 
   async selectFare(fare, quotedStay) {
-    set({ selectedFare: fare, selectedStay: quotedStay ?? null, showingQuotedStay: !!quotedStay, stays: quotedStay ? [quotedStay] : [],
-      stayKind: quotedStay ? "all" : get().stayKind, staysStatus: quotedStay ? "done" : fare ? "loading" : "idle", staysError: undefined });
-    if (!fare || quotedStay) return;
-    const submitted = get().submitted;
-    if (!submitted) return;
-    const r = await fetchStays(fare, submitted.adults).catch(() => ({ stays: [] as Stay[], error: "Could not load stays." }));
-    if (get().selectedFare !== fare || get().submitted !== submitted) return;
-    set({ stays: r.stays, staysStatus: "error" in r && r.error ? "error" : "done", staysError: "error" in r ? r.error : undefined });
-    void get().refreshQuota();
+    set({ selectedFare: fare });
+    if (!fare || get().draft?.fare.id === fare.id) return;
+    const search = get().submitted;
+    const place = AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination;
+    set({ draft: { name: `${place} · ${fare.departDate}`, fare, adults: search?.adults, search, notes: "",
+      lodging: quotedStay ? [{ id: crypto.randomUUID(), place, checkIn: quotedStay.checkIn, checkOut: quotedStay.checkOut, stay: quotedStay }] : [] } });
   },
 
-  setStayKind: (stayKind) => set({ stayKind }),
-  selectStay: (selectedStay) => set({ selectedStay }),
+  setSort: sort => set({ sort }),
+  setDraft: patch => { const draft = get().draft; if (draft) set({ draft: { ...draft, ...patch } }); },
+  openTrip: trip => set({ view: "search", selectedFare: trip.fare, draft: { ...trip, lodging: tripStops(trip) } }),
 
-  async saveCurrentTrip(name) {
-    const { selectedFare, selectedStay } = get();
-    if (!selectedFare) return;
-    const trip = await saveTrip(name, selectedFare, selectedStay ?? undefined, get().submitted?.adults);
+  async saveCurrentTrip() {
+    const draft = get().draft;
+    if (!draft) return false;
+    const trip = await saveTrip(draft, draft.id);
+    set({ trips: [trip, ...get().trips.filter(item => item.id !== trip.id)] });
+    const current = get().draft;
+    if (current?.fare === draft.fare && current.id === draft.id) set({ draft: { ...current, id: trip.id } });
+    return current === draft;
+  },
+
+  async saveResult(fare, stay) {
+    const search = get().submitted;
+    const trip = await saveTrip({ name: `${AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination} · ${fare.departDate}`,
+      fare, stay, adults: search?.adults, search });
     set({ trips: [trip, ...get().trips] });
   },
 

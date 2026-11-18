@@ -5,6 +5,7 @@ import { PriceCalendar } from "./components/PriceCalendar.tsx";
 import { ResultsList } from "./components/ResultsList.tsx";
 import { SearchForm } from "./components/SearchForm.tsx";
 import { TripsView } from "./components/TripsView.tsx";
+import { SharedTrips } from "./components/SharedTrips.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 import { ThemePicker } from "./components/ThemePicker.tsx";
@@ -33,11 +34,21 @@ export function App() {
   const cancel = useStore((s) => s.cancelSearch);
   const [panel, setPanel] = useState<typeof searchViews[number]>("List");
   const [editing, setEditing] = useState(true);
+  const [hash, setHash] = useState(window.location.hash);
   const route = (tokens: string[]) => tokens.map((token) => resolvePlace(token)?.label ?? token).join(", ");
 
   useEffect(() => {
     void refreshQuota();
   }, [refreshQuota]);
+  useEffect(() => { if (selected) { setPanel("List"); setEditing(false); } }, [selected]);
+  useEffect(() => { if (submitted) { setPanel("List"); setEditing(false); } }, [submitted]);
+  useEffect(() => {
+    const update = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", update);
+    return () => window.removeEventListener("hashchange", update);
+  }, []);
+
+  if (hash.startsWith("#share=")) return <div className="app"><SharedTrips hash={hash} /><ThemePicker /></div>;
 
   return (
     <div className="app">
@@ -82,8 +93,8 @@ export function App() {
           </aside>
           <section className="stage">
             <header className="search-heading">
-              <h1>{route(request.origins) || "Origin"} → {route(request.destinations) || "Destination"}</h1>
-              <p className="muted">{shortDate(request.departFrom)} – {shortDate(request.departTo)} · {travelerCount(request.adults)}</p>
+              <h1>{selected ? `${selected.origin} → ${selected.destination}` : `${route(request.origins) || "Origin"} → ${route(request.destinations) || "Destination"}`}</h1>
+              {!selected && <p className="muted">{shortDate(request.departFrom)} – {shortDate(request.departTo)} · {travelerCount(request.adults)}</p>}
             </header>
             <div className="seg view-switch" role="group" aria-label="Explore search results">
               {searchViews.map((name) => <button key={name} className={name === panel ? "on" : ""} aria-pressed={name === panel} onClick={() => setPanel(name)}>{name}</button>)}

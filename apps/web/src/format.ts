@@ -1,4 +1,10 @@
-import { AIRPORT_BY_IATA, parseISODate, type Stay } from "@farescope/shared";
+import { AIRPORT_BY_IATA, parseISODate, tripStops, type Stay, type TripPlan } from "@farescope/shared";
+
+export function tripPriceNote(trip: Pick<TripPlan, "fare" | "stay" | "lodging">): string {
+  const stops = tripStops(trip);
+  return [trip.fare.stale || stops.some(stop => stop.stay?.stale) ? "Includes older prices" : "",
+    stops.some(stop => stop.stay?.totalBasis === "nightly-estimate") ? "Includes estimated accommodation" : ""].filter(Boolean).join(" · ");
+}
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 export const money = (n: number) => usd.format(n);
