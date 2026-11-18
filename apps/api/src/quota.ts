@@ -26,13 +26,13 @@ export class QuotaGuard {
     return row?.count ?? 0;
   }
 
-  private bump(bucket: string, period: string): void {
+  private bump(bucket: string, period: string, units: number): void {
     this.db
       .prepare(
-        `INSERT INTO usage (bucket, period, count) VALUES (?, ?, 1)
-         ON CONFLICT(bucket, period) DO UPDATE SET count = count + 1`,
+        `INSERT INTO usage (bucket, period, count) VALUES (?, ?, ?)
+         ON CONFLICT(bucket, period) DO UPDATE SET count = count + excluded.count`,
       )
-      .run(bucket, period);
+      .run(bucket, period, units);
   }
 
   status(clientId: string) {
@@ -50,21 +50,22 @@ export class QuotaGuard {
     return Math.max(0, Math.min(s.monthlyBudget - s.monthlyUsed, s.dailyClientBudget - s.dailyClientUsed));
   }
 
-  /** Atomically check both buckets and consume one unit if allowed. */
-  tryConsume(clientId: string): QuotaDecision {
+  /** Reserve the full cost of a provider request in both buckets. */
+  tryConsume(clientId: string, units = 1): QuotaDecision {
+    if (!Number.isSafeInteger(units) || units < 1) throw new Error("Invalid quota units");
     const { month, day } = this.periods();
     this.db.exec("BEGIN IMMEDIATE");
     try {
-      if (this.read("global", month) >= this.cfg.monthlyBudget) {
+      if (this.read("global", month) + units > this.cfg.monthlyBudget) {
         this.db.exec("ROLLBACK");
         return { ok: false, reason: "monthly" };
       }
-      if (this.read(`client:${clientId}`, day) >= this.cfg.dailyClientBudget) {
+      if (this.read(`client:${clientId}`, day) + units > this.cfg.dailyClientBudget) {
         this.db.exec("ROLLBACK");
         return { ok: false, reason: "daily" };
       }
-      this.bump("global", month);
-      this.bump(`client:${clientId}`, day);
+      this.bump("global", month, units);
+      this.bump(`client:${clientId}`, day, units);
       this.db.exec("COMMIT");
       return { ok: true };
     } catch (e) {

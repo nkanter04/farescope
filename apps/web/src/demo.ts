@@ -3,7 +3,7 @@
  * mock providers as the API server, with an in-memory cache and trips kept in localStorage.
  */
 import { createMockFlightProvider, createMockStayProvider, runSearch, ttlFor, type SearchCache } from "@farescope/api/engine";
-import { SearchRequestSchema, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
+import { SearchRequestSchema, tripTotal, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
 
 const memory = new Map<string, { value: unknown; fetchedAt: number; expiresAt: number }>();
 const cache: SearchCache = {
@@ -31,6 +31,7 @@ export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent)
     parsed.data,
     {
       provider: flights,
+      stays,
       cache,
       quota: { remaining: () => Infinity, tryConsume: () => ({ ok: true }) },
       clientId: "demo",
@@ -43,11 +44,11 @@ export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent)
   );
 }
 
-export async function fetchStays(airport: string, checkIn: string, checkOut: string, adults: number) {
-  const key = `s|${airport}|${checkIn}|${checkOut}|${adults}`;
+export async function fetchStays(airport: string, checkIn: string, checkOut: string, adults: number, location?: string) {
+  const key = JSON.stringify(["s", airport, checkIn, checkOut, adults, location]);
   const hit = cache.get<Stay[]>(key);
   if (hit && !hit.expired) return { stays: hit.value, cached: true };
-  const result = await stays.search({ airport, checkIn, checkOut, adults });
+  const result = await stays.search({ airport, checkIn, checkOut, adults, location });
   cache.put(key, "mock", result, ttlFor(checkIn, new Date()));
   return { stays: result, cached: false };
 }
@@ -78,16 +79,16 @@ export function listTrips(): TripPlan[] {
   return readTrips();
 }
 
-export function saveTrip(name: string, fare: Fare, stay?: Stay): TripPlan {
+export function saveTrip(input: Omit<TripPlan, "id" | "total" | "createdAt">, id?: string): TripPlan {
+  const existing = readTrips().find(trip => trip.id === id);
+  if (id && !existing) throw new Error("This trip was deleted. Save a new copy.");
   const trip: TripPlan = {
-    id: crypto.randomUUID ? crypto.randomUUID() : `t-${Date.now()}`,
-    name,
-    fare,
-    stay,
-    total: fare.price + (stay?.total ?? 0),
-    createdAt: new Date().toISOString(),
+    ...input,
+    id: id ?? crypto.randomUUID(),
+    total: tripTotal(input),
+    createdAt: existing?.createdAt ?? new Date().toISOString(),
   };
-  writeTrips([trip, ...readTrips()]);
+  writeTrips([trip, ...readTrips().filter(item => item.id !== trip.id)]);
   return trip;
 }
 

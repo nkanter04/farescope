@@ -5,7 +5,7 @@ import { useStore } from "../store.ts";
 
 /** Month grids of the cheapest fare per departure day, plus cheapest per trip length. */
 export function PriceCalendar() {
-  const req = useStore((s) => s.request);
+  const req = useStore((s) => s.submitted ?? s.request);
   const filterDate = useStore((s) => s.filterDate);
   const setFilterDate = useStore((s) => s.setFilterDate);
   const status = useStore((s) => s.status);
@@ -41,7 +41,7 @@ export function PriceCalendar() {
   return (
     <div className="calendar">
       <div className="cal-head">
-        <h2>Cheapest by departure day</h2>
+        <h2>Lowest airfare found by departure day</h2>
         {filterDate && (
           <button className="link" onClick={() => setFilterDate(null)}>
             Clear day filter
@@ -69,6 +69,8 @@ export function PriceCalendar() {
                     className={`day ${cell ? "has" : ""} ${filterDate === day ? "sel" : ""} ${inRange ? "" : "out"}`}
                     style={cell ? { background: priceColor(t, 0.28), borderColor: priceColor(t, 0.7) } : undefined}
                     disabled={!cell}
+                    aria-label={cell ? `${day}, airfare ${money(cell.price)}` : day}
+                    aria-pressed={filterDate === day}
                     title={cell ? `${money(cell.price)}${cell.nights ? ` · ${cell.nights} nights` : ""}` : undefined}
                     onClick={() => setFilterDate(filterDate === day ? null : day)}
                   >

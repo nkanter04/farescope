@@ -1,7 +1,9 @@
-import { todayISO, type Fare, type SearchEvent, type SearchRequest } from "@farescope/shared";
+import { todayISO, type Fare, type SearchEvent, type SearchRequest, type TripQuote } from "@farescope/shared";
 import type { Cabin } from "@farescope/shared";
 import { ttlFor } from "../ttl.ts";
-import type { FlightProvider, FlightResult } from "../providers/types.ts";
+import type { FlightProvider, FlightResult, StayProvider } from "../providers/types.ts";
+import { SHORTLIST_LIMIT, shortlistCandidates } from "./shortlist.ts";
+import { lookupStays } from "./stays.ts";
 import { planSearch, refineCandidates, sampleCandidates, type Candidate } from "./planner.ts";
 
 /**
@@ -15,11 +17,12 @@ export interface SearchCache {
 }
 export interface SearchQuota {
   remaining(clientId: string): number;
-  tryConsume(clientId: string): { ok: true } | { ok: false; reason: "monthly" | "daily" };
+  tryConsume(clientId: string, units?: number): { ok: true } | { ok: false; reason: "monthly" | "daily" };
 }
 
 export interface RunDeps {
   provider: FlightProvider;
+  stays?: StayProvider;
   cache: SearchCache;
   quota: SearchQuota;
   clientId: string;
@@ -59,11 +62,19 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
     (hit && !hit.expired ? fresh : uncached).push(c);
   }
 
-  const budget = provider.live ? Math.min(deps.perSearchBudget, quota.remaining(deps.clientId)) : deps.freeCallCap;
+  const stayProvider = req.tripType === "roundtrip" ? deps.stays : undefined;
+  const liveLimit = Math.min(deps.perSearchBudget, quota.remaining(deps.clientId));
+  // Reserve whole lodging lookups while leaving at least half the cold-search budget for flights.
+  const cost = stayProvider?.live ? stayProvider.callsPerSearch : 0;
+  const reserved = cost ? cost * Math.min(SHORTLIST_LIMIT, Math.floor(liveLimit / (2 * cost))) : 0;
+  const budget = provider.live ? liveLimit - reserved : deps.freeCallCap;
+  const shortlistFares: Fare[] = [];
   const firstPassSize = provider.live ? Math.max(1, Math.ceil(budget * 0.6)) : budget;
   const firstPass = budget > 0 ? sampleCandidates(uncached, firstPassSize) : [];
 
-  emit({ type: "start", totalCandidates: plan.candidates.length, plannedCalls: Math.min(budget, uncached.length), live: provider.live });
+  emit({ type: "start", totalCandidates: plan.totalCandidates, plannedCalls: Math.min(budget, uncached.length), live: provider.live });
+  if (plan.totalCandidates > plan.candidates.length) emit({ type: "notice", level: "info", message: "This broad search samples routes and dates. Narrow the airports or date window for more coverage." });
+  if (!provider.live) emit({ type: "notice", level: "info", message: "Demo prices and flight times are simulated. Connections use a historical 2014 route network. Current service may differ." });
   if (provider.live && budget === 0 && uncached.length) {
     emit({ type: "notice", level: "warn", message: "Live search budget used up. Showing cached prices only." });
   }
@@ -83,7 +94,8 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
 
   const consider = (c: Candidate, fares: Fare[], flags: { cached: boolean; stale?: boolean }) => {
     if (!fares.length) return;
-    const sorted = [...fares].sort((a, b) => a.price - b.price);
+    const sorted = fares.filter(fare => req.maxStops === null || fare.stops <= req.maxStops).sort((a, b) => a.price - b.price);
+    if (!sorted.length) return;
     const cheapest = sorted[0];
     bestForRefine.push({ routeGroup: c.routeGroup, departDate: c.query.departDate, nights: c.nights, price: cheapest.price });
     const send = new Map<string, Fare>();
@@ -106,7 +118,9 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
     }
     for (const f of send.values()) {
       fareCount++;
-      emit({ type: "fare", fare: { ...f, cached: flags.cached, stale: flags.stale } });
+      const fare = { ...f, cached: flags.cached, stale: flags.stale };
+      if (stayProvider) shortlistFares.push(fare);
+      emit({ type: "fare", fare });
     }
   };
 
@@ -177,5 +191,26 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
   }
 
   emit({ type: "progress", done, total: done, providerCalls });
+  if (stayProvider && !deps.signal?.aborted) {
+    const { eligible, selected } = shortlistCandidates(shortlistFares, req.departFrom);
+    const quotes: TripQuote[] = [];
+    let unitsLeft = liveLimit - (provider.live ? providerCalls : 0);
+    const report = (checked: number) => emit({ type: "shortlist", eligible, planned: selected.length, checked, quotes: [...quotes] });
+    report(0);
+    for (const [i, candidate] of selected.entries()) {
+      if (deps.signal?.aborted) break;
+      const { fare, checkIn, checkOut } = candidate;
+      const result = await lookupStays({ airport: fare.destination, checkIn, checkOut, adults: req.adults },
+        stayProvider, cache, quota, deps.clientId, unitsLeft, now());
+      unitsLeft -= result.units;
+      providerCalls += result.units;
+      if (deps.signal?.aborted) break;
+      const stay = result.stays.reduce<typeof result.stays[number] | undefined>(
+        (best, item) => !best || item.total < best.total ? item : best, undefined);
+      if (stay) quotes.push({ fare, stay });
+      quotes.sort((a, b) => (a.fare.price + a.stay.total) - (b.fare.price + b.stay.total));
+      report(i + 1);
+    }
+  }
   emit({ type: "done", fares: fareCount, providerCalls, cacheHits });
 }

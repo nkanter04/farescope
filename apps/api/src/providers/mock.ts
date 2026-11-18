@@ -6,6 +6,7 @@ import {
   distanceKm,
   parseISODate,
   regionOf,
+  resolvePlace,
   todayISO,
   type Fare,
   type FlightLeg,
@@ -13,6 +14,7 @@ import {
   type StayKind,
 } from "@farescope/shared";
 import type { FlightProvider, FlightQuery, FlightResult, StayProvider, StayQuery } from "./types.ts";
+import { demoPaths } from "./routes.ts";
 
 /**
  * Deterministic fake data for development: same query -> same prices, so the UI is stable and
@@ -75,38 +77,20 @@ function advanceMult(departDate: string, today: string): number {
 }
 
 const LOW_COST = new Set(["Southwest", "JetBlue", "Alaska", "Ryanair", "Volaris", "GOL"]);
-const HUBS = ["DFW", "LAX", "SFO", "SEA", "ORD", "JFK", "ATL", "LHR", "FRA", "CDG", "AMS", "IST", "DXB", "DOH", "ICN", "HND", "HKG", "TPE", "SIN", "BKK", "MEX", "PTY", "BOG", "GRU", "JNB", "SYD", "AKL"];
 
 function airlinesFor(from: string, to: string, km: number): string[] {
   const all = [...new Set([...(AIRLINES_BY_REGION[regionOf(from) ?? ""] ?? []), ...(AIRLINES_BY_REGION[regionOf(to) ?? ""] ?? [])])];
   return km > 4_500 ? all.filter((a) => !LOW_COST.has(a)) : all;
 }
 
-/** Connection airports that add the least detour, ordered along the route. */
-function pickHubs(from: string, to: string, stops: number, seed: string): string[] {
-  const a = AIRPORT_BY_IATA[from];
-  const b = AIRPORT_BY_IATA[to];
-  const direct = distanceKm(a, b);
-  const ranked = HUBS.filter((h) => h !== from && h !== to)
-    .map((h) => ({ h, detour: distanceKm(a, AIRPORT_BY_IATA[h]) + distanceKm(AIRPORT_BY_IATA[h], b) - direct }))
-    .sort((x, y) => x.detour - y.detour)
-    .slice(0, 5);
-  const chosen: string[] = [];
-  for (let i = 0; chosen.length < stops && i < 20; i++) {
-    const h = ranked[Math.floor(hash01(`${seed}hub${i}`) * ranked.length)].h;
-    if (!chosen.includes(h)) chosen.push(h);
-  }
-  return chosen.sort((x, y) => distanceKm(a, AIRPORT_BY_IATA[x]) - distanceKm(a, AIRPORT_BY_IATA[y]));
-}
-
-function makeFare(q: FlightQuery, from: string, to: string, option: number, today: string): Fare {
-  const seed = `${from}|${to}|${q.departDate}|${q.returnDate ?? ""}|${option}`;
+function makeFare(q: FlightQuery, points: string[], option: number, today: string): Fare {
+  const from = points[0];
+  const to = points.at(-1)!;
+  const seed = `${points.join("|")}|${q.departDate}|${q.returnDate ?? ""}|${option}`;
   const r = hash01(seed);
   const r2 = hash01(seed + "b");
   const km = distanceKm(AIRPORT_BY_IATA[from], AIRPORT_BY_IATA[to]);
-  const nonstopPossible = km < 9_500 && hash01(`${from}${to}ns`) < (km < 3_000 ? 0.85 : 0.45);
-  let stops = option === 0 && nonstopPossible ? 0 : option === 0 ? 1 : Math.min(2, 1 + Math.floor(r2 * 2));
-  if (q.maxStops !== null && stops > q.maxStops) stops = q.maxStops;
+  const stops = points.length - 2;
   const stopMult = stops === 0 ? 1.18 : stops === 1 ? 1.0 : 0.88;
 
   let price = basePrice(from, to) * seasonMult(q.departDate) * advanceMult(q.departDate, today) * stopMult;
@@ -118,7 +102,6 @@ function makeFare(q: FlightQuery, from: string, to: string, option: number, toda
   const airline = airlines[Math.floor(hash01(seed + "al") * airlines.length)] ?? "Mock Air";
   const departMin = 6 * 60 + Math.floor(r * 16 * 60);
 
-  const points = [from, ...pickHubs(from, to, stops, seed), to];
   const legs: FlightLeg[] = [];
   const stamp = (m: number) => `${addDays(q.departDate, Math.floor(m / 1440))} ${hhmm(m % 1440)}`;
   let t = departMin;
@@ -171,8 +154,9 @@ export function createMockFlightProvider(opts: { today?: () => string; latencyMs
       for (const from of q.origins) {
         for (const to of q.destinations) {
           if (from === to || !AIRPORT_BY_IATA[from] || !AIRPORT_BY_IATA[to]) continue;
-          const nOptions = 2 + Math.floor(hash01(`${from}${to}${q.departDate}n`) * 2);
-          for (let i = 0; i < nOptions; i++) fares.push(makeFare(q, from, to, i, today()));
+          const paths = demoPaths(from, to, q.maxStops ?? 2);
+          if (q.returnDate && !demoPaths(to, from, q.maxStops ?? 2).length) continue;
+          for (const [i, path] of paths.entries()) fares.push(makeFare(q, path, i, today()));
         }
       }
       fares.sort((a, b) => a.price - b.price);
@@ -197,30 +181,32 @@ export function createMockStayProvider(): StayProvider {
     live: false,
     callsPerSearch: 0,
     async search(q: StayQuery): Promise<Stay[]> {
-      const ap = AIRPORT_BY_IATA[q.airport];
+      const locationAirport = q.location ? resolvePlace(q.location)?.airports[0] : q.airport;
+      const ap = AIRPORT_BY_IATA[locationAirport ?? q.airport];
       if (!ap) return [];
+      const city = q.location || ap.city;
       const cost = COUNTRIES[ap.country]?.costIndex ?? 1;
       const nights = Math.max(1, daysBetween(q.checkIn, q.checkOut));
       const season = seasonMult(q.checkIn);
       const out: Stay[] = [];
       const kindCount: Record<StayKind, number> = { hotel: 0, hostel: 0, rental: 0 };
       for (let i = 0; i < 14; i++) {
-        const seed = `${ap.city}|${i}`;
+        const seed = `${city}|${i}`;
         const kind: StayKind = i % 7 === 3 || i % 7 === 6 ? "hostel" : i % 3 === 1 ? "rental" : "hotel";
         const stars = kind === "hotel" ? 2 + Math.floor(hash01(seed + "st") * 4) : undefined;
         const base = kind === "hostel" ? 32 : kind === "rental" ? 115 : 70 + (stars ?? 3) * 38;
         const nightly = Math.round(base * cost * season * (0.75 + 0.5 * hash01(seed + q.checkIn)));
         const names = STAY_NAMES[kind];
-        const label = names[(kindCount[kind]++ + Math.floor(hash01(ap.city) * names.length)) % names.length];
+        const label = names[(kindCount[kind]++ + Math.floor(hash01(city) * names.length)) % names.length];
         const name =
-          kind === "hotel" ? `${label} Hotel ${ap.city}` : kind === "hostel" ? `${ap.city} ${label} Hostel` : `${label} near ${ap.city} center`;
+          kind === "hotel" ? `${label} Hotel ${city}` : kind === "hostel" ? `${city} ${label} Hostel` : `${label} near ${city} center`;
         out.push({
           id: `mockstay-${ap.iata}-${i}`,
           provider: "mock",
           name,
           kind,
-          lat: ap.lat + (hash01(seed + "lat") - 0.5) * 0.25,
-          lng: ap.lng + (hash01(seed + "lng") - 0.5) * 0.25,
+          lat: locationAirport ? ap.lat + (hash01(seed + "lat") - 0.5) * 0.25 : undefined,
+          lng: locationAirport ? ap.lng + (hash01(seed + "lng") - 0.5) * 0.25 : undefined,
           nightly,
           total: nightly * nights * Math.max(1, Math.ceil(q.adults / 2)),
           rating: Math.round((3.4 + hash01(seed + "rt") * 1.55) * 10) / 10,

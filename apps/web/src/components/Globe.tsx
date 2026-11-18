@@ -50,7 +50,7 @@ export function Globe() {
   const wrap = useRef<HTMLDivElement>(null);
   const globe = useRef<GlobeMethods | undefined>(undefined);
   const [size, setSize] = useState({ w: 600, h: 400 });
-  const request = useStore((s) => s.request);
+  const request = useStore((s) => s.submitted ?? s.request);
   const filterDest = useStore((s) => s.filterDest);
   const setFilterDest = useStore((s) => s.setFilterDest);
   const selected = useStore((s) => s.selectedFare);
@@ -94,19 +94,21 @@ export function Globe() {
     const out: ArcDatum[] = [];
     for (const f of destBest.values()) {
       if (filterDest && f.destination !== filterDest) continue;
-      const a = AIRPORT_BY_IATA[f.origin];
-      const b = AIRPORT_BY_IATA[f.destination];
-      if (!a || !b) continue;
       const t = (f.price - destMin) / span;
-      out.push({
-        startLat: a.lat,
-        startLng: a.lng,
-        endLat: b.lat,
-        endLng: b.lng,
-        color: [priceColor(t, 0.25), priceColor(t, 0.95)],
-        fare: f,
-        stroke: (selected?.destination === f.destination ? 1.2 : 0.55) * theme.arcScale,
-      });
+      for (const leg of f.outbound) {
+        const a = AIRPORT_BY_IATA[leg.from];
+        const b = AIRPORT_BY_IATA[leg.to];
+        if (!a || !b) continue;
+        out.push({
+          startLat: a.lat,
+          startLng: a.lng,
+          endLat: b.lat,
+          endLng: b.lng,
+          color: [priceColor(t, 0.25), priceColor(t, 0.95)],
+          fare: f,
+          stroke: (selected?.destination === f.destination ? 1.2 : 0.55) * theme.arcScale,
+        });
+      }
     }
     return out;
   }, [destBest, filterDest, destMin, span, selected, theme]);

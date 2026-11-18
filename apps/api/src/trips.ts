@@ -1,6 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
-import type { TripPlan } from "@farescope/shared";
+import { tripTotal, type TripPlan } from "@farescope/shared";
 
 /**
  * Saved trips, keyed by owner. Until Supabase auth lands (Phase 2b), the owner is an anonymous
@@ -20,7 +20,7 @@ export class TripStore {
     const trip: TripPlan = {
       ...input,
       id: randomUUID(),
-      total: input.fare.price + (input.stay?.total ?? 0),
+      total: tripTotal(input),
       createdAt: new Date().toISOString(),
     };
     this.db.prepare("INSERT INTO trips (id, owner, data, created_at) VALUES (?, ?, ?, ?)").run(trip.id, owner, JSON.stringify(trip), Date.now());
@@ -30,5 +30,14 @@ export class TripStore {
   remove(owner: string, id: string): boolean {
     const r = this.db.prepare("DELETE FROM trips WHERE owner = ? AND id = ?").run(owner, id);
     return Number(r.changes) > 0;
+  }
+
+  update(owner: string, id: string, input: Omit<TripPlan, "id" | "createdAt" | "total">): TripPlan | undefined {
+    const row = this.db.prepare("SELECT data FROM trips WHERE owner = ? AND id = ?").get(owner, id) as { data: string } | undefined;
+    if (!row) return undefined;
+    const original = JSON.parse(row.data) as TripPlan;
+    const trip = { ...input, id, createdAt: original.createdAt, total: tripTotal(input) };
+    this.db.prepare("UPDATE trips SET data = ? WHERE owner = ? AND id = ?").run(JSON.stringify(trip), owner, id);
+    return trip;
   }
 }

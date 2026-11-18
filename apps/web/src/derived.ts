@@ -14,6 +14,7 @@ export function useDerived() {
   const fares = useStore((s) => s.fares);
   const filterDest = useStore((s) => s.filterDest);
   const filterDate = useStore((s) => s.filterDate);
+  const sort = useStore((s) => s.sort);
 
   return useMemo(() => {
     const destBest = new Map<string, Fare>();
@@ -40,7 +41,7 @@ export function useDerived() {
     const seen = new Set<string>();
     const list = fares
       .filter((f) => (!filterDest || f.destination === filterDest) && (!filterDate || f.departDate === filterDate))
-      .sort((a, b) => a.price - b.price)
+      .sort((a, b) => (sort === "duration" ? a.durationMin - b.durationMin : sort === "stops" ? a.stops - b.stops : 0) || a.price - b.price)
       .filter((f) => {
         // collapse identical itineraries seen through overlapping queries
         const k = `${f.origin}${f.destination}${f.departDate}${f.returnDate}${f.price}${f.airlines.join()}`;
@@ -62,7 +63,7 @@ export function useDerived() {
       dayMax,
       destMin: Math.min(...destPrices),
       destMax: Math.max(...destPrices),
-      cheapest: list[0] as Fare | undefined,
+      cheapest: list.reduce<Fare | undefined>((best, fare) => !best || fare.price < best.price ? fare : best, undefined),
     };
-  }, [fares, filterDest, filterDate]);
+  }, [fares, filterDest, filterDate, sort]);
 }

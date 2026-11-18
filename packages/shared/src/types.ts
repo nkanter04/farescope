@@ -73,10 +73,12 @@ export interface Stay {
   provider: string;
   name: string;
   kind: StayKind;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   nightly: number;
   total: number;
+  totalBasis?: "quoted" | "nightly-estimate";
+  stale?: boolean;
   rating?: number;
   reviews?: number;
   stars?: number;
@@ -90,10 +92,25 @@ export interface Stay {
 export interface TripPlan {
   id: string;
   name: string;
+  /** Older saves predate the traveler-count snapshot. */
+  adults?: number;
   fare: Fare;
   stay?: Stay;
+  lodging?: LodgingStop[];
+  notes?: string;
+  search?: SearchRequest;
   total: number;
   createdAt: string;
+}
+
+export interface LodgingStop {
+  id: string;
+  place: string;
+  checkIn: string;
+  checkOut: string;
+  stay?: Stay;
+  /** A user-entered cost for accommodation arranged separately, including zero. */
+  ownCost?: number;
 }
 
 export interface QuotaStatus {
@@ -105,10 +122,16 @@ export interface QuotaStatus {
   dailyClientUsed: number;
 }
 
+export interface TripQuote {
+  fare: Fare;
+  stay: Stay;
+}
+
 /** Server-sent events streamed by POST /api/search. */
 export type SearchEvent =
   | { type: "start"; totalCandidates: number; plannedCalls: number; live: boolean }
   | { type: "fare"; fare: Fare }
+  | { type: "shortlist"; checked: number; planned: number; eligible: number; quotes: TripQuote[] }
   | { type: "insights"; route: string; insights: PriceInsights }
   | { type: "progress"; done: number; total: number; providerCalls: number }
   | { type: "notice"; level: "info" | "warn"; message: string }

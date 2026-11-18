@@ -4,7 +4,7 @@ import { PlaceInput } from "./PlaceInput.tsx";
 
 const CABIN_LABEL: Record<Cabin, string> = { economy: "Economy", premium: "Premium economy", business: "Business", first: "First" };
 
-export function SearchForm() {
+export function SearchForm({ onSearch }: { onSearch: () => void }) {
   const r = useStore((s) => s.request);
   const set = useStore((s) => s.setRequest);
   const run = useStore((s) => s.runSearch);
@@ -18,6 +18,7 @@ export function SearchForm() {
       className="search-form"
       onSubmit={(e) => {
         e.preventDefault();
+        onSearch();
         void run();
       }}
     >
@@ -97,23 +98,24 @@ export function SearchForm() {
             ))}
           </select>
         </div>
-        <div className="field">
-          <label htmlFor="stops">Stops</label>
-          <select
-            id="stops"
-            value={r.maxStops ?? "any"}
-            onChange={(e) => set({ maxStops: e.target.value === "any" ? null : (Number(e.target.value) as 0 | 1 | 2) })}
-          >
-            <option value="any">Any</option>
-            <option value="0">Nonstop only</option>
-            <option value="1">1 stop or fewer</option>
-            <option value="2">2 stops or fewer</option>
-          </select>
-        </div>
         <div className="field narrow">
           <label htmlFor="adults">Travelers</label>
           <input id="adults" type="number" min={1} max={9} value={r.adults} onChange={(e) => set({ adults: Math.max(1, Math.min(9, Number(e.target.value) || 1)) })} />
         </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="stops">Maximum stops</label>
+        <select
+          id="stops"
+          value={r.maxStops ?? "any"}
+          onChange={(e) => set({ maxStops: e.target.value === "any" ? null : (Number(e.target.value) as 0 | 1 | 2) })}
+        >
+          <option value="any">Any</option>
+          <option value="0">Nonstop only</option>
+          <option value="1">1 stop or fewer</option>
+          <option value="2">2 stops or fewer</option>
+        </select>
       </div>
 
       {status === "searching" ? (
@@ -122,7 +124,7 @@ export function SearchForm() {
         </button>
       ) : (
         <button type="submit" className="primary" disabled={!r.origins.length || !r.destinations.length}>
-          Find the cheapest trips
+          Search flights
         </button>
       )}
     </form>

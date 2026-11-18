@@ -7,6 +7,8 @@ import { buildFlightParams, createSerpApiFlightProvider, parseFlights, type Serp
 const flightsFixture = flightsJson as unknown as SerpFlightsResponse;
 import { buildHotelParams, createSerpApiStayProvider, parseHotels } from "./serpapi-hotels.ts";
 import type { FlightQuery } from "./types.ts";
+import routes from "./data/routes.json";
+import { stayQueryKey } from "./types.ts";
 
 const q: FlightQuery = {
   origins: ["AUS"],
@@ -19,6 +21,21 @@ const q: FlightQuery = {
 };
 
 describe("mock provider", () => {
+  it("filters real route paths without converting connections into nonstops", async () => {
+    const provider = createMockFlightProvider({ today: () => "2026-11-16" });
+    for (const [origin, destination] of [["AUS", "HND"], ["PHL", "HKG"]]) {
+      const query = { ...q, origins: [origin], destinations: [destination] };
+      expect((await provider.search({ ...query, maxStops: 0 })).fares).toEqual([]);
+      const connecting = (await provider.search({ ...query, maxStops: 2 })).fares;
+      expect(new Set(connecting.map(fare => fare.stops))).toEqual(new Set([1, 2]));
+      for (const fare of connecting) {
+        expect(fare.stops).toBe(fare.outbound.length - 1);
+        for (const leg of fare.outbound) expect((routes as Record<string, string[]>)[leg.from]).toContain(leg.to);
+      }
+      expect((await provider.search({ ...query, maxStops: 1 })).fares.every(fare => fare.stops === 1)).toBe(true);
+    }
+    expect((await provider.search({ ...q, origins: ["LAX"], destinations: ["NRT"], maxStops: 0 })).fares[0].stops).toBe(0);
+  });
   it("is deterministic and plausible", async () => {
     const p = createMockFlightProvider({ today: () => "2026-11-16" });
     const a = await p.search(q);
@@ -48,6 +65,10 @@ describe("mock provider", () => {
 });
 
 describe("serpapi flights", () => {
+  it("rejects connecting offers when nonstop is requested", () => {
+    expect(parseFlights(flightsFixture, { ...q, maxStops: 0 }).fares).toEqual([]);
+    expect(buildFlightParams({ ...q, maxStops: 2 }, "KEY").get("stops")).toBe("3");
+  });
   it("builds multi-airport params", () => {
     const p = buildFlightParams(q, "KEY");
     expect(p.get("departure_id")).toBe("AUS");
@@ -91,6 +112,15 @@ describe("serpapi hotels", () => {
   it("searches by city name", () => {
     expect(buildHotelParams(sq, "K", false).get("q")).toBe("Tokyo, Japan hotels and hostels");
     expect(buildHotelParams(sq, "K", true).get("vacation_rentals")).toBe("true");
+  });
+  it("honors locations outside the arrival city and separates their caches", async () => {
+    const kyoto = { ...sq, location: "Kyoto, Japan" };
+    expect(buildHotelParams(kyoto, "K", false).get("q")).toBe("Kyoto, Japan hotels and hostels");
+    expect(stayQueryKey("mock", kyoto)).not.toBe(stayQueryKey("mock", sq));
+    expect(stayQueryKey("mock", kyoto)).not.toBe(stayQueryKey("mock", { ...sq, location: "Nara, Japan" }));
+    const stays = await createMockStayProvider().search(kyoto);
+    expect(stays.every(stay => stay.name.includes("Kyoto, Japan"))).toBe(true);
+    expect(stays[0].lat).toBeUndefined();
   });
   it("parses properties, detects hostels, skips unpriced", () => {
     const stays = parseHotels(hotelsFixture, sq, false);

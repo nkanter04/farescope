@@ -1,8 +1,6 @@
-/**
- * Curated set of major airports for v1. Coordinates are approximate (~0.01 deg), good for the
- * globe and distance-based mock pricing. Later this can be generated from the public-domain
- * OurAirports dataset to cover every commercial airport.
- */
+import airportCatalog from "./data/airports.json";
+import countryCatalog from "./data/countries.json";
+/** Scheduled-service airport catalog with existing city labels preserved for saved searches. */
 export type Region =
   | "North America"
   | "Central America & Caribbean"
@@ -22,7 +20,7 @@ export interface Airport {
   lng: number;
 }
 
-export const COUNTRIES: Record<string, { name: string; region: Region; aliases?: string[]; costIndex: number }> = {
+const COUNTRY_OVERRIDES: Record<string, { name: string; region: Region; aliases?: string[]; costIndex: number }> = {
   US: { name: "United States", region: "North America", aliases: ["usa", "america", "united states of america"], costIndex: 1.0 },
   CA: { name: "Canada", region: "North America", costIndex: 0.95 },
   MX: { name: "Mexico", region: "Central America & Caribbean", costIndex: 0.55 },
@@ -58,6 +56,7 @@ export const COUNTRIES: Record<string, { name: string; region: Region; aliases?:
   BE: { name: "Belgium", region: "Europe", costIndex: 0.95 },
   PL: { name: "Poland", region: "Europe", costIndex: 0.55 },
   HU: { name: "Hungary", region: "Europe", costIndex: 0.55 },
+  RU: { name: "Russia", region: "Europe", aliases: ["russian federation", "россия"], costIndex: 1 },
   AE: { name: "United Arab Emirates", region: "Middle East", aliases: ["uae"], costIndex: 1.0 },
   QA: { name: "Qatar", region: "Middle East", costIndex: 1.0 },
   IL: { name: "Israel", region: "Middle East", costIndex: 1.1 },
@@ -91,7 +90,7 @@ const A = (iata: string, name: string, city: string, country: string, lat: numbe
   iata, name, city, country, lat, lng,
 });
 
-export const AIRPORTS: Airport[] = [
+const CURATED_AIRPORTS: Airport[] = [
   // United States
   A("AUS", "Austin-Bergstrom", "Austin", "US", 30.197, -97.666),
   A("DFW", "Dallas/Fort Worth", "Dallas", "US", 32.897, -97.038),
@@ -228,6 +227,18 @@ export const AIRPORTS: Airport[] = [
   A("PPT", "Papeete Tahiti", "Papeete", "PF", -17.554, -149.607),
 ];
 
+const CONTINENT_REGION: Record<string, Region> = {
+  AF: "Africa", AS: "Asia", EU: "Europe", NA: "Central America & Caribbean", SA: "South America", OC: "Oceania",
+};
+export const COUNTRIES: typeof COUNTRY_OVERRIDES = Object.fromEntries(countryCatalog
+  .filter(country => CONTINENT_REGION[country.continent])
+  .map(country => [country.code, COUNTRY_OVERRIDES[country.code] ??
+    { name: country.name, region: CONTINENT_REGION[country.continent], costIndex: 1 }]));
+
+// Country cost indexes are illustrative mock-price inputs, including the neutral default of 1.
+const byCode = new Map<string, Airport>(airportCatalog.map(airport => [airport.iata, airport]));
+for (const airport of CURATED_AIRPORTS) byCode.set(airport.iata, { ...byCode.get(airport.iata), ...airport });
+export const AIRPORTS: Airport[] = [...byCode.values()].filter(airport => COUNTRIES[airport.country]);
 export const AIRPORT_BY_IATA: Record<string, Airport> = Object.fromEntries(AIRPORTS.map((a) => [a.iata, a]));
 
 export const REGIONS: Region[] = [

@@ -2,9 +2,19 @@
 
 ### ▶ [Try the live demo](https://nkanter04.github.io/farescope/)
 
-Search whole regions and date windows at once ("Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights") to find the cheapest flights. The app also shows lodging for the chosen dates and saves trips to compare total cost. Results stream onto a 3D globe and a price calendar.
+Search whole regions and date windows at once ("Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights") to compare flights. Results stream into a list, price calendar, and 3D globe. Sort by combined price, airfare, outbound duration, or stops, then save options to your shortlist.
 
 The demo uses simulated prices and runs entirely in your browser. Saved trips stay in that browser. Real prices come from the API server described below.
+
+## Plan a flexible itinerary
+
+- Open a result or edit a saved trip. Add stays in any city, neighborhood, or address, with separate check-in and check-out dates. The flight destination does not restrict lodging searches.
+- Split a week between Tokyo and Kyoto, record accommodation already arranged (including free stays), or save a partial plan. Missing nights, overlapping dates, and unpriced stops are flagged; totals include only known airfare and accommodation costs.
+- Review the dated route and open each transfer in Google Maps. Transport costs are not included. Connecting flight schedules and prices in the demo are simulated using historical route data; see [DATA_SOURCES.md](DATA_SOURCES.md).
+- Name trips, add notes, reopen the original search, and compare up to three plans. A lowest-total label requires complete lodging coverage and comparable traveler counts and price sources.
+- Share a read-only snapshot of one trip or a comparison. The compressed link includes notes and saved prices; anyone with the link can read it. Edits require a new link. Links generated on localhost only work on that computer; use the published website for sharing with others. Links do not create shared accounts or collaborative editing.
+
+Existing single-hotel saves remain readable and can be edited into multiple stays. One-way trips can have dated stays but remain labeled as partial plans because there is no return date defining the end of the trip.
 
 ## Run it locally
 
@@ -42,4 +52,4 @@ Every real result is cached (6–48 h depending on how far out the date is) and 
 - Hosted Postgres; deployment (Vercel/Cloudflare + Render/Fly).
 - Price alerts.
 - The SerpApi fixtures in `apps/api/src/fixtures` are hand-built from SerpApi's documented response shape. Replace them with recorded responses once a key exists.
-- The airport list is a curated ~125 major airports. Generate it from OurAirports for full coverage.
+- Real-time route and schedule coverage, return-leg details, and multi-city/open-jaw flights. Airport search currently covers 4,007 airports; airport coverage does not guarantee an available flight.

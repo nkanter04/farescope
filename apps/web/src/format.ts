@@ -1,7 +1,22 @@
-import { AIRPORT_BY_IATA, parseISODate } from "@farescope/shared";
+import { AIRPORT_BY_IATA, parseISODate, tripStops, type Stay, type TripPlan } from "@farescope/shared";
+
+export function tripPriceNote(trip: Pick<TripPlan, "fare" | "stay" | "lodging">): string {
+  const stops = tripStops(trip);
+  return [trip.fare.stale || stops.some(stop => stop.stay?.stale) ? "Includes older prices" : "",
+    stops.some(stop => stop.stay?.totalBasis === "nightly-estimate") ? "Includes estimated accommodation" : ""].filter(Boolean).join(" · ");
+}
 
 const usd = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 export const money = (n: number) => usd.format(n);
+export const travelerCount = (adults?: number) =>
+  adults === undefined ? "Traveler count unknown" : `${adults} ${adults === 1 ? "adult" : "adults"}`;
+
+export const priceScope = (stay?: Stay | null) => {
+  if (!stay) return "Flight only";
+  if (stay.stale) return stay.totalBasis === "nightly-estimate" ? "Flight + older stay estimate" : "Flight + older stay price";
+  if (stay.totalBasis === "nightly-estimate") return "Flight + estimated stay";
+  return "Flight + stay";
+};
 
 export const duration = (min: number) => `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, "0")}m`;
 

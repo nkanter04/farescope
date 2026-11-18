@@ -1,4 +1,4 @@
-import type { Fare, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
+import type { LodgingStop, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
 function clientId(): string {
   const make = () => (crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
@@ -44,21 +44,14 @@ export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent)
   }
 }
 
-export async function fetchStays(fare: Fare, adults: number): Promise<{ stays: Stay[]; stale?: boolean; error?: string }> {
-  const checkIn = fare.outbound.at(-1)?.arrive.slice(0, 10) || fare.departDate;
-  const checkOut = fare.returnDate ?? addDaysLocal(checkIn, 3);
-  if (DEMO) return (await demo()).fetchStays(fare.destination, checkIn, checkOut, adults);
-  const qs = new URLSearchParams({ airport: fare.destination, checkIn, checkOut, adults: String(adults) });
+export async function fetchStays(airport: string, stop: LodgingStop, adults: number): Promise<{ stays: Stay[]; stale?: boolean; error?: string }> {
+  const { checkIn, checkOut, place } = stop;
+  if (DEMO) return (await demo()).fetchStays(airport, checkIn, checkOut, adults, place);
+  const qs = new URLSearchParams({ airport, checkIn, checkOut, location: place, adults: String(adults) });
   const res = await fetch(`/api/stays?${qs}`, { headers: headers() });
   const json = await res.json();
   if (!res.ok) return { stays: [], error: json.error ?? `HTTP ${res.status}` };
   return json;
-}
-
-function addDaysLocal(d: string, n: number): string {
-  const x = new Date(`${d}T00:00:00Z`);
-  x.setUTCDate(x.getUTCDate() + n);
-  return x.toISOString().slice(0, 10);
 }
 
 export async function fetchQuota(): Promise<QuotaStatus | undefined> {
@@ -77,14 +70,15 @@ export async function listTrips(): Promise<TripPlan[]> {
   return r.ok ? (await r.json()).trips : [];
 }
 
-export async function saveTrip(name: string, fare: Fare, stay?: Stay): Promise<TripPlan> {
-  if (DEMO) return (await demo()).saveTrip(name, fare, stay);
-  const r = await fetch("/api/trips", { method: "POST", headers: headers(), body: JSON.stringify({ name, fare, stay }) });
+export async function saveTrip(input: Omit<TripPlan, "id" | "total" | "createdAt">, id?: string): Promise<TripPlan> {
+  if (DEMO) return (await demo()).saveTrip(input, id);
+  const r = await fetch(id ? `/api/trips/${encodeURIComponent(id)}` : "/api/trips", { method: id ? "PUT" : "POST", headers: headers(), body: JSON.stringify(input) });
   if (!r.ok) throw new Error((await r.json()).error ?? "Could not save trip");
   return (await r.json()).trip;
 }
 
 export async function deleteTrip(id: string): Promise<void> {
   if (DEMO) return (await demo()).deleteTrip(id);
-  await fetch(`/api/trips/${id}`, { method: "DELETE", headers: headers() });
+  const response = await fetch(`/api/trips/${id}`, { method: "DELETE", headers: headers() });
+  if (!response.ok) throw new Error("Could not delete trip.");
 }

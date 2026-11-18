@@ -28,6 +28,7 @@ export interface FlightProvider {
 export interface StayQuery {
   /** Destination airport; the provider searches around its city. */
   airport: string;
+  location?: string;
   checkIn: string;
   checkOut: string;
   adults: number;
@@ -44,7 +45,8 @@ export interface StayProvider {
 export function flightQueryKey(provider: string, q: FlightQuery): string {
   return [
     "f",
-    provider,
+    // Retire cached synthetic nonstops from the previous mock generator.
+    provider === "mock" ? "mock-routes-v2" : provider,
     [...q.origins].sort().join(","),
     [...q.destinations].sort().join(","),
     q.departDate,
@@ -56,5 +58,6 @@ export function flightQueryKey(provider: string, q: FlightQuery): string {
 }
 
 export function stayQueryKey(provider: string, q: StayQuery): string {
-  return ["s", provider, q.airport, q.checkIn, q.checkOut, q.adults].join("|");
+  const key = ["s", provider, q.airport, q.checkIn, q.checkOut, q.adults].join("|");
+  return q.location ? `${key}|${encodeURIComponent(q.location.trim().toLowerCase())}` : key;
 }

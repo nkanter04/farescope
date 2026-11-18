@@ -3,8 +3,9 @@ import { SearchRequestSchema, type Fare, type SearchEvent } from "@farescope/sha
 import { QueryCache, ttlFor } from "../cache.ts";
 import { openDb } from "../db.ts";
 import { QuotaGuard } from "../quota.ts";
-import { createMockFlightProvider } from "../providers/mock.ts";
-import type { FlightProvider, FlightQuery } from "../providers/types.ts";
+import { createMockFlightProvider, createMockStayProvider } from "../providers/mock.ts";
+import { stayQueryKey, type FlightProvider, type FlightQuery, type StayProvider } from "../providers/types.ts";
+import { lookupStays } from "./stays.ts";
 import { planSearch, refineCandidates, sampleCandidates, spread } from "./planner.ts";
 import { runSearch } from "./run.ts";
 
@@ -13,7 +14,7 @@ const TODAY = "2026-11-16";
 
 const req = SearchRequestSchema.parse({
   origins: ["AUS"],
-  destinations: ["Japan"],
+  destinations: ["NRT", "HND", "KIX"],
   departFrom: "2027-03-01",
   departTo: "2027-03-31",
   tripType: "roundtrip",
@@ -22,6 +23,13 @@ const req = SearchRequestSchema.parse({
 });
 
 describe("planner", () => {
+  it("bounds the work list for global searches while retaining its full size", () => {
+    const plan = planSearch({ ...req, origins: ["anywhere"], destinations: ["anywhere"] },
+      { name: "mock", maxAirportsPerSide: 50 }, TODAY);
+    expect(plan.candidates).toHaveLength(40_000);
+    expect(plan.totalCandidates).toBeGreaterThan(40_000);
+    expect(new Set(plan.candidates.map(candidate => candidate.key)).size).toBe(40_000);
+  });
   it("expands places x dates x trip lengths", () => {
     const plan = planSearch(req, { name: "mock", maxAirportsPerSide: 50 }, TODAY);
     expect(plan.routeGroups).toBe(1);
@@ -97,13 +105,15 @@ function fakeLive(): FlightProvider & { calls: FlightQuery[] } {
   return { name: "fakelive", live: true, maxAirportsPerSide: 7, calls, search: async (q) => (calls.push(q), inner.search(q)) };
 }
 
-async function collect(provider: FlightProvider, opts: { perSearch: number; monthly?: number; db?: ReturnType<typeof openDb> }) {
+async function collect(provider: FlightProvider, opts: { perSearch: number; monthly?: number; db?: ReturnType<typeof openDb>;
+  stays?: StayProvider; request?: typeof req }) {
   const db = opts.db ?? openDb(":memory:");
   const events: SearchEvent[] = [];
   await runSearch(
-    req,
+    opts.request ?? req,
     {
       provider,
+      stays: opts.stays,
       cache: new QueryCache(db, () => NOW.getTime()),
       quota: new QuotaGuard(db, { monthlyBudget: opts.monthly ?? 100, dailyClientBudget: 100 }, () => NOW),
       clientId: "ip:test",
@@ -117,6 +127,66 @@ async function collect(provider: FlightProvider, opts: { perSearch: number; mont
 }
 
 describe("runSearch", () => {
+  it("ranks distinct flight and stay options by combined price for the submitted party", async () => {
+    const provider = createMockStayProvider();
+    const { events } = await collect(createMockFlightProvider({ today: () => TODAY }), {
+      perSearch: 0, stays: provider, request: { ...req, adults: 3 },
+    });
+    const shortlist = events.filter(e => e.type === "shortlist").at(-1)!;
+    expect(shortlist.checked).toBe(4);
+    expect(shortlist.eligible).toBeGreaterThan(4);
+    expect(shortlist.quotes).toHaveLength(4);
+    const totals = shortlist.quotes.map(({ fare, stay }) => fare.price + stay.total);
+    expect(totals).toEqual([...totals].sort((a, b) => a - b));
+    const keys = new Set<string>();
+    for (const { fare, stay } of shortlist.quotes) {
+      expect(stay.checkIn).toBe(fare.outbound.at(-1)?.arrive.slice(0, 10));
+      expect(stay.checkOut).toBe(fare.returnDate);
+      const query = { airport: fare.destination, checkIn: stay.checkIn, checkOut: stay.checkOut, adults: 3 };
+      keys.add(stayQueryKey(provider.name, query));
+      expect(stay.total).toBe(Math.min(...(await provider.search(query)).map(s => s.total)));
+    }
+    expect(keys.size).toBe(4);
+  });
+
+  it("charges flights and multi-call lodging against the same limit, including failed lookups", async () => {
+    const flights = fakeLive();
+    let calls = 0;
+    const stays = { ...createMockStayProvider(), live: true, callsPerSearch: 2, search: async () => {
+      calls++;
+      throw new Error("Unavailable");
+    } };
+    const { events, db } = await collect(flights, { perSearch: 6, stays });
+    expect(flights.calls).toHaveLength(4);
+    expect(calls).toBe(1);
+    expect(events.at(-1)).toMatchObject({ type: "done", providerCalls: 6 });
+    expect(events.filter(e => e.type === "shortlist").at(-1)?.quotes).toEqual([]);
+    expect(new QuotaGuard(db, { monthlyBudget: 100, dailyClientBudget: 100 }, () => NOW).remaining("ip:test")).toBe(94);
+  });
+
+  it("skips automatic lodging when a one-way search has no checkout date", async () => {
+    const { events } = await collect(fakeLive(), { perSearch: 2, stays: createMockStayProvider(), request: { ...req, tripType: "oneway" } });
+    expect(events.some(e => e.type === "shortlist")).toBe(false);
+    expect(events.at(-1)).toMatchObject({ type: "done", providerCalls: 2 });
+  });
+
+  it("reuses fresh lodging and serves marked expired quotes without a partial quota charge", async () => {
+    let stamp = NOW.getTime();
+    const db = openDb(":memory:");
+    const cache = new QueryCache(db, () => stamp);
+    const quota = new QuotaGuard(db, { monthlyBudget: 3, dailyClientBudget: 3 }, () => NOW);
+    const stays = { ...createMockStayProvider(), live: true, callsPerSearch: 2 };
+    const query = { airport: "HND", checkIn: "2027-03-01", checkOut: "2027-03-08", adults: 2 };
+    const lookup = () => lookupStays(query, stays, cache, quota, "a", 2, NOW);
+    expect((await lookup()).units).toBe(2);
+    expect(await lookup()).toMatchObject({ units: 0, cached: true });
+    stamp += 7 * 86_400_000;
+    const expired = await lookup();
+    expect(expired).toMatchObject({ units: 0, cached: true, stale: true });
+    expect(expired.stays[0].stale).toBe(true);
+    expect(quota.remaining("a")).toBe(1);
+  });
+
   it("covers every candidate with a free provider", async () => {
     const { events, fares } = await collect(createMockFlightProvider({ today: () => TODAY }), { perSearch: 0 });
     const done = events.find((e) => e.type === "done")!;

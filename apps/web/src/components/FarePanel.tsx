@@ -1,120 +1,71 @@
 import { useState } from "react";
-import { cityOf, duration, money, shortDate, stopsLabel } from "../format.ts";
+import { addDays, AIRPORT_BY_IATA, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
+import { cityOf, duration, money, shortDate, stopsLabel, travelerCount, tripPriceNote } from "../format.ts";
 import { useStore } from "../store.ts";
+import { LodgingEditor } from "./LodgingEditor.tsx";
+import { TripTimeline } from "./TripTimeline.tsx";
 
-/** Selected flight -> lodging at the destination for those nights -> trip total -> save. */
 export function FarePanel() {
-  const fare = useStore((s) => s.selectedFare);
-  const stays = useStore((s) => s.stays);
-  const staysStatus = useStore((s) => s.staysStatus);
-  const staysError = useStore((s) => s.staysError);
-  const stayKind = useStore((s) => s.stayKind);
-  const setStayKind = useStore((s) => s.setStayKind);
-  const selectedStay = useStore((s) => s.selectedStay);
-  const selectStay = useStore((s) => s.selectStay);
-  const selectFare = useStore((s) => s.selectFare);
-  const save = useStore((s) => s.saveCurrentTrip);
-  const [saved, setSaved] = useState<string | null>(null);
-
-  if (!fare) return null;
-  const shown = stays.filter((s) => stayKind === "all" || s.kind === stayKind);
-  const total = fare.price + (selectedStay?.total ?? 0);
-  const defaultName = `${cityOf(fare.destination)} · ${shortDate(fare.departDate)}`;
-
-  return (
-    <section className="fare-panel" aria-label="Selected trip">
-      <div className="panel-head">
-        <button className="link" onClick={() => void selectFare(null)}>
-          ← Back to results
-        </button>
+  const draft = useStore(state => state.draft);
+  const setDraft = useStore(state => state.setDraft);
+  const selectFare = useStore(state => state.selectFare);
+  const save = useStore(state => state.saveCurrentTrip);
+  const [status, setStatus] = useState("");
+  const [saving, setSaving] = useState(false);
+  if (!draft) return null;
+  const { fare } = draft;
+  const stops = draft.lodging ?? [];
+  const coverage = lodgingCoverage(fare, stops);
+  const valid = draft.name.trim() && stops.every(stop => stop.place.trim() && stop.checkIn && stop.checkOut > stop.checkIn);
+  const addStop = () => {
+    setStatus("");
+    const arrival = fare.outbound.at(-1)?.arrive.slice(0, 10) || fare.departDate;
+    const checkIn = [...stops].sort((a, b) => a.checkOut.localeCompare(b.checkOut)).at(-1)?.checkOut ?? arrival;
+    const airport = AIRPORT_BY_IATA[fare.destination];
+    const place = stops.length ? "" : `${cityOf(fare.destination)}, ${COUNTRIES[airport?.country]?.name ?? ""}`;
+    setDraft({ lodging: [...stops, { id: crypto.randomUUID(), place, checkIn,
+      checkOut: fare.returnDate && checkIn < fare.returnDate ? addDays(checkIn, 1) : "" }] });
+  };
+  return <section className="fare-panel">
+    <button className="link" onClick={() => void selectFare(null)}>← Back to results</button>
+    <div className="card flight-summary">
+      <div className="fare-main"><strong>{cityOf(fare.origin)} → {cityOf(fare.destination)}</strong><strong className="price">{money(fare.price)}</strong></div>
+      <p>{shortDate(fare.departDate)}{fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {stopsLabel(fare.stops)} outbound · {duration(fare.durationMin)}</p>
+      <details><summary>Flight segments</summary><ol>{fare.outbound.map((leg, i) => <li key={i}>
+        {leg.from} → {leg.to} · {leg.airline} {leg.flightNumber} · {leg.depart} – {leg.arrive}
+      </li>)}</ol></details>
+      {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
+      {fare.bookingUrl?.startsWith("https://") && <a className="secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer">Search these flight dates ↗</a>}
+    </div>
+    <div className="row">
+      <label className="field">Trip name<input maxLength={120} value={draft.name} onChange={event => { setDraft({ name: event.target.value }); setStatus(""); }} /></label>
+      {!draft.adults && <label className="field">Adults<input type="number" min={1} max={9} placeholder="Unknown" onChange={event => setDraft({ adults: Math.max(1, Math.min(9, Number(event.target.value))) })} /></label>}
+    </div>
+    <div className="editor-heading"><h2>Where you’ll stay</h2><button className="secondary" disabled={stops.length >= 30} onClick={addStop}>Add a stay</button></div>
+    {!stops.length && <p className="muted">Choose any city, neighborhood, or address and the nights you’ll spend there.</p>}
+    {stops.map(stop => <LodgingEditor key={stop.id} fare={fare} stop={stop} adults={draft.adults}
+      onChange={patch => { setDraft({ lodging: stops.map(item => item.id === stop.id ? { ...item, ...patch } : item) }); setStatus(""); }}
+      onRemove={() => { setDraft({ lodging: stops.filter(item => item.id !== stop.id) }); setStatus(""); }} />)}
+    {coverage.conflict && <p className="notice warn">Some stays overlap or fall outside your flight dates. Check the dates before booking.</p>}
+    {coverage.gaps > 0 && <p className="notice info">{coverage.gaps} {coverage.gaps === 1 ? "night" : "nights"} still to plan. Add accommodation or record a stay you’ve arranged yourself.</p>}
+    {coverage.unpriced > 0 && <p className="muted small">{coverage.unpriced} {coverage.unpriced === 1 ? "stay has" : "stays have"} no cost yet.</p>}
+    {!!stops.length && <TripTimeline fare={fare} stops={stops} />}
+    <label className="field">Trip notes<textarea rows={3} maxLength={5000} value={draft.notes ?? ""} placeholder="Train plans, places to visit, or questions for your travel companion"
+      onChange={event => { setDraft({ notes: event.target.value }); setStatus(""); }} /></label>
+    <div className="trip-total">
+      <div><div className="muted small">{coverage.complete ? "Flight + planned accommodation" : "Known costs so far"} · {travelerCount(draft.adults)}</div>
+        <div className="big">{money(tripTotal(draft))}</div>
+        {tripPriceNote(draft) && <div className="stale small">{tripPriceNote(draft)}</div>}
+        <div className="muted small">Airfare {money(fare.price)} + accommodation {money(tripTotal(draft) - fare.price)}</div>
       </div>
-
-      <div className="card">
-        <div className="fare-main">
-          <span className="route">
-            {cityOf(fare.origin)} → {cityOf(fare.destination)}
-          </span>
-          <span className="price">{money(fare.price)}</span>
-        </div>
-        <div className="fare-sub muted">
-          {shortDate(fare.departDate)}
-          {fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {stopsLabel(fare.stops)} · {duration(fare.durationMin)}
-        </div>
-        <ol className="legs">
-          {fare.outbound.map((l, i) => (
-            <li key={i}>
-              <b>
-                {l.from} → {l.to}
-              </b>{" "}
-              {l.airline} {l.flightNumber}
-              <span className="muted">
-                {" "}
-                {l.depart.slice(11)} – {l.arrive.slice(11)}
-                {l.arrive.slice(0, 10) !== l.depart.slice(0, 10) ? " (+1)" : ""}
-              </span>
-            </li>
-          ))}
-        </ol>
-        {fare.returnDate && <p className="muted small">Price is the round-trip total. Return flight options are shown on the booking site.</p>}
-        {fare.bookingUrl && (
-          <a className="button secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer noopener">
-            View on Google Flights ↗
-          </a>
-        )}
-      </div>
-
-      <h3>Where to stay in {cityOf(fare.destination)}</h3>
-      <div className="seg small" role="radiogroup" aria-label="Lodging type">
-        {(["all", "hotel", "hostel", "rental"] as const).map((k) => (
-          <button key={k} role="radio" aria-checked={stayKind === k} className={stayKind === k ? "on" : ""} onClick={() => setStayKind(k)}>
-            {k === "all" ? "All" : k === "rental" ? "Rentals" : `${k[0].toUpperCase()}${k.slice(1)}s`}
-          </button>
-        ))}
-      </div>
-      {staysStatus === "loading" && <div className="empty">Finding stays…</div>}
-      {staysStatus === "error" && <div className="notice warn">{staysError}</div>}
-      {staysStatus === "done" && shown.length === 0 && <div className="empty">No stays of this type found.</div>}
-      <ul className="stay-list">
-        {shown.map((s) => (
-          <li key={s.id}>
-            <button className={`stay ${selectedStay?.id === s.id ? "sel" : ""}`} onClick={() => selectStay(selectedStay?.id === s.id ? null : s)}>
-              <div className="fare-main">
-                <span className="stay-name">{s.name}</span>
-                <span className="price">{money(s.total)}</span>
-              </div>
-              <div className="fare-sub muted">
-                <span>
-                  <span className={`kind kind-${s.kind}`}>{s.kind}</span>
-                  {s.stars ? ` ${"★".repeat(s.stars)}` : ""}
-                  {s.rating ? ` · ${s.rating.toFixed(1)} (${s.reviews?.toLocaleString() ?? 0})` : ""}
-                </span>
-                <span>{money(s.nightly)}/night</span>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <div className="trip-total">
-        <div>
-          <div className="muted small">Trip total</div>
-          <div className="big">{money(total)}</div>
-          <div className="muted small">
-            Flight {money(fare.price)}
-            {selectedStay ? ` + stay ${money(selectedStay.total)}` : " · pick a stay to add it"}
-          </div>
-        </div>
-        <button
-          className="primary"
-          onClick={async () => {
-            await save(defaultName);
-            setSaved(defaultName);
-          }}
-        >
-          Save trip
-        </button>
-      </div>
-      {saved && <div className="notice info">Saved “{saved}”. See it under My trips.</div>}
-    </section>
-  );
+      <button className="primary" disabled={!valid || saving} onClick={async () => {
+        setSaving(true);
+        setStatus("Saving…");
+        try { setStatus(await save() ? "Saved to My trips." : "Saved. Your newer edits still need saving."); }
+        catch (error) { setStatus((error as Error).message); }
+        finally { setSaving(false); }
+      }}>{saving ? "Saving…" : draft.id ? "Save changes" : "Save trip"}</button>
+    </div>
+    {status && <p role="status" className="notice info">{status}</p>}
+  </section>;
 }
