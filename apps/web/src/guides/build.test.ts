@@ -69,6 +69,6 @@ describe("static guide pages", () => {
   });
 
   it("keeps the app's month-label index in sync with the guides (run npm run guides:build)", () => {
-    expect(readFileSync(MONTH_INDEX_PATH, "utf8")).toBe(monthIndexJson());
+    expect(readFileSync(MONTH_INDEX_PATH, "utf8").replace(/\r\n/g, "\n")).toBe(monthIndexJson());
   });
 });
