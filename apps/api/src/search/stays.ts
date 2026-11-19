@@ -3,7 +3,7 @@ import { stayQueryKey, type StayProvider, type StayQuery } from "../providers/ty
 import { ttlFor } from "../ttl.ts";
 import type { SearchCache, SearchQuota } from "./run.ts";
 
-/** Shared by automatic shortlisting and the individual lodging endpoint. */
+/** Lodging lookup for the trip planner (GET /api/stays): cache-first, reserving all its quota units at once. */
 export async function lookupStays(query: StayQuery, provider: StayProvider, cache: SearchCache,
   quota: SearchQuota, clientId: string, availableUnits: number, now: Date) {
   const key = stayQueryKey(provider.name, query);

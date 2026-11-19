@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
+import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type TripPlan } from "@farescope/shared";
 import { deleteTrip, fetchFareDetails, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
 
 /** Shared empty airline filter (stable identity for React selectors). */
@@ -39,14 +39,13 @@ interface State {
   progress: { done: number; total: number; providerCalls: number; planned: number; candidates: number };
   notices: Notice[];
   fares: Fare[];
-  shortlist?: Extract<SearchEvent, { type: "shortlist" }>;
   filterDest: string | null;
   filterDate: string | null;
   selectedFare: Fare | null;
   /** Loading real itineraries for a selected date-grid price. */
   details?: { fareId: string; status: "loading" | "error"; message?: string };
   draft?: TripDraft;
-  sort: "price" | "airfare" | "duration" | "stops";
+  sort: "price" | "duration" | "stops";
   trips: TripPlan[];
   compare: string[];
   quota?: QuotaStatus;
@@ -59,12 +58,12 @@ interface State {
   goHome(): void;
   setFilterDest(d: string | null): void;
   setFilterDate(d: string | null): void;
-  selectFare(f: Fare | null, quotedStay?: Stay): Promise<void>;
+  selectFare(f: Fare | null): Promise<void>;
   setSort(sort: State["sort"]): void;
   setDraft(patch: Partial<TripDraft>): void;
   openTrip(trip: TripPlan): void;
   saveCurrentTrip(): Promise<boolean>;
-  saveResult(fare: Fare, stay?: Stay): Promise<void>;
+  saveResult(fare: Fare): Promise<void>;
   loadTrips(): Promise<void>;
   removeTrip(id: string): Promise<void>;
   toggleCompare(id: string): void;
@@ -116,7 +115,6 @@ export const useStore = create<State>((set, get) => ({
       submitted,
       status: "searching",
       fares: [],
-      shortlist: undefined,
       notices: [],
       filterDest: null,
       filterDate: null,
@@ -144,9 +142,6 @@ export const useStore = create<State>((set, get) => ({
         case "fare":
           pending.push(e.fare);
           if (!raf) raf = requestAnimationFrame(flush);
-          break;
-        case "shortlist":
-          set({ shortlist: e });
           break;
         case "progress":
           set({ progress: { ...get().progress, done: e.done, total: e.total, providerCalls: e.providerCalls } });
@@ -180,13 +175,13 @@ export const useStore = create<State>((set, get) => ({
   },
   goHome() {
     controller?.abort();
-    set({ view: "search", submitted: undefined, status: "idle", fares: [], shortlist: undefined, notices: [], selectedFare: null, details: undefined, draft: undefined, filterDest: null, filterDate: null });
+    set({ view: "search", submitted: undefined, status: "idle", fares: [], notices: [], selectedFare: null, details: undefined, draft: undefined, filterDest: null, filterDate: null });
   },
 
   setFilterDest: (filterDest) => set({ filterDest }),
   setFilterDate: (filterDate) => set({ filterDate }),
 
-  async selectFare(fare, quotedStay) {
+  async selectFare(fare) {
     if (fare?.priceOnly) {
       // A date-grid price has no itinerary yet: fetch the real flights for these dates, then open the cheapest.
       set({ selectedFare: fare, draft: undefined, details: { fareId: fare.id, status: "loading" } });
@@ -200,14 +195,14 @@ export const useStore = create<State>((set, get) => ({
         return;
       }
       set({ fares: mergeFares(get().fares, result.fares), details: undefined });
-      return get().selectFare(cheapest, quotedStay);
+      return get().selectFare(cheapest);
     }
     set({ selectedFare: fare, details: undefined });
     if (!fare || get().draft?.fare.id === fare.id) return;
     const search = get().submitted;
     const place = AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination;
     set({ draft: { name: `${place} · ${fare.departDate}`, fare, adults: search?.adults, search, notes: "",
-      lodging: quotedStay ? [{ id: crypto.randomUUID(), place, checkIn: quotedStay.checkIn, checkOut: quotedStay.checkOut, stay: quotedStay }] : [] } });
+      lodging: [] } });
   },
 
   setSort: sort => set({ sort }),
@@ -224,10 +219,10 @@ export const useStore = create<State>((set, get) => ({
     return current === draft;
   },
 
-  async saveResult(fare, stay) {
+  async saveResult(fare) {
     const search = get().submitted;
     const trip = await saveTrip({ name: `${AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination} · ${fare.departDate}`,
-      fare, stay, adults: search?.adults, search });
+      fare, adults: search?.adults, search });
     set({ trips: [trip, ...get().trips] });
   },
 

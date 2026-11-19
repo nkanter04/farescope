@@ -136,7 +136,6 @@ export function createApi(deps: ApiDeps): Hono {
         try {
           await runSearch(parsed.data, {
             provider: flights,
-            stays,
             cache,
             quota,
             clientId,

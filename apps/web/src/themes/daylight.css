@@ -237,13 +237,7 @@ input[type="checkbox"] { width: 16px; height: 16px; min-height: 0; padding: 0; a
 
 /* ---------- Results ---------- */
 .results { margin-top: 24px; }
-.combined-results { margin-bottom: 26px; }
-.combined-results p { margin: 6px 0 12px; }
 .airfare-heading { margin-bottom: 12px; }
-.quote-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
-.quote-grid .quote { display: grid; align-content: start; gap: 5px; height: 100%; font-size: .83rem; }
-.quote .price { margin-top: 5px; font-size: 1.28rem; }
-.quote .route small { color: var(--muted); font-weight: 500; }
 .progress {
   position: relative; background: var(--panel-2); border-radius: var(--radius-sm); overflow: hidden;
   padding: 9px 12px; font-size: 0.82rem; font-weight: 500; color: var(--text-2); margin-bottom: 10px;
@@ -365,8 +359,6 @@ th[scope="row"] { color: var(--muted); font-weight: 500; width: 120px; }
 /* ---------- Flexible itineraries ---------- */
 textarea { font: inherit; color: var(--text); background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px; width: 100%; resize: vertical; }
 .results-sort { max-width: 360px; margin-bottom: 20px; }
-.quote-grid > li { display: flex; flex-direction: column; min-width: 0; }
-.quote-grid .quote { flex: 1; height: auto; }
 .result-save { padding: 8px 4px 12px; display: flex; flex-wrap: wrap; gap: 8px; }
 .result-save .link { min-height: 32px; }
 .link:disabled { color: var(--muted); text-decoration: none; }

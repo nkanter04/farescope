@@ -197,16 +197,10 @@ export interface QuotaStatus {
   dailyClientUsed: number;
 }
 
-export interface TripQuote {
-  fare: Fare;
-  stay: Stay;
-}
-
 /** Server-sent events streamed by POST /api/search. */
 export type SearchEvent =
   | { type: "start"; totalCandidates: number; plannedCalls: number; live: boolean }
   | { type: "fare"; fare: Fare }
-  | { type: "shortlist"; checked: number; planned: number; eligible: number; quotes: TripQuote[] }
   | { type: "insights"; route: string; insights: PriceInsights }
   | { type: "progress"; done: number; total: number; providerCalls: number }
   | { type: "notice"; level: "info" | "warn"; message: string }

@@ -62,7 +62,7 @@ export function FarePanel() {
     {planning && <NightPlanner fare={fare} stops={stops} cancel={() => setPlanning(false)} apply={lodging => {
       setDraft({ lodging }); setPlanning(false); setStatus("Route applied. Save your trip to keep these stays.");
     }} />}
-    {!planning && !stops.length && <p className="muted">Choose any city, neighborhood, or address and the nights you’ll spend there.</p>}
+    {!planning && !stops.length && <p className="muted">Stays are booked separately from the flight. Add a stay to compare hotels for your dates, or plan several stops by nights.</p>}
     {!planning && stops.map(stop => <LodgingEditor key={stop.id} fare={fare} stop={stop} adults={draft.adults}
       onChange={patch => { setDraft({ lodging: stops.map(item => item.id === stop.id ? { ...item, ...patch } : item) }); setStatus(""); }}
       onRemove={() => { setDraft({ lodging: stops.filter(item => item.id !== stop.id) }); setStatus(""); }} />)}

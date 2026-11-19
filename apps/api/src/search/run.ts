@@ -1,9 +1,7 @@
-import { addDays, AIRPORT_BY_IATA, daysBetween, REGION_IDS, fareMatchesAirlines, resolveAll, resolvePlace, todayISO, type Place, type Fare, type SearchEvent, type SearchRequest, type TripQuote } from "@farescope/shared";
+import { addDays, AIRPORT_BY_IATA, daysBetween, REGION_IDS, fareMatchesAirlines, resolveAll, resolvePlace, todayISO, type Place, type Fare, type SearchEvent, type SearchRequest } from "@farescope/shared";
 import type { Cabin } from "@farescope/shared";
 import { ttlFor } from "../ttl.ts";
-import { calendarQueryKey, exploreQueryKey, flightQueryKey, type CalendarPrice, type CalendarQuery, type ExploreDeal, type ExploreQuery, type FlightProvider, type FlightQuery, type FlightResult, type StayProvider } from "../providers/types.ts";
-import { SHORTLIST_LIMIT, shortlistCandidates } from "./shortlist.ts";
-import { lookupStays } from "./stays.ts";
+import { calendarQueryKey, exploreQueryKey, flightQueryKey, type CalendarPrice, type CalendarQuery, type ExploreDeal, type ExploreQuery, type FlightProvider, type FlightQuery, type FlightResult } from "../providers/types.ts";
 import { planSearch, refineCandidates, sampleCandidates, type Candidate } from "./planner.ts";
 
 /**
@@ -22,7 +20,6 @@ export interface SearchQuota {
 
 export interface RunDeps {
   provider: FlightProvider;
-  stays?: StayProvider;
   cache: SearchCache;
   quota: SearchQuota;
   clientId: string;
@@ -64,18 +61,15 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
     (hit && !hit.expired ? fresh : uncached).push(c);
   }
 
-  // Quick searches (the explore page) only want prices: no itinerary lookups, no lodging.
-  const stayProvider = req.tripType === "roundtrip" && !req.quick ? deps.stays : undefined;
+  // Searches price flights only; stays are looked up separately when planning a trip (/api/stays).
   const liveLimit = Math.min(deps.perSearchBudget, quota.remaining(deps.clientId));
-  // Reserve whole lodging lookups while leaving at least half the cold-search budget for flights.
-  const cost = stayProvider?.live ? stayProvider.callsPerSearch : 0;
-  const reserved = cost ? cost * Math.min(SHORTLIST_LIMIT, Math.floor(liveLimit / (2 * cost))) : 0;
-  const budget = provider.live ? liveLimit - reserved : deps.freeCallCap;
-  const shortlistFares: Fare[] = [];
+  const budget = provider.live ? liveLimit : deps.freeCallCap;
   // Price grids: "anywhere" and regions through explore, named places through the calendar.
   const today = todayISO(now());
   const exploreAll = provider.explore ? planExplore(req, today) : [];
-  const gridBudget = Math.max(budget, deps.perSearchBudget - (cost ? cost * Math.min(SHORTLIST_LIMIT, Math.floor(deps.perSearchBudget / (2 * cost))) : 0));
+  // Plan grid calls for the full per-search budget even when the live budget is short or gone:
+  // calls beyond it only read the cache (see fetchGrid), so cached prices still show.
+  const gridBudget = provider.live ? Math.max(budget, deps.perSearchBudget) : budget;
   const exploreJobs = exploreAll.slice(0, Math.max(0, req.quick ? gridBudget : gridBudget - 1));
   const calendarRoutes = provider.calendar ? planCalendarRoutes(req, { skipBroad: !!provider.explore }) : [];
   const calendarPlan = { routes: calendarRoutes, departFrom: plan.departFrom, departTo: plan.departTo };
@@ -146,7 +140,6 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
     for (const f of send.values()) {
       fareCount++;
       const fare = { ...f, cached: flags.cached, stale: flags.stale, queryKey: c.key };
-      if (stayProvider && !fare.priceOnly) shortlistFares.push(fare);
       emit({ type: "fare", fare });
     }
   };
@@ -345,27 +338,6 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
   }
 
   emit({ type: "progress", done, total: done, providerCalls });
-  if (stayProvider && !deps.signal?.aborted) {
-    const { eligible, selected } = shortlistCandidates(shortlistFares, req.departFrom);
-    const quotes: TripQuote[] = [];
-    let unitsLeft = liveLimit - (provider.live ? providerCalls : 0);
-    const report = (checked: number) => emit({ type: "shortlist", eligible, planned: selected.length, checked, quotes: [...quotes] });
-    report(0);
-    for (const [i, candidate] of selected.entries()) {
-      if (deps.signal?.aborted) break;
-      const { fare, checkIn, checkOut } = candidate;
-      const result = await lookupStays({ airport: fare.destination, checkIn, checkOut, adults: req.adults },
-        stayProvider, cache, quota, deps.clientId, unitsLeft, now());
-      unitsLeft -= result.units;
-      providerCalls += result.units;
-      if (deps.signal?.aborted) break;
-      const stay = result.stays.reduce<typeof result.stays[number] | undefined>(
-        (best, item) => !best || item.total < best.total ? item : best, undefined);
-      if (stay) quotes.push({ fare, stay });
-      quotes.sort((a, b) => (a.fare.price + a.stay.total) - (b.fare.price + b.stay.total));
-      report(i + 1);
-    }
-  }
   emit({ type: "done", fares: fareCount, providerCalls, cacheHits });
 }
 

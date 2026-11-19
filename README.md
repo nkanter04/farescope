@@ -4,7 +4,7 @@
 
 ### ▶ [Try the live demo](https://nkanter04.github.io/farescope/)
 
-Search whole regions and date windows at once ("Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights") to compare flights. Results stream into a list, price calendar, and 3D globe. Sort by combined price, airfare, outbound duration, or stops, then save options to your shortlist.
+Search whole regions and date windows at once ("Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights") to compare flights. Results stream into a list, price calendar, and 3D globe. Sort by price, outbound duration, or stops, then save flights to My trips. Pick a flight to plan stays separately, one stop or several.
 
 The demo uses simulated prices and runs entirely in your browser. Saved trips stay in that browser. Real prices come from the API server described below.
 
