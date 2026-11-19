@@ -17,6 +17,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      # Affiliate link templates (public). Set in GitHub → Settings → Secrets and variables → Actions → Variables.
+      VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

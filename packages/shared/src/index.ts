@@ -8,3 +8,4 @@ export * from "./forecast.ts";
 export * from "./airlines.ts";
 export * from "./forecast-eval.ts";
 export * from "./guides.ts";
+export * from "./booking.ts";

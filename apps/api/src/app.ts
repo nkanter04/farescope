@@ -12,6 +12,8 @@ import { openDb } from "./db.ts";
 import { createMockFlightProvider, createMockStayProvider } from "./providers/mock.ts";
 import { createSerpApiFlightProvider } from "./providers/serpapi-flights.ts";
 import { createSerpApiStayProvider } from "./providers/serpapi-hotels.ts";
+import { createTravelpayoutsFlightProvider } from "./providers/travelpayouts-flights.ts";
+import { createNoStayProvider } from "./providers/none.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
 import { lookupStays } from "./search/stays.ts";
 import { QuotaGuard } from "./quota.ts";
@@ -47,9 +49,21 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
   const watches = new WatchStore(db);
   const priceHistory = new PriceHistory(db);
   const flights =
-    overrides.flights ?? (cfg.provider === "serpapi" ? createSerpApiFlightProvider({ apiKey: cfg.serpapiKey }) : createMockFlightProvider());
+    overrides.flights ??
+    (cfg.provider === "serpapi"
+      ? createSerpApiFlightProvider({ apiKey: cfg.serpapiKey })
+      : cfg.provider === "travelpayouts"
+        ? createTravelpayoutsFlightProvider({ token: cfg.travelpayoutsToken, marker: cfg.travelpayoutsMarker || undefined })
+        : createMockFlightProvider());
+  // Real flights never get paired with simulated hotel prices: without a lodging source the app
+  // shows "lodging prices unavailable" plus booking links instead.
   const stays =
-    overrides.stays ?? (cfg.provider === "serpapi" ? createSerpApiStayProvider({ apiKey: cfg.serpapiKey }) : createMockStayProvider());
+    overrides.stays ??
+    (cfg.serpapiKey && cfg.provider !== "mock"
+      ? createSerpApiStayProvider({ apiKey: cfg.serpapiKey })
+      : cfg.provider === "mock"
+        ? createMockStayProvider()
+        : createNoStayProvider());
 
   app.addHook("onClose", async () => db.close());
 

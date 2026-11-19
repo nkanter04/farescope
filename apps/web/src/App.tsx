@@ -4,6 +4,7 @@ import { FarePanel } from "./components/FarePanel.tsx";
 import { PriceCalendar } from "./components/PriceCalendar.tsx";
 import { ResultsList } from "./components/ResultsList.tsx";
 import { SearchForm } from "./components/SearchForm.tsx";
+import { ExploreHome } from "./components/ExploreHome.tsx";
 import { TripsView } from "./components/TripsView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
 import { DEMO } from "./api.ts";
@@ -39,8 +40,9 @@ export function App() {
   const searching = useStore((s) => s.status === "searching");
   const cancel = useStore((s) => s.cancelSearch);
   const [panel, setPanel] = useState<typeof searchViews[number]>("List");
-  const [editing, setEditing] = useState(true);
+  const [editing, setEditing] = useState(false);
   const [hash, setHash] = useState(window.location.hash);
+  const exploring = !submitted && !selected;
   const route = (tokens: string[]) => tokens.map((token) => resolvePlace(token)?.label ?? token).join(", ");
 
   useEffect(() => {
@@ -71,10 +73,10 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <div className="brand">
+        <a className="brand" href="./" onClick={(e) => { e.preventDefault(); useStore.getState().goHome(); }} aria-label="Tripica home: explore cheap places">
           <Logo size={32} />
           Tripica
-        </div>
+        </a>
         {DEMO && (
           <a className="gh" href="https://github.com/nkanter04/farescope" target="_blank" rel="noreferrer noopener">
             Source on GitHub ↗
@@ -109,6 +111,7 @@ export function App() {
             </div>
           </aside>
           <section className="stage">
+            {exploring ? <ExploreHome /> : <>
             <header className="search-heading">
               <h1>{selected ? `${selected.origin} → ${selected.destination}` : `${route(request.origins) || "Origin"} → ${route(request.destinations) || "Destination"}`}</h1>
               {!selected && <p className="muted">{shortDate(request.departFrom)} – {shortDate(request.departTo)} · {travelerCount(request.adults)}</p>}
@@ -117,12 +120,10 @@ export function App() {
               {searchViews.map((name) => <button key={name} className={name === panel ? "on" : ""} aria-pressed={name === panel} onClick={() => setPanel(name)}>{name}</button>)}
             </div>
             {searching && !editing && <button className="link mobile-cancel" onClick={cancel}>Stop search</button>}
-            {panel === "List" && (selected ? <FarePanel key={selected.id} /> : <>
-              {!submitted && <p className="muted">Search your date range to compare airfares. For round trips, you’ll also see flight and stay prices together.</p>}
-              <ResultsList />
-            </>)}
+            {panel === "List" && (selected ? <FarePanel key={selected.id} /> : <ResultsList />)}
             {panel === "Calendar" && <PriceCalendar />}
             {panel === "Map" && <MapBoundary><Suspense fallback={<p role="status">Loading the globe…</p>}><Globe /></Suspense></MapBoundary>}
+            </>}
           </section>
         </main>
       ) : (

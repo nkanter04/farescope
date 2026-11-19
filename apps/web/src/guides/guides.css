@@ -107,3 +107,10 @@ h2 { font-size: 1.3rem; letter-spacing: -0.01em; margin: 36px 0 12px; }
   .g-chart { overflow-x: auto; padding: 12px; }
   .g-chart svg { min-width: 600px; }
 }
+
+.g-plan { margin-top: 32px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow-sm); }
+.g-plan h2 { margin-top: 0; }
+.g-plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.g-plan li { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; }
+.g-plan li strong { min-width: 110px; }
+.g-plan a { font-weight: 600; }

@@ -271,3 +271,8 @@ function summarize(d: Destination, months: MonthGuide[], best: number[], busiest
   const tail = peakFree.length ? `, so trips are usually cheaper than in ${monthRanges(peakFree)}` : "";
   return `Best value: ${monthRanges(best)}, with ${listJoin(reasons)}${tail}.`;
 }
+
+/** Compact per-destination month labels for the app (the explore page), keyed by guide slug. */
+export function guideMonthIndex(guides: DestinationGuide[]): Record<string, { name: string; labels: MonthLabel[]; best: number[] }> {
+  return Object.fromEntries(guides.map((g) => [g.destination.slug, { name: g.destination.name, labels: g.months.map((m) => m.label), best: g.best }]));
+}

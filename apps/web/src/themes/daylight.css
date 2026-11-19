@@ -89,7 +89,7 @@ h3 { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.005em; margin: 18p
   box-shadow: 0 1px 0 var(--line), 0 4px 16px rgba(16, 32, 64, 0.04);
   position: sticky; top: 0; z-index: 10;
 }
-.brand { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; display: flex; gap: 10px; align-items: center; color: var(--text); }
+.brand { text-decoration: none; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; display: flex; gap: 10px; align-items: center; color: var(--text); }
 .brand-mark { flex: 0 0 auto; display: block; border-radius: 10px; box-shadow: 0 2px 6px rgba(21, 112, 232, 0.3); }
 .tabs { display: flex; gap: 2px; padding: 3px; background: var(--panel-2); border-radius: 12px; }
 .tabs button {
@@ -565,3 +565,51 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 .guides-link:hover { background: var(--panel-2); color: var(--accent); }
 .guide-link { display: block; margin-top: 12px; font-weight: 600; font-size: 0.92rem; color: var(--accent); text-decoration: none; }
 .guide-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+
+/* ---------- Book / partner links ---------- */
+.book-links { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.book-btn {
+  display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px; font-weight: 600; font-size: 0.9rem;
+  background: var(--panel); border: 1px solid var(--line-strong); color: var(--text); text-decoration: none;
+}
+.book-btn:hover { border-color: var(--accent); color: var(--accent); }
+.book-btn.primary-link { background: var(--accent); border-color: var(--accent); color: #fff; }
+.book-btn.primary-link:hover { background: var(--accent-hover); color: #fff; }
+.disclosure { flex-basis: 100%; }
+.plan-extras { margin-top: 12px; }
+.plan-extras h3 { margin: 0; }
+
+/* Explore home: cheapest places from your origin, by month */
+.explore { display: grid; gap: 14px; min-width: 0; }
+.explore-head h1 { margin: 0 0 4px; font-size: 1.5rem; letter-spacing: -0.01em; }
+.explore-head p { margin: 0; }
+.demo-note { color: var(--warn); font-weight: 600; }
+.explore-months { display: flex; gap: 6px; flex-wrap: wrap; }
+.explore-months .chip-btn { padding: 6px 14px; font-size: 0.88rem; }
+.explore-empty { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 12px; justify-items: start; }
+.explore-empty p { margin: 0; color: var(--text-2); }
+.explore-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.explore-grid[aria-busy="true"] { opacity: 0.85; }
+.explore-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow-xs); display: grid; grid-template-rows: 1fr auto; min-width: 0; overflow: hidden; transition: box-shadow 0.15s var(--ease), border-color 0.15s var(--ease); }
+.explore-card:hover { box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+.explore-open { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "rank where from" "rank when when"; align-content: start; column-gap: 10px; row-gap: 4px; padding: 14px 14px 10px; align-items: baseline; min-width: 0; }
+.explore-open:focus-visible { outline: 3px solid var(--accent-ring); outline-offset: -3px; border-radius: var(--radius); }
+.explore-open .rank { grid-area: rank; align-self: start; width: 24px; height: 24px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.78rem; font-weight: 700; display: grid; place-items: center; }
+.explore-open .where { grid-area: where; display: grid; min-width: 0; }
+.explore-open .where strong { font-size: 1.02rem; overflow-wrap: anywhere; }
+.explore-open .where .muted { font-size: 0.82rem; }
+.explore-open .from { grid-area: from; text-align: right; white-space: nowrap; }
+.explore-open .from .muted { font-size: 0.78rem; }
+.explore-open .from strong { font-size: 1.08rem; color: var(--good); }
+.explore-open .when { grid-area: when; font-size: 0.8rem; }
+.explore-guide { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 14px; border-top: 1px solid var(--line); font-size: 0.8rem; font-weight: 600; color: var(--accent); text-decoration: none; background: var(--panel-2); }
+.explore-guide:hover { text-decoration: underline; text-underline-offset: 3px; }
+.season { border-radius: 999px; padding: 2px 8px; font-size: 0.72rem; font-weight: 700; text-decoration: none; display: inline-block; }
+.season.good { background: var(--good-soft); color: var(--good); }
+.season.mid { background: var(--accent-soft); color: #0b4fa8; }
+.season.busy { background: var(--warn-soft); color: var(--warn); }
+.season.off { background: var(--panel-3); color: var(--text-2); }
+.explore-controls { display: flex; gap: 10px 14px; flex-wrap: wrap; align-items: center; }
+.explore-scope { padding: 3px; }
+.explore-scope button { padding: 5px 14px; font-size: 0.86rem; }

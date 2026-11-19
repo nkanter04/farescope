@@ -1,0 +1,41 @@
+{
+  "_note": "Hand-built. origin/destination/origin_airport/destination_airport/price/airline/flight_number/departure_at follow Travelpayouts' documented example; return_at, transfers, duration_to and link are assumed and must be confirmed with a live call.",
+  "success": true,
+  "currency": "usd",
+  "data": [
+    {
+      "origin": "AUS",
+      "destination": "TYO",
+      "origin_airport": "AUS",
+      "destination_airport": "HND",
+      "price": 1104,
+      "airline": "NH",
+      "flight_number": "113",
+      "departure_at": "2027-04-03T10:25:00-05:00",
+      "return_at": "2027-04-12T17:10:00+09:00",
+      "transfers": 1,
+      "duration_to": 1015,
+      "link": "/search/AUS0304TYO12041?t=NH17940000001794060900000101HNDAUS_example"
+    },
+    {
+      "origin": "AUS",
+      "destination": "TYO",
+      "origin_airport": "AUS",
+      "destination_airport": "NRT",
+      "price": 987,
+      "airline": "UA",
+      "flight_number": 1650,
+      "departure_at": "2027-04-03T06:00:00-05:00",
+      "return_at": "2027-04-12T15:05:00+09:00",
+      "transfers": 2,
+      "duration_to": 1240
+    },
+    {
+      "origin": "AUS",
+      "destination": "TYO",
+      "price": 0,
+      "airline": "XX",
+      "departure_at": "2027-04-03T06:00:00-05:00"
+    }
+  ]
+}

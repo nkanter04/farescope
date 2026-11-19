@@ -5,6 +5,7 @@ import { cityOf, duration, money, shortDate, stopsLabel, travelerCount, tripPric
 import { useStore } from "../store.ts";
 import { LodgingEditor } from "./LodgingEditor.tsx";
 import { PriceInsight } from "./PriceInsight.tsx";
+import { BookLinks } from "./BookLinks.tsx";
 import { guideForAirport } from "../urlSearch.ts";
 import { TripTimeline } from "./TripTimeline.tsx";
 
@@ -40,7 +41,8 @@ export function FarePanel() {
         <span>{leg.from} → {leg.to} · {leg.airline} {leg.flightNumber} · {leg.depart} – {leg.arrive}</span>
       </li>)}</ol></details>
       {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
-      {fare.bookingUrl?.startsWith("https://") && <a className="secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer">Search these flight dates ↗</a>}
+      <BookLinks kind="flight" primary ctx={{ origin: fare.origin, destination: fare.destination, depart: fare.departDate, return: fare.returnDate, adults: draft.adults ?? 1 }} />
+      {fare.bookingUrl?.startsWith("https://") && !fare.bookingUrl.includes("google.com/travel/flights") && <a className="book-btn" href={fare.bookingUrl} target="_blank" rel="noreferrer">See this fare on the provider ↗</a>}
     </div>
     {(() => {
       const guide = guideForAirport(fare.destination);
@@ -60,6 +62,17 @@ export function FarePanel() {
     {coverage.gaps > 0 && <p className="notice info">{coverage.gaps} {coverage.gaps === 1 ? "night" : "nights"} still to plan. Add accommodation or record a stay you’ve arranged yourself.</p>}
     {coverage.unpriced > 0 && <p className="muted small">{coverage.unpriced} {coverage.unpriced === 1 ? "stay has" : "stays have"} no cost yet.</p>}
     {!!stops.length && <TripTimeline fare={fare} stops={stops} />}
+    {(() => {
+      const airport = AIRPORT_BY_IATA[fare.destination];
+      const city = airport?.city ?? fare.destination;
+      const country = COUNTRIES[airport?.country ?? ""]?.name;
+      const arrive = fare.outbound.at(-1)?.arrive.slice(0, 10) || fare.departDate;
+      return <section className="card plan-extras" aria-label="More for this trip">
+        <h3>More for {city}</h3>
+        <BookLinks kind="activity" ctx={{ city, country }} />
+        <BookLinks kind="car" ctx={{ city, country, checkIn: arrive, checkOut: fare.returnDate }} />
+      </section>;
+    })()}
     <label className="field">Trip notes<textarea rows={3} maxLength={5000} value={draft.notes ?? ""} placeholder="Train plans, places to visit, or questions for your travel companion"
       onChange={event => { setDraft({ notes: event.target.value }); setStatus(""); }} /></label>
     <div className="trip-total">

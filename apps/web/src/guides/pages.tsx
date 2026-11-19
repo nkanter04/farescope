@@ -10,8 +10,11 @@ import {
   mmToIn,
   monthRanges,
   tempText,
+  bookingLinks,
+  type BookingKind,
   type DestinationGuide,
   type MonthGuide,
+  type PartnerTemplate,
 } from "@farescope/shared";
 
 /**
@@ -26,6 +29,8 @@ export interface SiteConfig {
   today: string;
   /** Short hash of guides.css, so browsers fetch the new stylesheet after each deploy. */
   cssVersion?: string;
+  /** Partner (affiliate) link templates; empty = plain public search links. */
+  partners?: PartnerTemplate[];
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();
@@ -206,7 +211,35 @@ export function DestinationPage({ guide, site }: { guide: DestinationGuide; site
         months for {d.name}: {best.join(", ") || "none stand out"}.
       </p>
       <p><a className="g-cta" href={appLink(root, d.searchTo)}>Search all dates to {d.name} →</a></p>
+      <PlanLinks name={d.name} country={countryName(d.country)} site={site} />
     </Layout>
+  );
+}
+
+const PLAN: { kind: BookingKind; label: string }[] = [
+  { kind: "stay", label: "Hotels" },
+  { kind: "hostel", label: "Hostels" },
+  { kind: "activity", label: "Things to do" },
+  { kind: "car", label: "Car rental" },
+];
+
+/** Where to book the rest of the trip. Partner links carry affiliate IDs, so the disclosure shows with them. */
+function PlanLinks({ name, country, site }: { name: string; country: string; site: SiteConfig }) {
+  const rows = PLAN.map((p) => ({ ...p, links: bookingLinks(p.kind, { city: name, country }, site.partners ?? []) })).filter((r) => r.links.length);
+  if (!rows.length) return null;
+  return (
+    <section className="g-plan">
+      <h2>Plan the rest of your {name} trip</h2>
+      <ul>
+        {rows.map((r) => (
+          <li key={r.kind}>
+            <strong>{r.label}</strong>
+            {r.links.map((l) => <a key={l.url} href={l.url} rel="noreferrer sponsored" target="_blank">{l.partner} ↗</a>)}
+          </li>
+        ))}
+      </ul>
+      {rows.some((r) => r.links.some((l) => l.affiliate)) && <p className="g-muted">Tripica may earn a commission if you book through these links.</p>}
+    </section>
   );
 }
 

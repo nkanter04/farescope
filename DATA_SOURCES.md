@@ -29,6 +29,13 @@ To regenerate, download these files into a local directory and run the import sc
 - Open-Meteo and Meteostat are not used: their free tiers are non-commercial.
 - Cached responses live in `data/guides/raw/`. Refresh them with `npm run guides:fetch`.
 
+## Flight prices and booking links
+
+- **Demo:** simulated prices only (`providers/mock.ts`), always labeled.
+- **SerpApi** (paid, Google Flights / Google Hotels results): `PROVIDER=serpapi`.
+- **Travelpayouts / Aviasales Data API** (`PROVIDER=travelpayouts`): cached fares from recent Aviasales searches, free for Travelpayouts affiliates under their program terms. Prices can be hours or days old and routes nobody searched recently return nothing. Bookings through its links (with your marker) earn commission. Field names beyond the documented example are unconfirmed until a live call; see `apps/api/src/fixtures/travelpayouts-aus-tyo.json`.
+- **Booking links** for hotels, hostels, activities and cars are plain Google searches unless partner templates are configured in `VITE_PARTNER_LINKS`. Follow each partner's terms, and keep the on-page commission disclosure.
+
 ## Airline logos
 
 Airline names and logos are the airlines' trademarks, shown only to identify which airline operates a flight. With live data, each flight segment's logo URL comes from the provider (SerpApi returns Google Flights' logo URLs). The demo uses the same public CDN (`www.gstatic.com/flights/airline_logos/70px/<IATA>.png`) for airlines in `packages/shared/src/airlines.ts` only, and falls back to a brand-colored badge with the IATA code. Before a commercial launch, confirm the terms for displaying logos or switch to a licensed logo source.

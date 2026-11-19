@@ -3,6 +3,7 @@ import { daysBetween, suggestPlaces, type Fare, type LodgingStop, type Stay, typ
 import { fetchStays } from "../api.ts";
 import { money } from "../format.ts";
 import { useStore } from "../store.ts";
+import { BookLinks } from "./BookLinks.tsx";
 
 export function LodgingEditor({ fare, stop, adults, onChange, onRemove }: {
   fare: Fare; stop: LodgingStop; adults?: number; onChange(patch: Partial<LodgingStop>): void; onRemove(): void;
@@ -65,6 +66,7 @@ export function LodgingEditor({ fare, stop, adults, onChange, onRemove }: {
         <strong>{stop.stay.name}</strong><span>{stop.stay.totalBasis === "nightly-estimate" && "Est. "}{money(stop.stay.total)} for this stay</span>
         {stop.stay.stale && <span className="stale">Older price</span>}
         {stop.stay.url?.startsWith("https://") && <a href={stop.stay.url} target="_blank" rel="noreferrer">View accommodation ↗</a>}
+        <BookLinks kind={stop.stay.kind === "hostel" ? "hostel" : "stay"} ctx={{ city: stop.place, checkIn: stop.checkIn, checkOut: stop.checkOut, adults }} />
         <button className="link" onClick={() => onChange({ stay: undefined })}>Clear accommodation</button>
       </div>}
       <div className="editor-actions">
@@ -75,6 +77,7 @@ export function LodgingEditor({ fare, stop, adults, onChange, onRemove }: {
       </div>
       {!adults && <p className="muted small">Set the traveler count above to search stays.</p>}
       {error && <p role="alert" className="notice error">{error}</p>}
+      {stop.place.trim().length >= 2 && stop.checkOut > stop.checkIn && <BookLinks kind={kind === "hostel" ? "hostel" : "stay"} ctx={{ city: stop.place, checkIn: stop.checkIn, checkOut: stop.checkOut, adults }} />}
       {status === "done" && !error && !results.some(stay => kind === "all" || stay.kind === kind) && <p role="status">No stays found for these dates and preferences.</p>}
       <ul className="stay-list">{results.filter(stay => kind === "all" || stay.kind === kind).map(stay => <li key={stay.id}>
         <button className={`stay ${stop.stay?.id === stay.id ? "sel" : ""}`} onClick={() => { onChange({ stay, ownCost: undefined }); setResults([]); setStatus("idle"); }}>

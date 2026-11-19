@@ -13,7 +13,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { fileURLToPath } from "node:url";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { buildGuide, DESTINATIONS, todayISO, type ClimateRaw, type DestinationGuide, type Holiday } from "@farescope/shared";
+import { buildGuide, DESTINATIONS, guideMonthIndex, parsePartnerTemplates, todayISO, type ClimateRaw, type DestinationGuide, type Holiday } from "@farescope/shared";
 import { DestinationPage, IndexPage, MonthPage, monthSlug, type SiteConfig } from "./pages.tsx";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
@@ -32,6 +32,12 @@ export function loadGuides(): DestinationGuide[] {
   });
 }
 
+/** The app's explore page reads month labels from this committed file (a test keeps it current). */
+export const MONTH_INDEX_PATH = fileURLToPath(new URL("../explore/month-index.json", import.meta.url));
+export const monthIndexJson = (guides = loadGuides()) =>
+  `{\n${Object.entries(guideMonthIndex(guides)).map(([slug, v]) => `  ${JSON.stringify(slug)}: ${JSON.stringify(v)}`).join(",\n")}\n}
+`;
+
 export function renderPage(element: ReactElement): string {
   return `<!doctype html>${renderToStaticMarkup(element)}`;
 }
@@ -43,7 +49,11 @@ function write(path: string, html: string) {
 
 export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
   const cssPath = fileURLToPath(new URL("./guides.css", import.meta.url));
-  const site = { ...siteIn, cssVersion: createHash("sha1").update(readFileSync(cssPath)).digest("hex").slice(0, 8) };
+  const site = {
+    ...siteIn,
+    cssVersion: createHash("sha1").update(readFileSync(cssPath)).digest("hex").slice(0, 8),
+    partners: siteIn.partners ?? parsePartnerTemplates(process.env.VITE_PARTNER_LINKS).templates,
+  };
   const guides = loadGuides();
   const paths: string[] = ["", "guides/"];
   write(`${outDir}/guides/index.html`, renderPage(<IndexPage guides={guides} site={site} />));
@@ -69,5 +79,6 @@ export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const siteUrl = (process.env.SITE_URL ?? "https://nkanter04.github.io/farescope").replace(/\/$/, "");
   const paths = buildAll({ siteUrl, today: todayISO() });
+  writeFileSync(MONTH_INDEX_PATH, monthIndexJson());
   console.log(`Wrote ${paths.length - 1} guide pages, sitemap.xml and robots.txt to ${out} (site ${siteUrl}).`);
 }

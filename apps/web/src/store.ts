@@ -34,6 +34,8 @@ interface State {
   setRequest(patch: Partial<SearchRequest>): void;
   runSearch(): Promise<void>;
   cancelSearch(): void;
+  /** Back to the explore home page (keeps the form's values). */
+  goHome(): void;
   setFilterDest(d: string | null): void;
   setFilterDate(d: string | null): void;
   selectFare(f: Fare | null, quotedStay?: Stay): Promise<void>;
@@ -153,6 +155,10 @@ export const useStore = create<State>((set, get) => ({
   cancelSearch() {
     controller?.abort();
     set({ status: "done" });
+  },
+  goHome() {
+    controller?.abort();
+    set({ view: "search", submitted: undefined, status: "idle", fares: [], shortlist: undefined, notices: [], selectedFare: null, draft: undefined, filterDest: null, filterDate: null });
   },
 
   setFilterDest: (filterDest) => set({ filterDest }),
