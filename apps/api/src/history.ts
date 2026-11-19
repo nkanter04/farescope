@@ -33,6 +33,28 @@ export class PriceHistory {
     }
     return [...byKey.values()].filter((s) => s.points.length >= 2).slice(0, limitSeries);
   }
+
+  /**
+   * Series from the older, unscoped price_history table (recorded before searches were scoped by
+   * cabin and party). Split by cabin; party size is unknown there, so only the backtest uses it.
+   */
+  legacySeries(limitSeries = 500): CurveSeries[] {
+    const rows = this.db
+      .prepare(
+        `SELECT origin || destination || depart_date || IFNULL(return_date, '') || cabin AS k, depart_date AS depart,
+                date(fetched_at / 1000, 'unixepoch') AS day, MIN(price) AS price
+         FROM price_history WHERE depart_date >= date('now', '-400 days')
+         GROUP BY k, day ORDER BY k, day LIMIT 50000`,
+      )
+      .all() as { k: string; depart: string; day: string; price: number }[];
+    const byKey = new Map<string, CurveSeries>();
+    for (const r of rows) {
+      let s = byKey.get(r.k);
+      if (!s) byKey.set(r.k, (s = { departDate: r.depart, points: [] }));
+      s.points.push({ date: r.day, price: r.price });
+    }
+    return [...byKey.values()].filter((s) => s.points.length >= 2).slice(0, limitSeries);
+  }
 }
 
 export class WatchStore {

@@ -31,7 +31,10 @@ function realSeries(): CurveSeries[] {
   if (!existsSync(dbPath)) return [];
   const db = openDb(dbPath);
   try {
-    return new PriceHistory(db).series(5000);
+    // Scoped observations first; older unscoped rows still count for the backtest.
+    const history = new PriceHistory(db);
+    const scoped = history.series(5000);
+    return scoped.length >= MIN_REAL_SERIES ? scoped : [...scoped, ...history.legacySeries(5000)];
   } finally {
     db.close();
   }

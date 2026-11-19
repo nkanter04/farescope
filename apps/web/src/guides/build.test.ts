@@ -13,7 +13,7 @@ const page = (p: string) => readFileSync(join(out, p), "utf8");
 
 describe("static guide pages", () => {
   it("writes an index, one page per destination, 12 month pages and a sitemap", () => {
-    expect(paths).toHaveLength(2 + DESTINATIONS.length + 12);
+    expect(paths).toHaveLength(2 + DESTINATIONS.length + 12 + 2); // + privacy and terms
     const sitemap = page("sitemap.xml");
     expect(sitemap.match(/<url>/g)).toHaveLength(paths.length);
     expect(sitemap).toContain("<loc>https://example.test/fs/guides/kyoto/</loc>");
@@ -74,5 +74,22 @@ describe("static guide pages", () => {
 
   it("loads the Travelpayouts Drive script on guide pages", () => {
     expect(page("guides/index.html")).toContain('src="https://emrldco.com/NjAzODE1.js?t=603815"');
+  });
+
+  it("renders styled privacy and terms pages that state retention, with a contact only when configured", () => {
+    const privacy = page("privacy/index.html");
+    expect(privacy).toContain("guides.css");
+    expect(privacy).toContain("deleted after 31 days");
+    expect(privacy).toContain("Turnstile Privacy Addendum");
+    expect(privacy).not.toContain("NASA POWER"); // data credits only on guide pages
+    expect(page("terms/index.html")).toContain("Terms of use");
+    expect(readFileSync(join(out, "sitemap.xml"), "utf8")).toContain("/privacy/");
+    const withContact = mkdtempSync(join(tmpdir(), "guides-contact-"));
+    try {
+      buildAll({ siteUrl: "https://example.test", today: "2026-11-19", contactEmail: "hello@example.test" }, withContact);
+      expect(readFileSync(join(withContact, "privacy/index.html"), "utf8")).toContain("mailto:hello@example.test");
+    } finally {
+      rmSync(withContact, { recursive: true, force: true });
+    }
   });
 });

@@ -20,6 +20,8 @@ jobs:
     env:
       # Affiliate link templates (public). Set in GitHub → Settings → Secrets and variables → Actions → Variables.
       VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}
+      # Public contact address shown on the privacy and terms pages.
+      CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -70,6 +72,7 @@ jobs:
         if: env.HAS_TOKEN == 'true'
         env:
           TRIPICA_LIVE_BUILD: "true"
+          CONTACT_EMAIL: ${{ vars.CONTACT_EMAIL }}
           CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
           SITE_URL: ${{ vars.CF_SITE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}

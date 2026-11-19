@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildGuide, DESTINATIONS, guideMonthIndex, parsePartnerTemplates, todayISO, type ClimateRaw, type DestinationGuide, type Holiday } from "@farescope/shared";
-import { DestinationPage, IndexPage, MonthPage, monthSlug, type SiteConfig } from "./pages.tsx";
+import { DestinationPage, IndexPage, MonthPage, monthSlug, PrivacyPage, TermsPage, type SiteConfig } from "./pages.tsx";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const raw = `${root}data/guides/raw`;
@@ -65,6 +65,9 @@ export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
     write(`${outDir}/guides/month/${monthSlug(m)}/index.html`, renderPage(<MonthPage month={m} guides={guides} site={site} />));
     paths.push(`guides/month/${monthSlug(m)}/`);
   }
+  write(`${outDir}/privacy/index.html`, renderPage(<PrivacyPage site={site} />));
+  write(`${outDir}/terms/index.html`, renderPage(<TermsPage site={site} />));
+  paths.push("privacy/", "terms/");
   mkdirSync(`${outDir}/guides`, { recursive: true });
   copyFileSync(cssPath, `${outDir}/guides/guides.css`);
   const sitemap =
@@ -86,7 +89,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     const script = '<script defer src="./measurement.js"' + (analyticsToken ? ' data-token="' + analyticsToken + '"' : '') + '></script>';
     writeFileSync(appPage, readFileSync(appPage, "utf8").replace("</head>", script + "</head>"));
   }
-  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken });
+  const rawEmail = process.env.CONTACT_EMAIL?.trim();
+  const contactEmail = rawEmail && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(rawEmail) ? rawEmail : undefined;
+  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken, contactEmail });
   writeFileSync(MONTH_INDEX_PATH, monthIndexJson());
   console.log(`Wrote ${paths.length - 1} guide pages, sitemap.xml and robots.txt to ${out} (site ${siteUrl}).`);
 }

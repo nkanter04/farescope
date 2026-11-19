@@ -114,3 +114,10 @@ h2 { font-size: 1.3rem; letter-spacing: -0.01em; margin: 36px 0 12px; }
 .g-plan li { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; }
 .g-plan li strong { min-width: 110px; }
 .g-plan a { font-weight: 600; }
+
+/* Privacy and terms */
+.g-legal { max-width: 46rem; }
+.g-legal h2 { margin-top: 2rem; }
+.g-legal ul { padding-left: 1.2rem; }
+.g-legal li { margin: 0.4rem 0; }
+.g-updated { color: var(--muted); font-size: 0.9rem; margin-top: -0.5rem; }

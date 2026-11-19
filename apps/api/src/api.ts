@@ -4,6 +4,7 @@ import { CABINS, FareSchema, SearchRequestSchema, type QuotaStatus, type SearchE
 import { QueryCache } from "./cache.ts";
 import { PriceHistory, WatchStore } from "./history.ts";
 import { QuotaGuard } from "./quota.ts";
+import { dailyPruner } from "./prune.ts";
 import type { SqlDb } from "./sql.ts";
 import { TripStore } from "./trips.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
@@ -99,6 +100,12 @@ export function createApi(deps: ApiDeps): Hono {
   const gate = async (c: Context) => (flights.live && deps.liveGate ? deps.liveGate(c) : undefined);
 
   const app = new Hono();
+  // Retention: delete IP-keyed counters after 31 days (checked at most once a day).
+  const prune = dailyPruner(db);
+  app.use(async (_c, next) => {
+    try { prune(); } catch (e) { deps.log?.("prune failed", e); }
+    await next();
+  });
   deps.extend?.(app);
 
   app.get("/api/health", (c) => c.json({ ok: true, provider: flights.name, live: flights.live }));

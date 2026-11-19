@@ -1,5 +1,6 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
+import { PrivacyContent, TermsContent } from "./legal.tsx";
 import type { ReactNode } from "react";
 import { Logo } from "../components/Logo.tsx";
 import {
@@ -36,6 +37,8 @@ export interface SiteConfig {
   partners?: PartnerTemplate[];
   measure?: boolean;
   analyticsToken?: string;
+  /** Public contact address for the privacy and terms pages. */
+  contactEmail?: string;
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();
@@ -56,7 +59,7 @@ export function appLink(root: string, searchTo: string, month?: string): string 
   return `${root}?${q}`;
 }
 
-function Layout(props: { title: string; description: string; path: string; root: string; site: SiteConfig; jsonLd?: object; children: ReactNode }) {
+function Layout(props: { title: string; description: string; path: string; root: string; site: SiteConfig; jsonLd?: object; dataCredits?: boolean; children: ReactNode }) {
   const canonical = `${props.site.siteUrl}/${props.path}`;
   return (
     <html lang="en">
@@ -69,7 +72,7 @@ function Layout(props: { title: string; description: string; path: string; root:
         <title>{props.title}</title>
         <meta name="description" content={props.description} />
         <link rel="canonical" href={canonical} />
-        <meta property="og:type" content="article" />
+        <meta property="og:type" content={props.dataCredits === false ? "website" : "article"} />
         <meta property="og:site_name" content="Tripica" />
         <meta property="og:title" content={props.title} />
         <meta property="og:description" content={props.description} />
@@ -91,11 +94,11 @@ function Layout(props: { title: string; description: string; path: string; root:
         </header>
         <main className="g-main">{props.children}</main>
         <footer className="g-foot">
-          <p>
+          {props.dataCredits !== false && <p>
             Climate: <a href="https://power.larc.nasa.gov/">NASA POWER</a> monthly averages (2001–2025) for the surrounding ~50 km area; city-center
             temperatures can differ by a few degrees. Public holidays: <a href="https://date.nager.at/">Nager.Date</a>. Seasonal events and the
             demand estimates are Tripica's own. Prices depend on dates and availability; nothing here is a price quote.
-          </p>
+          </p>}
           <p><a href={props.root + "privacy/"}>Privacy</a> · <a href={props.root + "terms/"}>Terms</a></p>
           <p>Tripica is operated by Kanter Capital LLC.</p>
         </footer>
@@ -331,6 +334,22 @@ export function IndexPage({ guides, site }: { guides: DestinationGuide[]; site: 
           </ul>
         </section>
       ))}
+    </Layout>
+  );
+}
+
+export function PrivacyPage({ site }: { site: SiteConfig }) {
+  return (
+    <Layout title="Privacy policy · Tripica" description="What Tripica collects, why, and how long it keeps it." path="privacy/" root="../" site={site} dataCredits={false}>
+      <PrivacyContent site={site} />
+    </Layout>
+  );
+}
+
+export function TermsPage({ site }: { site: SiteConfig }) {
+  return (
+    <Layout title="Terms of use · Tripica" description="The terms for using Tripica for travel research and planning." path="terms/" root="../" site={site} dataCredits={false}>
+      <TermsContent site={site} />
     </Layout>
   );
 }

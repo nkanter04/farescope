@@ -376,7 +376,8 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 .editor-heading { margin: 18px 0 12px; }
 .editor-heading h3, .editor-heading .secondary { margin: 0; }
 .lodging-editor .editor-heading { margin-top: 0; }
-.night-stop { min-width: 0; margin: 12px 0; border: 1px solid currentColor; border-radius: 8px; padding: 12px; }
+.night-stop { min-width: 0; margin: 12px 0; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); padding: 12px; }
+.night-stop legend { padding: 0 6px; font-weight: 600; color: var(--text-2); }
 .night-stop .row > .field:first-child { flex: 3; }
 .night-stop .editor-actions { margin-top: 8px; }
 .lodging-editor > .field, .lodging-editor > .row { margin: 12px 0; }
