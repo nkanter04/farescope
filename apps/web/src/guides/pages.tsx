@@ -17,6 +17,9 @@ import {
   type PartnerTemplate,
 } from "@farescope/shared";
 
+/** Travelpayouts Drive script, required on every page by the affiliate program. */
+export const TP_DRIVE_SRC = "https://emrldco.com/NjAzODE1.js?t=603815";
+
 /**
  * Static "When to visit" pages, rendered at build time to plain HTML (no client JavaScript), so
  * search engines can index them. Links are relative so the site works under any base path.
@@ -57,6 +60,8 @@ function Layout(props: { title: string; description: string; path: string; root:
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
+        {/* Travelpayouts Drive (affiliate link conversion; partner 603815) */}
+        <script async data-cmp-ab="2" src={TP_DRIVE_SRC} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{props.title}</title>
         <meta name="description" content={props.description} />

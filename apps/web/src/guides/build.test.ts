@@ -71,4 +71,8 @@ describe("static guide pages", () => {
   it("keeps the app's month-label index in sync with the guides (run npm run guides:build)", () => {
     expect(readFileSync(MONTH_INDEX_PATH, "utf8").replace(/\r\n/g, "\n")).toBe(monthIndexJson());
   });
+
+  it("loads the Travelpayouts Drive script on guide pages", () => {
+    expect(page("guides/index.html")).toContain('src="https://emrldco.com/NjAzODE1.js?t=603815"');
+  });
 });
