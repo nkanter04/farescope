@@ -29,7 +29,9 @@ describe("static guide pages", () => {
     expect(html.match(/<tr id="/g)).toHaveLength(12);
     expect(html).toContain("NASA POWER");
     expect(html).toContain("Nager.Date");
-    expect(html).toContain("Farescope is operated by Kanter Capital LLC");
+    expect(html).toContain("Tripica is operated by Kanter Capital LLC");
+    expect(html).toContain('href="../../favicon.svg"');
+    expect(html).toContain('class="brand-mark"');
     // CTA into the app: relative to the site root, pre-filled with the airports and a month.
     expect(html).toMatch(/href="\.\.\/\.\.\/\?to=city%3AOsaka%7CJP&amp;depart=20\d\d-\d\d"/);
     expect(html).toContain("Cherry blossom season");

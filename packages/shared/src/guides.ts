@@ -18,7 +18,7 @@ export interface Destination {
   searchTo: string;
   /** Shown when the search uses a nearby city's airports, e.g. Kyoto via Osaka. */
   via?: string;
-  /** Famous seasonal peaks no holiday calendar knows about (curated by Farescope). */
+  /** Famous seasonal peaks no holiday calendar knows about (curated by Tripica). */
   events?: SeasonalEvent[];
 }
 

@@ -15,7 +15,7 @@ export function SharedTrips({ hash }: { hash: string }) {
     return () => { active = false; };
   }, [hash]);
   return <main className="single shared-trips"><h1>Shared itinerary</h1><p className="muted">Read-only snapshot. Prices may have changed since this plan was saved.</p>
-    <a href={window.location.pathname + window.location.search}>Open Farescope</a>
+    <a href={window.location.pathname + window.location.search}>Open Tripica</a>
     {error && <p role="alert">{error}</p>}
     {!error && !trips.length && <p role="status">Loading itinerary…</p>}
     {trips.length > 1 && <TripComparison trips={trips} />}

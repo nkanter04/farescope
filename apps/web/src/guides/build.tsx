@@ -6,7 +6,7 @@
  * build). Reads the cached data in data/guides/raw/, so it needs no network.
  *
  *   npm run guides:build                       # SITE_URL defaults to the GitHub Pages URL
- *   SITE_URL=https://farescope.com npm run guides:build
+ *   SITE_URL=https://tripica.example npm run guides:build
  */
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

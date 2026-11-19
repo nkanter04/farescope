@@ -90,12 +90,7 @@ h3 { font-size: 0.95rem; font-weight: 700; letter-spacing: -0.005em; margin: 18p
   position: sticky; top: 0; z-index: 10;
 }
 .brand { font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; display: flex; gap: 10px; align-items: center; color: var(--text); }
-.logo {
-  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px;
-  background: linear-gradient(145deg, #3b8cff 0%, #1570e8 55%, #0e57c0 100%);
-  color: #fff; font-size: 1.1rem; line-height: 1;
-  box-shadow: 0 2px 6px rgba(21, 112, 232, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
+.brand-mark { flex: 0 0 auto; display: block; border-radius: 10px; box-shadow: 0 2px 6px rgba(21, 112, 232, 0.3); }
 .tabs { display: flex; gap: 2px; padding: 3px; background: var(--panel-2); border-radius: 12px; }
 .tabs button {
   background: none; border: 0; padding: 6px 14px; border-radius: 9px; color: var(--muted); font-weight: 600; font-size: 0.9rem;

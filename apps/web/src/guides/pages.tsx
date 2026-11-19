@@ -1,6 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 import type { ReactNode } from "react";
+import { Logo } from "../components/Logo.tsx";
 import {
   COUNTRIES,
   MONTH_NAMES,
@@ -56,18 +57,19 @@ function Layout(props: { title: string; description: string; path: string; root:
         <meta name="description" content={props.description} />
         <link rel="canonical" href={canonical} />
         <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Farescope" />
+        <meta property="og:site_name" content="Tripica" />
         <meta property="og:title" content={props.title} />
         <meta property="og:description" content={props.description} />
         <meta property="og:url" content={canonical} />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌏</text></svg>" />
+        <link rel="icon" type="image/svg+xml" href={`${props.root}favicon.svg`} />
+        <meta property="og:image" content={`${props.site.siteUrl}/logo.svg`} />
         <link rel="stylesheet" href={`${props.root}guides/guides.css${props.site.cssVersion ? `?v=${props.site.cssVersion}` : ""}`} />
         {props.jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(props.jsonLd).replace(/</g, "\\u003c") }} />}
       </head>
       <body>
         <header className="g-top">
           <a className="g-brand" href={props.root}>
-            <span className="g-logo" aria-hidden>◍</span>Farescope
+            <Logo size={32} />Tripica
           </a>
           <nav>
             <a href={`${props.root}guides/`}>Guides</a>
@@ -79,9 +81,9 @@ function Layout(props: { title: string; description: string; path: string; root:
           <p>
             Climate: <a href="https://power.larc.nasa.gov/">NASA POWER</a> monthly averages (2001–2025) for the surrounding ~50 km area; city-center
             temperatures can differ by a few degrees. Public holidays: <a href="https://date.nager.at/">Nager.Date</a>. Seasonal events and the
-            demand estimates are Farescope's own. Prices depend on dates and availability; nothing here is a price quote.
+            demand estimates are Tripica's own. Prices depend on dates and availability; nothing here is a price quote.
           </p>
-          <p>Farescope is operated by Kanter Capital LLC.</p>
+          <p>Tripica is operated by Kanter Capital LLC.</p>
         </footer>
       </body>
     </html>
@@ -159,7 +161,7 @@ export function DestinationPage({ guide, site }: { guide: DestinationGuide; site
         headline: title,
         description,
         dateModified: site.today,
-        publisher: { "@type": "Organization", name: "Farescope (Kanter Capital LLC)" },
+        publisher: { "@type": "Organization", name: "Tripica (Kanter Capital LLC)" },
         about: { "@type": "TouristDestination", name: d.name, geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lng } },
       }}
     >

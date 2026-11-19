@@ -10,6 +10,7 @@ import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
 import { readUrlSearch } from "./urlSearch.ts";
+import { Logo } from "./components/Logo.tsx";
 import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
@@ -71,10 +72,8 @@ export function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <span className="logo" aria-hidden>
-            ◍
-          </span>
-          Farescope
+          <Logo size={32} />
+          Tripica
         </div>
         {DEMO && (
           <a className="gh" href="https://github.com/nkanter04/farescope" target="_blank" rel="noreferrer noopener">

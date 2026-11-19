@@ -21,7 +21,7 @@ export function WatchedFlights() {
   return (
     <section className="watched" aria-label="Watched flights">
       <h2>Watched flights</h2>
-      <p className="muted">Prices are re-checked when you open Farescope, at most every 6 hours per flight.</p>
+      <p className="muted">Prices are re-checked when you open Tripica, at most every 6 hours per flight.</p>
       <ul className="watch-list">
         {watches.map((w) => {
           const diff = w.lastPrice - w.priceAtWatch;

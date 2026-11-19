@@ -1,4 +1,6 @@
-# Farescope (working name)
+# Tripica
+
+*Formerly "Farescope". The repository, package names (`@farescope/*`) and the demo URL still use the old name until the move to a custom domain.*
 
 ### ▶ [Try the live demo](https://nkanter04.github.io/farescope/)
 

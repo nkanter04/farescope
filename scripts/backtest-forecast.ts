@@ -1,5 +1,5 @@
 /**
- * How accurate are Farescope's price predictions? Replays price histories, predicts as of past
+ * How accurate are Tripica's price predictions? Replays price histories, predicts as of past
  * dates using only data available then, and compares with what actually happened.
  *
  *   npm run backtest                      # real prices from the local price_history table if there

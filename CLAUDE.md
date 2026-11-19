@@ -4,7 +4,7 @@ Guidance for Claude Code (and other AI agents) working in this repository.
 
 ## Project
 
-Farescope finds the **cheapest trip across wide ranges** of places, dates and trip lengths. For example, "Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights." Results stream onto a 3D globe and a price calendar. You can add lodging and save or compare trips by total cost. Live demo (simulated prices): https://nkanter04.github.io/farescope/
+**Tripica** (formerly Farescope; the repo, `@farescope/*` packages, storage keys and demo URL keep the old name for now) finds the **cheapest trip across wide ranges** of places, dates and trip lengths. For example, "Austin → anywhere in Japan, leaving any day Jan–Apr, 7–12 nights." Results stream onto a 3D globe and a price calendar. You can add lodging and save or compare trips by total cost. Live demo (simulated prices): https://nkanter04.github.io/farescope/
 
 The long-term goal is a **multi-stop trip planner**: flights and drives between stops, hotels at each stop, and an optimizer that picks the cheapest start date and nights per stop.
 

@@ -21,7 +21,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .g-top { display: flex; align-items: center; gap: 24px; padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
 .g-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; color: var(--text); }
 .g-brand:hover { text-decoration: none; }
-.g-logo { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: #fff; background: linear-gradient(145deg, #3b8cff 0%, #1570e8 55%, #0e57c0 100%); }
+.brand-mark { flex: 0 0 auto; display: block; border-radius: 10px; box-shadow: 0 2px 6px rgba(21, 112, 232, 0.3); }
 .g-top nav { margin-left: auto; display: flex; gap: 18px; font-weight: 600; font-size: 0.95rem; }
 
 .g-main { max-width: 920px; margin: 0 auto; padding: 28px 24px 48px; }
