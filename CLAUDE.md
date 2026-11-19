@@ -12,7 +12,7 @@ The long-term goal is a **multi-stop trip planner**: flights and drives between 
 
 ```bash
 npm install
-npm run dev:api        # Fastify API on :8787 (PROVIDER=mock by default)
+npm run dev:api        # API (Hono on Node) on :8787 (PROVIDER=mock by default)
 npm run dev:web        # Vite web on :5180, proxies /api → :8787
 npm run dev -w @farescope/web -- --mode demo   # web with in-browser engine, no API
 npm test               # Vitest (all workspaces)
@@ -22,6 +22,9 @@ npm run build:demo -w @farescope/web           # static GitHub Pages build
 npm run backtest       # price-forecast accuracy (real price_history if ≥30 flights, else simulated)
 npm run guides:fetch   # refresh cached guide data (NASA POWER climate, Nager.Date holidays) → data/guides/raw
 npm run guides:build   # render static guide pages + sitemap into apps/web/dist (run after build:demo)
+npm run build:cf       # live-site build for Cloudflare (web app in API mode + guides)
+npm run dev:cf         # run the Cloudflare Worker + Durable Object locally (wrangler dev; add --var PROVIDER:mock)
+npm run deploy:cf      # build:cf + wrangler deploy (after `npx wrangler login`)
 ```
 
 Requires Node 22.13+ (built-in `node:sqlite`). Before calling work done, run `npm run typecheck` and `npm test`. If the UI changed, check it in a browser at desktop width and at 375px (no horizontal scroll, no console errors).
@@ -34,7 +37,7 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 - `packages/shared`: types and zod schemas (`SearchRequestSchema`, `Fare`, `Stay`, `TripPlan`, `LodgingStop`, `SearchEvent`, `TripShareSchema`), trip math (`tripStops`, `tripTotal`, `lodgingCoverage`, `comparableTrips` in `trips.ts`), the place resolver (tokens `AUS`, `city:Tokyo|JP`, `country:JP`, `region:Asia`, `anywhere`), and UTC date helpers.
   - **Places:** airport codes, `city:Tokyo|JP`, `state:US-TX` (US airports carry `state`), `country:JP`, `region:Asia`, `anywhere`. Countries, US states and regions carry Google place IDs (kgmid) from Wikidata in `src/data/place-ids.json`; the live grids use them.
   - **Airports:** 4,007 scheduled-service airports from OurAirports (`src/data/airports.json`, `countries.json`), merged with a hand-curated list in `airports.ts`. Each airport has a `tier` (major/regional/local) computed from route counts. **Country, region and "Anywhere" expand to major airports only**, while cities and IATA codes reach every airport. See `DATA_SOURCES.md`. To regenerate, run `scripts/import-airports.ps1`, which also runs `scripts/airport-tiers.ts`.
-- `apps/api`: Fastify server.
+- `apps/api`: the HTTP API is a runtime-neutral **Hono** app (`api.ts`, no Node imports). `app.ts` + `server.ts` run it on Node (local dev, tests via `test-inject.ts`); `cloudflare/worker.ts` runs it on Cloudflare (production). Storage classes take a small `SqlDb` interface (`sql.ts`): Node's `node:sqlite` in `db.ts`, Durable Object SQLite in `cloudflare/do-sql.ts` (transactions via `transactionSync`). Settings come from env vars in `settings.ts` (shared) + `config.ts` (Node extras).
   - `search/planner.ts` expands a request into provider calls: (origin chunk × destination chunk) × (date × nights).
   - `search/run.ts` runs them in this order: fresh cache hits → **price grids** when the provider has them (SerpApi): `explore` calls for "anywhere"/region destinations (Google Explore, one call per origin × month × trip-length bucket) and `calendar` calls for named places (Google's date grid, one call per route × trip length prices every departure date in up to 121 days) → full itineraries for the cheapest grid dates with the rest of the budget. Providers without grids (mock, Travelpayouts) get an evenly spread sample of exact date pairs plus refinement near the cheapest. It streams `SearchEvent`s as SSE. Very broad searches are capped at 40,000 candidates. `SearchRequest.quick` (the explore page) skips itinerary and lodging lookups.
   - **Price-only fares:** grid results stream as `Fare`s with `priceOnly: true` (no legs; explore ones may name an airline) and, for whole places, `coverage` (Google place IDs + labels like "Japan"). Opening one calls `POST /api/fare-details` (`search/details.ts`, cache-first, 1 quota unit), and the client's `mergeFares` replaces the grid price with the real itineraries (matched by `queryKey`). A real itinerary always replaces its cell's grid price in the stream, even if it costs a bit more.
@@ -57,7 +60,8 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
   - `api.ts` routes calls to `demo.ts` (the in-browser engine) when `MODE === "demo"`.
 - **"When to visit" guides** (static, SEO): `packages/shared/src/guides.ts` (pure) turns NASA POWER climate normals + public holidays + curated seasonal events (`data/destinations.json` → `events`) into per-month comfort, demand, labels (Best value / Peak / Shoulder / Off-season), best months and template sentences built only from the numbers. `apps/web/src/guides/` renders `/guides/`, `/guides/<slug>/`, `/guides/month/<month>/`, `sitemap.xml` and `robots.txt` with `react-dom/server` (no client JS). The canonical domain is `SITE_URL`. The pages link into the app with `?to=…&depart=YYYY-MM` (`urlSearch.ts`), which pre-fills and runs a search. **Never put simulated prices on guide pages;** a price-by-month section needs real fare data.
 - **Themes:** `apps/web/src/themes/daylight.css` is the only shipped stylesheet, loaded at runtime by `theme.ts`. The globe reads `--globe-texture`, `--globe-atmosphere`, `--globe-origin`, `--globe-label`, `--globe-muted-point` and `--globe-arc-scale` from `:root`. Unused drafts live in `design/theme-drafts/`.
-- **Deploy:** pushing to `main` runs `.github/workflows/deploy.yml` (typecheck → test → demo build → GitHub Pages).
+- **Deploy:** pushing to `main` runs `.github/workflows/deploy.yml`: typecheck → test → the simulated demo on GitHub Pages, and (once the `CLOUDFLARE_API_TOKEN` secret exists) the live site on Cloudflare: `wrangler.jsonc` serves `apps/web/dist` as static assets and sends `/api/*` to one SQLite-backed Durable Object (`TripicaStore`). Worker secrets (`SERPAPI_KEY`, `TURNSTILE_SECRET_KEY`) are set with `npx wrangler secret put`; public settings (budgets) are `vars` in `wrangler.jsonc`.
+- **Bot check:** with `TURNSTILE_SECRET_KEY` set, routes that can spend live searches (`/api/search`, `/api/fare-details`, `/api/stays`; `/api/watches/check` falls back to cache) need a pass from `POST /api/human` (Cloudflare Turnstile, `turnstile.ts`): an HMAC of the visitor's IP + UTC day. The web app (`human.ts`, `VITE_TURNSTILE_SITE_KEY`) gets one on demand and retries once.
 
 ## Rules (must follow)
 
@@ -78,7 +82,8 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 
 ## Gotchas
 
-- **SSE disconnects:** use `reply.raw.on("close")` and check `writableFinished`. The request's `"close"` event fires as soon as the body is read and would cancel every search.
+- **SSE disconnects:** `/api/search` streams a `ReadableStream`; a client disconnect aborts the search through the request's `signal` and the stream's `cancel()`, so no more quota is spent.
+- **Cloudflare CPU and storage:** one global Durable Object (`idFromName("main")`) holds all state, so the cache and monthly budget are shared. Durable Object SQL is synchronous; never use raw BEGIN/COMMIT there (use `SqlDb.transaction`).
 - **Grid overflow:** grid areas that contain the horizontally scrolling calendar need `minmax(0, 1fr)` columns and `min-width: 0`.
 - **Stale mock data:** mock results are cached. After editing `providers/mock.ts`, delete `apps/api/.local-data/farescope.sqlite*`.
 - **SerpApi round trips:** the price is the round-trip total, but only outbound legs are returned. Return legs would need a second call, which we skip to save quota.
@@ -93,5 +98,5 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 2. Cheapest-dates optimizer: **dynamic programming** over (stop, arrival date), choosing nights per stop. It must be exact, pure and browser-safe. Don't use an LLM for the price math.
 3. Driving legs (OSRM) and a 2D map (MapLibre).
 4. Real data: SerpApi price grids work locally (calendar, explore, details). Next: host the API so the public site uses them; "Abroad" on the explore page could add per-region explore calls; Travelpayouts' sparse cache would need month-wide queries. Add partner templates (`VITE_PARTNER_LINKS`) once affiliate accounts are approved.
-5. Supabase auth and Postgres, plus API hosting.
+5. Accounts (auth) and a custom domain for the Cloudflare site.
 6. Claude API for natural-language trip input and explanations of the results.

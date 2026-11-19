@@ -1,4 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { SqlDb } from "./sql.ts";
 import type { Cabin, Fare } from "@farescope/shared";
 
 export { ttlFor } from "./ttl.ts";
@@ -10,7 +10,7 @@ export interface CacheEntry<T> {
 }
 
 export class QueryCache {
-  constructor(private db: DatabaseSync, private now: () => number = Date.now) {}
+  constructor(private db: SqlDb, private now: () => number = Date.now) {}
 
   get<T>(key: string): CacheEntry<T> | undefined {
     const row = this.db.prepare("SELECT payload, fetched_at, expires_at FROM query_cache WHERE key = ?").get(key) as

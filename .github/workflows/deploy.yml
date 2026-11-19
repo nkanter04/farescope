@@ -1,4 +1,4 @@
-name: Test and deploy demo to GitHub Pages
+name: Test and deploy (GitHub Pages demo + Cloudflare live site)
 
 on:
   push:
@@ -46,3 +46,34 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Live site on Cloudflare (real prices). Skipped until the CLOUDFLARE_API_TOKEN secret exists.
+  # Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID. Variables: CF_SITE_URL (e.g.
+  # https://tripica.<account>.workers.dev), VITE_TURNSTILE_SITE_KEY. Worker secrets (SERPAPI_KEY,
+  # TURNSTILE_SECRET_KEY) live in Cloudflare, set once with `npx wrangler secret put`.
+  cloudflare:
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.HAS_TOKEN == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_TOKEN == 'true'
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+        if: env.HAS_TOKEN == 'true'
+      - run: npm run build:cf
+        if: env.HAS_TOKEN == 'true'
+        env:
+          SITE_URL: ${{ vars.CF_SITE_URL }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}
+      - run: npx wrangler deploy
+        if: env.HAS_TOKEN == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

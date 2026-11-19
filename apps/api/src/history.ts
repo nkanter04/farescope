@@ -1,4 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { SqlDb } from "./sql.ts";
 import type { CurveSeries, Fare, PricePoint, PriceWatch } from "@farescope/shared";
 
 /**
@@ -7,7 +7,7 @@ import type { CurveSeries, Fare, PricePoint, PriceWatch } from "@farescope/share
  * the demo and the forecast falls back to simulated history.
  */
 export class PriceHistory {
-  constructor(private db: DatabaseSync) {}
+  constructor(private db: SqlDb) {}
 
   /** This route and these dates: lowest observed price per day. */
   forFare(fare: Fare): PricePoint[] {
@@ -43,7 +43,7 @@ export class PriceHistory {
 }
 
 export class WatchStore {
-  constructor(private db: DatabaseSync) {}
+  constructor(private db: SqlDb) {}
 
   list(owner: string): PriceWatch[] {
     const rows = this.db.prepare("SELECT data FROM watches WHERE owner = ? ORDER BY created_at DESC").all(owner) as { data: string }[];

@@ -1,4 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
+import type { SqlDb } from "./sql.ts";
 
 export interface QuotaConfig {
   monthlyBudget: number;
@@ -12,7 +12,7 @@ export type QuotaDecision = { ok: true } | { ok: false; reason: "monthly" | "dai
  * and one per-client daily bucket (stops a single visitor from draining it).
  */
 export class QuotaGuard {
-  constructor(private db: DatabaseSync, private cfg: QuotaConfig, private now: () => Date = () => new Date()) {}
+  constructor(private db: SqlDb, private cfg: QuotaConfig, private now: () => Date = () => new Date()) {}
 
   private periods() {
     const iso = this.now().toISOString();
@@ -54,23 +54,12 @@ export class QuotaGuard {
   tryConsume(clientId: string, units = 1): QuotaDecision {
     if (!Number.isSafeInteger(units) || units < 1) throw new Error("Invalid quota units");
     const { month, day } = this.periods();
-    this.db.exec("BEGIN IMMEDIATE");
-    try {
-      if (this.read("global", month) + units > this.cfg.monthlyBudget) {
-        this.db.exec("ROLLBACK");
-        return { ok: false, reason: "monthly" };
-      }
-      if (this.read(`client:${clientId}`, day) + units > this.cfg.dailyClientBudget) {
-        this.db.exec("ROLLBACK");
-        return { ok: false, reason: "daily" };
-      }
+    return this.db.transaction((): QuotaDecision => {
+      if (this.read("global", month) + units > this.cfg.monthlyBudget) return { ok: false, reason: "monthly" };
+      if (this.read(`client:${clientId}`, day) + units > this.cfg.dailyClientBudget) return { ok: false, reason: "daily" };
       this.bump("global", month, units);
       this.bump(`client:${clientId}`, day, units);
-      this.db.exec("COMMIT");
       return { ok: true };
-    } catch (e) {
-      this.db.exec("ROLLBACK");
-      throw e;
-    }
+    });
   }
 }

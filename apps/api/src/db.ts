@@ -1,58 +1,38 @@
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { SCHEMA, type SqlDb, type SqlValue } from "./sql.ts";
 
 /**
- * SQLite for local dev (Node's built-in driver, no native deps). The schema is plain SQL so it
- * ports directly to Postgres/Supabase in Phase 4.
+ * SQLite for local dev and tests (Node's built-in driver, no native deps). Production on Cloudflare
+ * uses Durable Object SQLite through the same `SqlDb` interface (see do-sql.ts).
  */
-export function openDb(path: string): DatabaseSync {
+export function openDb(path: string): SqlDb {
   if (path !== ":memory:") mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
-  db.exec(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS query_cache (
-      key TEXT PRIMARY KEY,
-      provider TEXT NOT NULL,
-      payload TEXT NOT NULL,
-      fetched_at INTEGER NOT NULL,
-      expires_at INTEGER NOT NULL
-    );
-    -- Every real fare we ever see. Over time this becomes our own long-range price history.
-    CREATE TABLE IF NOT EXISTS price_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      provider TEXT NOT NULL,
-      origin TEXT NOT NULL,
-      destination TEXT NOT NULL,
-      depart_date TEXT NOT NULL,
-      return_date TEXT,
-      cabin TEXT NOT NULL,
-      price REAL NOT NULL,
-      stops INTEGER NOT NULL,
-      airlines TEXT NOT NULL,
-      fetched_at INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_ph_route ON price_history (origin, destination, depart_date);
-    CREATE TABLE IF NOT EXISTS usage (
-      bucket TEXT NOT NULL,
-      period TEXT NOT NULL,
-      count INTEGER NOT NULL DEFAULT 0,
-      PRIMARY KEY (bucket, period)
-    );
-    CREATE TABLE IF NOT EXISTS trips (
-      id TEXT PRIMARY KEY,
-      owner TEXT NOT NULL,
-      data TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_trips_owner ON trips (owner, created_at);
-    CREATE TABLE IF NOT EXISTS watches (
-      id TEXT PRIMARY KEY,
-      owner TEXT NOT NULL,
-      data TEXT NOT NULL,
-      created_at INTEGER NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_watches_owner ON watches (owner, created_at);
-  `);
-  return db;
+  db.exec("PRAGMA journal_mode = WAL;");
+  db.exec(SCHEMA);
+  return {
+    prepare(sql) {
+      const stmt = db.prepare(sql);
+      return {
+        run: (...params: SqlValue[]) => stmt.run(...params),
+        get: (...params: SqlValue[]) => stmt.get(...params),
+        all: (...params: SqlValue[]) => stmt.all(...params),
+      };
+    },
+    exec: (sql) => db.exec(sql),
+    transaction(fn) {
+      db.exec("BEGIN IMMEDIATE");
+      try {
+        const out = fn();
+        db.exec("COMMIT");
+        return out;
+      } catch (e) {
+        db.exec("ROLLBACK");
+        throw e;
+      }
+    },
+    close: () => db.close(),
+  };
 }

@@ -12,10 +12,13 @@
     "dev:web": "npm run dev -w @farescope/web",
     "build": "npm run build -w @farescope/web",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p apps/api && tsc --noEmit -p apps/web",
+    "typecheck": "tsc --noEmit -p packages/shared && tsc --noEmit -p apps/api && tsc --noEmit -p apps/api/tsconfig.worker.json && tsc --noEmit -p apps/web",
     "backtest": "tsx scripts/backtest-forecast.ts",
     "guides:fetch": "tsx scripts/guides-fetch.ts",
-    "guides:build": "tsx apps/web/src/guides/build.tsx"
+    "guides:build": "tsx apps/web/src/guides/build.tsx",
+    "build:cf": "npm run build -w @farescope/web && npm run guides:build",
+    "dev:cf": "wrangler dev",
+    "deploy:cf": "npm run build:cf && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

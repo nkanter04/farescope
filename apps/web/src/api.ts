@@ -1,3 +1,4 @@
+import { liveFetch } from "./human.ts";
 import type { Cabin, Fare, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
 function clientId(): string {
@@ -18,12 +19,12 @@ function clientId(): string {
 export const DEMO = import.meta.env.MODE === "demo";
 const demo = () => import("./demo.ts");
 
-const headers = () => ({ "content-type": "application/json", "x-client-id": clientId() });
+const headers = (): Record<string, string> => ({ "content-type": "application/json", "x-client-id": clientId() });
 
 /** POST /api/search and parse the server-sent event stream. */
 export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent) => void, signal: AbortSignal): Promise<void> {
   if (DEMO) return (await demo()).streamSearch(req, onEvent, signal);
-  const res = await fetch("/api/search", { method: "POST", headers: headers(), body: JSON.stringify(req), signal });
+  const res = await liveFetch("/api/search", { method: "POST", headers: headers(), body: JSON.stringify(req), signal });
   if (!res.ok || !res.body) {
     const msg = await res.json().then((j) => j.error as string).catch(() => `HTTP ${res.status}`);
     onEvent({ type: "error", message: msg });
@@ -48,7 +49,7 @@ export async function fetchStays(airport: string, stop: LodgingStop, adults: num
   const { checkIn, checkOut, place } = stop;
   if (DEMO) return (await demo()).fetchStays(airport, checkIn, checkOut, adults, place);
   const qs = new URLSearchParams({ airport, checkIn, checkOut, location: place, adults: String(adults) });
-  const res = await fetch(`/api/stays?${qs}`, { headers: headers() });
+  const res = await liveFetch(`/api/stays?${qs}`, { headers: headers() });
   const json = await res.json();
   if (!res.ok) return { stays: [], error: json.error ?? `HTTP ${res.status}` };
   return json;
@@ -89,7 +90,7 @@ export async function fetchFareDetails(
   opts: { cabin: Cabin; maxStops: 0 | 1 | 2 | null; adults: number; airlines?: string[] },
 ): Promise<{ fares: Fare[]; error?: string }> {
   if (DEMO) return (await demo()).fareDetails(fare, opts);
-  const r = await fetch("/api/fare-details", { method: "POST", headers: headers(), body: JSON.stringify({ fare, ...opts }) });
+  const r = await liveFetch("/api/fare-details", { method: "POST", headers: headers(), body: JSON.stringify({ fare, ...opts }) });
   if (!r.ok) return { fares: [], error: (await r.json().catch(() => ({}))).error ?? "Could not load these flights." };
   return r.json();
 }
@@ -123,6 +124,6 @@ export async function removeWatch(id: string): Promise<void> {
 /** Re-price watched flights (cache-first; at most once per 6 hours per flight). */
 export async function checkWatches(): Promise<PriceWatch[]> {
   if (DEMO) return (await demo()).checkWatches();
-  const r = await fetch("/api/watches/check", { method: "POST", headers: headers(), body: "{}" });
+  const r = await liveFetch("/api/watches/check", { method: "POST", headers: headers(), body: "{}" });
   return r.ok ? (await r.json()).watches : [];
 }

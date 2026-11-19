@@ -50,6 +50,19 @@
         "--strictPort"
       ],
       "port": 5182
+    },
+    {
+      "name": "cf-local",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "dev",
+        "--var",
+        "PROVIDER:mock",
+        "--port",
+        "8790"
+      ],
+      "port": 8790
     }
   ]
 }

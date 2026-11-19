@@ -1,5 +1,4 @@
-import type { DatabaseSync } from "node:sqlite";
-import { randomUUID } from "node:crypto";
+import type { SqlDb } from "./sql.ts";
 import { tripTotal, type TripPlan } from "@farescope/shared";
 
 /**
@@ -7,7 +6,7 @@ import { tripTotal, type TripPlan } from "@farescope/shared";
  * per-browser id, so trips are private-by-obscurity only. Do not store anything sensitive.
  */
 export class TripStore {
-  constructor(private db: DatabaseSync) {}
+  constructor(private db: SqlDb) {}
 
   list(owner: string): TripPlan[] {
     const rows = this.db.prepare("SELECT data FROM trips WHERE owner = ? ORDER BY created_at DESC LIMIT 100").all(owner) as {
@@ -19,7 +18,7 @@ export class TripStore {
   create(owner: string, input: Omit<TripPlan, "id" | "createdAt" | "total">): TripPlan {
     const trip: TripPlan = {
       ...input,
-      id: randomUUID(),
+      id: crypto.randomUUID(),
       total: tripTotal(input),
       createdAt: new Date().toISOString(),
     };
