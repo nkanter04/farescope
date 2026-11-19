@@ -280,11 +280,11 @@ input[type="checkbox"] { width: 16px; height: 16px; min-height: 0; padding: 0; a
 .legs { margin: 12px 0 0; padding-left: 20px; font-size: 0.86rem; display: flex; flex-direction: column; gap: 6px; color: var(--text-2); }
 .legs li::marker { color: var(--accent); font-weight: 700; }
 .card p.small { margin: 12px 0 0; }
+/* Trip total: a normal card at the end of the trip view (not pinned, so it never covers the plan). */
 .trip-total {
-  position: sticky; bottom: 0; margin-top: 18px; padding: 16px 20px; display: flex; justify-content: space-between;
-  align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.94);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  box-shadow: 0 -1px 0 var(--line), 0 -8px 24px rgba(16, 32, 64, 0.06);
+  margin-top: 18px; padding: 16px 20px; display: flex; justify-content: space-between;
+  align-items: center; gap: 12px; background: var(--panel); border-radius: var(--radius);
+  box-shadow: var(--shadow-sm), 0 0 0 1px var(--line);
 }
 .trip-total .primary { padding: 12px 20px; }
 .fare-panel > .notice.info { margin-top: 14px; }
