@@ -99,6 +99,7 @@ export function App() {
           </div>
         )}
       </header>
+      <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/">Open Tripica for live prices</a> · </>}<a href="./privacy/">Privacy</a> · <a href="./terms/">Terms</a></div>
 
       {view === "search" ? (
         <main className="layout">

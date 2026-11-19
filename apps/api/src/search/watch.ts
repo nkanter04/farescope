@@ -30,16 +30,16 @@ export function watchQuery(w: Pick<PriceWatch, "fare" | "cabin" | "adults">): Fl
   };
 }
 
-const path = (f: Fare) => f.outbound.map((l) => `${l.from}>${l.to}`).join(",");
-
-/** The same flight if it's still offered, else the cheapest with the same stops, else the cheapest. */
 export function matchFare(target: Fare, fares: Fare[]): Fare | undefined {
-  const byPrice = [...fares].sort((a, b) => a.price - b.price);
-  return (
-    byPrice.find((f) => path(f) === path(target) && f.airlines.join() === target.airlines.join()) ??
-    byPrice.find((f) => f.stops === target.stops) ??
-    byPrice[0]
-  );
+  if (!target.outbound.length || target.outbound.some(leg => !leg.flightNumber || !leg.depart)) return undefined;
+  return fares.filter(f => f.origin === target.origin && f.destination === target.destination &&
+    f.departDate === target.departDate && f.returnDate === target.returnDate && f.stops === target.stops &&
+    f.airlines.join() === target.airlines.join() && f.outbound.length === target.outbound.length &&
+    f.outbound.every((leg, i) => {
+      const other = target.outbound[i];
+      return leg.from === other.from && leg.to === other.to && leg.depart === other.depart &&
+        leg.flightNumber === other.flightNumber && leg.airline === other.airline;
+    })).sort((a, b) => a.price - b.price)[0];
 }
 
 export interface WatchCheck {
@@ -72,7 +72,7 @@ export async function checkWatch(watch: PriceWatch, deps: WatchDeps): Promise<Wa
     try {
       result = await deps.provider.search(query);
       deps.cache.put(key, deps.provider.name, result, ttlFor(query.departDate, now));
-      if (deps.provider.live) deps.cache.recordPrices(result.fares, query.cabin);
+      if (deps.provider.live) deps.cache.recordPrices(result.fares, query.cabin, key);
     } catch {
       return { watch, units, checked: false };
     }

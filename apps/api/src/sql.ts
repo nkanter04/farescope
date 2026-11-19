@@ -44,6 +44,11 @@ export const SCHEMA = `
     fetched_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_ph_route ON price_history (origin, destination, depart_date);
+  CREATE TABLE IF NOT EXISTS scoped_history (
+    search_key TEXT NOT NULL, origin TEXT NOT NULL, destination TEXT NOT NULL,
+    depart_date TEXT NOT NULL, day TEXT NOT NULL, price REAL NOT NULL,
+    PRIMARY KEY(search_key, origin, destination, day)
+  );
   CREATE TABLE IF NOT EXISTS usage (
     bucket TEXT NOT NULL,
     period TEXT NOT NULL,

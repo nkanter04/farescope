@@ -34,6 +34,8 @@ export interface SiteConfig {
   cssVersion?: string;
   /** Partner (affiliate) link templates; empty = plain public search links. */
   partners?: PartnerTemplate[];
+  measure?: boolean;
+  analyticsToken?: string;
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();
@@ -62,6 +64,7 @@ function Layout(props: { title: string; description: string; path: string; root:
         <meta charSet="utf-8" />
         {/* Travelpayouts Drive (affiliate link conversion; partner 603815) */}
         <script async data-cmp-ab="2" src={TP_DRIVE_SRC} />
+        {props.site.measure && <script defer src={props.root + "measurement.js"} data-token={props.site.analyticsToken} />}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{props.title}</title>
         <meta name="description" content={props.description} />
@@ -93,6 +96,7 @@ function Layout(props: { title: string; description: string; path: string; root:
             temperatures can differ by a few degrees. Public holidays: <a href="https://date.nager.at/">Nager.Date</a>. Seasonal events and the
             demand estimates are Tripica's own. Prices depend on dates and availability; nothing here is a price quote.
           </p>
+          <p><a href={props.root + "privacy/"}>Privacy</a> · <a href={props.root + "terms/"}>Terms</a></p>
           <p>Tripica is operated by Kanter Capital LLC.</p>
         </footer>
       </body>
@@ -239,7 +243,7 @@ function PlanLinks({ name, country, site }: { name: string; country: string; sit
         {rows.map((r) => (
           <li key={r.kind}>
             <strong>{r.label}</strong>
-            {r.links.map((l) => <a key={l.url} href={l.url} rel="noreferrer sponsored" target="_blank">{l.partner} ↗</a>)}
+            {r.links.map((l) => <a data-booking-kind={r.kind} key={l.url} href={l.url} rel="noreferrer sponsored" target="_blank">{l.partner} ↗</a>)}
           </li>
         ))}
       </ul>

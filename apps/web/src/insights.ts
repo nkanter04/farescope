@@ -16,7 +16,7 @@ interface InsightsState {
 
 /** Same flight (route + dates + itinerary) regardless of when its price was fetched. */
 export const watchKey = (f: Fare) =>
-  [f.origin, f.destination, f.departDate, f.returnDate ?? "", f.airlines.join(), f.outbound.map((l) => l.from + l.to).join()].join("|");
+  [f.origin, f.destination, f.departDate, f.returnDate ?? "", f.airlines.join(), f.outbound.map((l) => [l.from, l.to, l.flightNumber, l.depart].join("/")).join()].join("|");
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
@@ -70,7 +70,7 @@ export const useInsights = create<InsightsState>((set, get) => ({
 
   async toggleWatch(fare, cabin, adults) {
     set({ watchError: undefined });
-    const existing = get().watches.find((w) => watchKey(w.fare) === watchKey(fare));
+    const existing = get().watches.find((w) => w.adults === adults && w.cabin === cabin && watchKey(w.fare) === watchKey(fare));
     if (existing) return get().unwatch(existing.id);
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "default") {

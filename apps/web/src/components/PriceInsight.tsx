@@ -30,14 +30,16 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
   const fares = useStore((s) => s.fares);
   const trend = useInsights((s) => s.trends[fare.id]);
   const loadTrend = useInsights((s) => s.loadTrend);
-  const watch = useInsights((s) => s.watches.find((w) => watchKey(w.fare) === watchKey(fare)));
+  const watch = useInsights((s) => s.watches.find((w) => w.adults === adults && w.cabin === cabin && watchKey(w.fare) === watchKey(fare)));
   const toggleWatch = useInsights((s) => s.toggleWatch);
   const watchError = useInsights((s) => s.watchError);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const showForecast = useStore(s => s.quota?.live === false);
   const hasFares = fares.length > 0;
   useEffect(() => {
+    if (!showForecast) return;
     // Other flights from this search teach the forecast how prices move before departure.
     const peers = [...fares]
       .filter((f) => f.id !== fare.id)
@@ -46,12 +48,12 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
     void loadTrend(fare, peers);
     // Recompute only when the selected flight changes or results first arrive.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fare, hasFares, loadTrend]);
+  }, [fare, hasFares, loadTrend, showForecast]);
 
   const watchSwitch = (
     <div className="watch-row">
       <div>
-        <span id={`watch-${fare.id}`}>Get notified when prices change</span>
+        <span id={`watch-${fare.id}`}>Watch this outbound itinerary while Tripica is open</span>
         {watch && (
           <div className="muted small">
             Watching since {money(watch.priceAtWatch)}
@@ -84,6 +86,7 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
     </div>
   );
 
+  if (!showForecast) return <section className="card price-insight">{watchSwitch}</section>;
   if (!trend || trend === "loading") {
     return (
       <section className="card price-insight" aria-busy="true">
@@ -100,6 +103,8 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
       </section>
     );
   }
+
+  if (!trend.basis.simulated) return <section className="card price-insight">{watchSwitch}</section>;
 
   const h = HEADLINE[trend.verdict];
   const pastPoints = trend.basis.historyPoints - 1;

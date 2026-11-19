@@ -623,3 +623,6 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 /* Turnstile robot check: invisible unless Cloudflare asks for a click */
 .human-check { position: fixed; right: 16px; bottom: 16px; z-index: 60; }
 .human-check:empty { display: none; }
+
+.launch-links { padding: 4px 16px; font-size: .85rem; }
+.launch-links a { color: var(--accent); }

@@ -55,6 +55,12 @@ export class TripicaStore extends DurableObject<Env> {
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
+    const click = /^\/api\/booking-click\/(app|guide)\/(flight|stay|hostel|activity|car)$/.exec(url.pathname);
+    if (click && request.method === "POST") {
+      if (request.headers.get("origin") !== url.origin) return new Response(null, { status: 403 });
+      console.info("booking_click", { source: click[1], kind: click[2] });
+      return new Response(null, { status: 204 });
+    }
     if (url.pathname.startsWith("/api/")) {
       // One global store keeps the shared cache and the monthly budget in one place.
       return env.STORE.get(env.STORE.idFromName("main")).fetch(request);

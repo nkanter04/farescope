@@ -30,13 +30,17 @@ export class QueryCache {
       .run(key, provider, JSON.stringify(value), t, t + ttlMs);
   }
 
-  recordPrices(fares: Fare[], cabin: Cabin): void {
+  recordPrices(fares: Fare[], cabin: Cabin, searchKey: string): void {
     const stmt = this.db.prepare(
       `INSERT INTO price_history (provider, origin, destination, depart_date, return_date, cabin, price, stops, airlines, fetched_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const t = this.now();
+    const day = new Date(t).toISOString().slice(0, 10);
+    const scoped = this.db.prepare(
+      "INSERT INTO scoped_history VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(search_key, origin, destination, day) DO UPDATE SET price = MIN(price, excluded.price)");
     for (const f of fares) {
+      scoped.run(searchKey, f.origin, f.destination, f.departDate, day, f.price);
       stmt.run(f.provider, f.origin, f.destination, f.departDate, f.returnDate ?? null, cabin, f.price, f.stops, f.airlines.join(","), t);
     }
   }

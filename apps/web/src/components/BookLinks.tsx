@@ -19,7 +19,7 @@ export function BookLinks({ kind, ctx, primary = false }: { kind: BookingKind; c
   return (
     <div className="book-links">
       {links.map((l, i) => (
-        <a key={l.url} className={primary && i === 0 ? "book-btn primary-link" : "book-btn"} href={l.url} target="_blank" rel="noreferrer sponsored">
+        <a data-booking-kind={kind} key={l.url} className={primary && i === 0 ? "book-btn primary-link" : "book-btn"} href={l.url} target="_blank" rel="noreferrer sponsored">
           {VERB[kind]} {l.partner} ↗
         </a>
       ))}

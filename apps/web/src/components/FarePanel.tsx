@@ -43,7 +43,7 @@ export function FarePanel() {
       </li>)}</ol></details>
       {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
       <BookLinks kind="flight" primary ctx={{ origin: fare.origin, destination: fare.destination, depart: fare.departDate, return: fare.returnDate, adults: draft.adults ?? 1 }} />
-      {fare.bookingUrl?.startsWith("https://") && !fare.bookingUrl.includes("google.com/travel/flights") && <a className="book-btn" href={fare.bookingUrl} target="_blank" rel="noreferrer">See this fare on the provider ↗</a>}
+      {fare.bookingUrl?.startsWith("https://") && !fare.bookingUrl.includes("google.com/travel/flights") && <a className="book-btn" data-booking-kind="flight" href={fare.bookingUrl} target="_blank" rel="noreferrer">See this fare on the provider ↗</a>}
     </div>
     {(() => {
       const guide = guideForAirport(fare.destination);

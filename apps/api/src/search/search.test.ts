@@ -287,6 +287,16 @@ describe("calendar-first search", () => {
     expect(events.some((e) => e.type === "notice" && /more places, months or trip lengths/.test(e.message))).toBe(true);
   });
 
+  it("reads cached grids when the monthly budget is exhausted", async () => {
+    const provider = fakeCalendar();
+    const request = { ...req, quick: true };
+    const first = await collect(provider, { perSearch: 1, monthly: 1, request });
+    const second = await collect(provider, { perSearch: 1, monthly: 1, request, db: first.db });
+    expect(first.fares.length).toBeGreaterThan(0);
+    expect(second.fares.map(f => f.id)).toEqual(first.fares.map(f => f.id));
+    expect(provider.calendarCalls).toHaveLength(1);
+  });
+
   it("reuses cached calendars on a repeat search", async () => {
     const p = fakeCalendar();
     const first = await collect(p, { perSearch: 6 });

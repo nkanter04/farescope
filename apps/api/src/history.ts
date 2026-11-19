@@ -11,13 +11,9 @@ export class PriceHistory {
 
   /** This route and these dates: lowest observed price per day. */
   forFare(fare: Fare): PricePoint[] {
-    const rows = this.db
-      .prepare(
-        `SELECT date(fetched_at / 1000, 'unixepoch') AS day, MIN(price) AS price FROM price_history
-         WHERE origin = ? AND destination = ? AND depart_date = ? AND return_date IS ?
-         GROUP BY day ORDER BY day`,
-      )
-      .all(fare.origin, fare.destination, fare.departDate, fare.returnDate ?? null) as { day: string; price: number }[];
+    if (!fare.queryKey) return [];
+    const rows = this.db.prepare("SELECT day, price FROM scoped_history WHERE search_key = ? AND origin = ? AND destination = ? ORDER BY day")
+      .all(fare.queryKey, fare.origin, fare.destination) as { day: string; price: number }[];
     return rows.map((r) => ({ date: r.day, price: r.price }));
   }
 
@@ -25,11 +21,8 @@ export class PriceHistory {
   series(limitSeries = 500): CurveSeries[] {
     const rows = this.db
       .prepare(
-        `SELECT origin || destination || depart_date || IFNULL(return_date, '') AS k, depart_date AS depart,
-                date(fetched_at / 1000, 'unixepoch') AS day, MIN(price) AS price
-         FROM price_history
-         WHERE depart_date >= date('now', '-400 days')
-         GROUP BY k, day ORDER BY k, day LIMIT 50000`,
+        `SELECT search_key || ':' || origin || ':' || destination AS k, depart_date AS depart, day, price
+         FROM scoped_history WHERE depart_date >= date('now', '-400 days') ORDER BY k, day LIMIT 50000`,
       )
       .all() as { k: string; depart: string; day: string; price: number }[];
     const byKey = new Map<string, CurveSeries>();

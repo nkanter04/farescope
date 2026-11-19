@@ -78,7 +78,15 @@ export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const siteUrl = (process.env.SITE_URL ?? "https://nkanter04.github.io/farescope").replace(/\/$/, "");
-  const paths = buildAll({ siteUrl, today: todayISO() });
+  const measure = process.env.TRIPICA_LIVE_BUILD === "true";
+  const rawToken = process.env.CF_WEB_ANALYTICS_TOKEN;
+  const analyticsToken = rawToken && /^[a-f0-9]{32}$/i.test(rawToken) ? rawToken : undefined;
+  if (measure) {
+    const appPage = out + "/index.html";
+    const script = '<script defer src="./measurement.js"' + (analyticsToken ? ' data-token="' + analyticsToken + '"' : '') + '></script>';
+    writeFileSync(appPage, readFileSync(appPage, "utf8").replace("</head>", script + "</head>"));
+  }
+  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken });
   writeFileSync(MONTH_INDEX_PATH, monthIndexJson());
   console.log(`Wrote ${paths.length - 1} guide pages, sitemap.xml and robots.txt to ${out} (site ${siteUrl}).`);
 }

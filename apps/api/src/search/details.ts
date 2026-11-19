@@ -70,7 +70,7 @@ export async function fareDetails(input: DetailsInput, deps: DetailsDeps): Promi
   try {
     const result = await deps.provider.search(q);
     deps.cache.put(key, deps.provider.name, result, ttlFor(q.departDate, now()));
-    if (deps.provider.live) deps.cache.recordPrices(result.fares, q.cabin);
+    if (deps.provider.live) deps.cache.recordPrices(result.fares, q.cabin, key);
     return { fares: shape(result.fares, { cached: false }), cached: false };
   } catch (e) {
     if (hit) return { fares: shape(hit.value.fares, { cached: true, stale: true }), cached: true, stale: true };

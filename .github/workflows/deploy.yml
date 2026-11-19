@@ -69,6 +69,8 @@ jobs:
       - run: npm run build:cf
         if: env.HAS_TOKEN == 'true'
         env:
+          TRIPICA_LIVE_BUILD: "true"
+          CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
           SITE_URL: ${{ vars.CF_SITE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
           VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}

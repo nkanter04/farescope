@@ -13,7 +13,7 @@ import { planSearch, refineCandidates, sampleCandidates, type Candidate } from "
 export interface SearchCache {
   get<T>(key: string): { value: T; fetchedAt: number; expired: boolean } | undefined;
   put(key: string, provider: string, value: unknown, ttlMs: number): void;
-  recordPrices(fares: Fare[], cabin: Cabin): void;
+  recordPrices(fares: Fare[], cabin: Cabin, searchKey: string): void;
 }
 export interface SearchQuota {
   remaining(clientId: string): number;
@@ -75,10 +75,11 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
   // Price grids: "anywhere" and regions through explore, named places through the calendar.
   const today = todayISO(now());
   const exploreAll = provider.explore ? planExplore(req, today) : [];
-  const exploreJobs = exploreAll.slice(0, Math.max(0, req.quick ? budget : budget - 1));
+  const gridBudget = Math.max(budget, deps.perSearchBudget - (cost ? cost * Math.min(SHORTLIST_LIMIT, Math.floor(deps.perSearchBudget / (2 * cost))) : 0));
+  const exploreJobs = exploreAll.slice(0, Math.max(0, req.quick ? gridBudget : gridBudget - 1));
   const calendarRoutes = provider.calendar ? planCalendarRoutes(req, { skipBroad: !!provider.explore }) : [];
   const calendarPlan = { routes: calendarRoutes, departFrom: plan.departFrom, departTo: plan.departTo };
-  const calendarBudget = budget - exploreJobs.length;
+  const calendarBudget = gridBudget - exploreJobs.length;
   const calendarJobs = provider.calendar && calendarBudget > 0
     ? planCalendar(req, calendarPlan, provider.calendarMaxDays ?? 60, calendarBudget, { reserveForDetails: !req.quick })
     : [];
@@ -181,7 +182,7 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
       providerCalls++;
       const result = await provider.search(c.query);
       cache.put(c.key, provider.name, result, ttlFor(c.query.departDate, now()));
-      if (provider.live) cache.recordPrices(result.fares, c.query.cabin);
+      if (provider.live) cache.recordPrices(result.fares, c.query.cabin, c.key);
       consider(c, result.fares, { cached: false });
       if (result.insights && provider.live) {
         emit({ type: "insights", route: `${c.query.origins.join(",")}>${c.query.destinations.join(",")}`, insights: result.insights });
@@ -203,6 +204,7 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
       cacheHits++;
       return { value: hit.value, flags: { cached: true } };
     }
+    if (provider.live && providerCalls >= budget) return { value: hit?.value, flags: { cached: true, stale: true } };
     const decision = provider.live ? quota.tryConsume(deps.clientId) : { ok: true as const };
     if (!decision.ok) {
       if (!quotaNoticeSent) {

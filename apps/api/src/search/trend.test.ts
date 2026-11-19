@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { addDays, type Fare } from "@farescope/shared";
 import { QueryCache } from "../cache.ts";
+import { PriceHistory } from "../history.ts";
 import { openDb } from "../db.ts";
 import { QuotaGuard } from "../quota.ts";
 import { createMockFlightProvider, mockPriceHistory } from "../providers/mock.ts";
@@ -18,6 +19,20 @@ const query: FlightQuery = {
 async function mockFares(today = TODAY) {
   return (await createMockFlightProvider({ today: () => today }).search(query)).fares;
 }
+
+it("isolates observations by cabin and party and ignores legacy unscoped rows", async () => {
+  const [fare] = await mockFares();
+  const db = openDb(":memory:");
+  const cache = new QueryCache(db, () => NOW.getTime());
+  const history = new PriceHistory(db);
+  const economy = flightQueryKey("serpapi", query);
+  const business = flightQueryKey("serpapi", { ...query, cabin: "business", adults: 2 });
+  cache.recordPrices([{ ...fare, price: 500 }], "economy", economy);
+  cache.recordPrices([{ ...fare, price: 4000 }], "business", business);
+  expect(history.forFare({ ...fare, queryKey: business })).toEqual([{ date: TODAY, price: 4000 }]);
+  expect(history.forFare({ ...fare, queryKey: undefined })).toEqual([]);
+  db.close();
+});
 
 describe("mock price history", () => {
   it("is deterministic, covers the whole on-sale window and stays near today's price", async () => {
@@ -112,6 +127,6 @@ describe("price watches", () => {
     expect(r.watch.status).toBe("departed");
     const target = fares[fares.length - 1];
     expect(matchFare(target, fares)).toBe(target);
-    expect(matchFare({ ...target, airlines: ["Nobody"] }, fares)!.stops).toBe(target.stops);
+    expect(matchFare({ ...target, airlines: ["Nobody"] }, fares)).toBeUndefined();
   });
 });
