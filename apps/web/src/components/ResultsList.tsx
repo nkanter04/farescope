@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CHECK_EVENT } from "../human.ts";
 import { daysBetween, type Fare, type Stay } from "@farescope/shared";
 import { AirlineFilter } from "./AirlineFilter.tsx";
 import { FareAirlines } from "./AirlineLogo.tsx";
@@ -6,6 +7,17 @@ import { useDerived } from "../derived.ts";
 import { cityOf, fareEnds, duration, money, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
 import { passesAirlines } from "../derived.ts";
 import { ANY_AIRLINE, useStore } from "../store.ts";
+
+/** True while the Turnstile robot check runs (see human.ts). */
+function useHumanCheck(): boolean {
+  const [checking, setChecking] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setChecking((e as CustomEvent<boolean>).detail);
+    window.addEventListener(CHECK_EVENT, on);
+    return () => window.removeEventListener(CHECK_EVENT, on);
+  }, []);
+  return checking;
+}
 
 export function ResultsList() {
   const status = useStore((s) => s.status);
@@ -33,6 +45,7 @@ export function ResultsList() {
   const { list } = useDerived();
 
   const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+  const checking = useHumanCheck();
 
   return (
     <section className="results">
@@ -47,7 +60,7 @@ export function ResultsList() {
         <div className="progress">
           <div className="bar" style={{ width: `${pct}%` }} />
           <span>
-            Checking selected routes and dates… {pct}%
+            {checking ? "Confirming you’re not a robot… (tap the box in the corner if it asks)" : `Checking selected routes and dates… ${pct}%`}
           </span>
         </div>
       )}

@@ -54,6 +54,16 @@ function loadTurnstile(): Promise<TurnstileApi> {
 
 let pending: Promise<string | undefined> | undefined;
 
+/** Lets the UI say "Confirming you're not a robot…" while a check runs. */
+export const CHECK_EVENT = "tripica:human-check";
+const announce = (checking: boolean) => {
+  try {
+    window.dispatchEvent(new CustomEvent<boolean>(CHECK_EVENT, { detail: checking }));
+  } catch {
+    /* no window (tests) */
+  }
+};
+
 /** A valid pass for today, running the check if needed. Resolves undefined when checks are off. */
 export function ensurePass(force = false): Promise<string | undefined> {
   if (!SITE_KEY) return Promise.resolve(undefined);
@@ -64,6 +74,7 @@ export function ensurePass(force = false): Promise<string | undefined> {
     savePass(undefined);
   }
   pending ??= (async () => {
+    announce(true);
     const turnstile = await loadTurnstile();
     // Usually invisible; when Cloudflare wants a click, the box shows in the corner.
     const box = document.createElement("div");
@@ -90,6 +101,7 @@ export function ensurePass(force = false): Promise<string | undefined> {
     }
   })().finally(() => {
     pending = undefined;
+    announce(false);
   });
   return pending;
 }
