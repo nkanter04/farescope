@@ -563,3 +563,10 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
   .airline-filter { flex: 1 1 100%; }
   .airline-panel { left: 0; right: auto; }
 }
+
+
+/* ---------- Links to the "When to visit" guides ---------- */
+.guides-link { font-weight: 600; font-size: 0.92rem; color: var(--text-2); text-decoration: none; padding: 6px 10px; border-radius: 999px; }
+.guides-link:hover { background: var(--panel-2); color: var(--accent); }
+.guide-link { display: block; margin-top: 12px; font-weight: 600; font-size: 0.92rem; color: var(--accent); text-decoration: none; }
+.guide-link:hover { text-decoration: underline; text-underline-offset: 3px; }

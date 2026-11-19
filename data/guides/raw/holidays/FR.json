@@ -1,0 +1,121 @@
+{
+ "country": "FR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-29",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-06",
+    "name": "Ascension Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-08",
+    "name": "Victory in Europe Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-17",
+    "name": "Whit Monday",
+    "global": true
+   },
+   {
+    "date": "2027-07-14",
+    "name": "Bastille Day",
+    "global": true
+   },
+   {
+    "date": "2027-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-01",
+    "name": "All Saints' Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-11",
+    "name": "Armistice Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-08",
+    "name": "Victory in Europe Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-25",
+    "name": "Ascension Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-05",
+    "name": "Whit Monday",
+    "global": true
+   },
+   {
+    "date": "2028-07-14",
+    "name": "Bastille Day",
+    "global": true
+   },
+   {
+    "date": "2028-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-01",
+    "name": "All Saints' Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-11",
+    "name": "Armistice Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

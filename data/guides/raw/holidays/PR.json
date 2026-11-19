@@ -1,0 +1,221 @@
+{
+ "country": "PR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-01-06",
+    "name": "Three Kings Day / Epiphany",
+    "global": true
+   },
+   {
+    "date": "2027-01-11",
+    "name": "Birthday of Eugenio María de Hostos",
+    "global": true
+   },
+   {
+    "date": "2027-01-18",
+    "name": "Martin Luther King, Jr. Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-15",
+    "name": "Presidents' Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-18",
+    "name": "Birthday of Luis Muñoz Marín",
+    "global": true
+   },
+   {
+    "date": "2027-03-22",
+    "name": "Emancipation Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-04-19",
+    "name": "Birthday of José de Diego",
+    "global": true
+   },
+   {
+    "date": "2027-05-31",
+    "name": "Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-05",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-19",
+    "name": "Birthday of Don Luis Muñoz Rivera",
+    "global": true
+   },
+   {
+    "date": "2027-07-25",
+    "name": "Puerto Rico Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-27",
+    "name": "Birthday of Dr. José Celso Barbosa",
+    "global": true
+   },
+   {
+    "date": "2027-09-06",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-11",
+    "name": "Columbus Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-11",
+    "name": "Veterans Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-19",
+    "name": "Discovery of Puerto Rico",
+    "global": true
+   },
+   {
+    "date": "2027-11-25",
+    "name": "Thanksgiving Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-24",
+    "name": "Christmas Eve",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2027-12-31",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-06",
+    "name": "Three Kings Day / Epiphany",
+    "global": true
+   },
+   {
+    "date": "2028-01-10",
+    "name": "Birthday of Eugenio María de Hostos",
+    "global": true
+   },
+   {
+    "date": "2028-01-17",
+    "name": "Martin Luther King, Jr. Day",
+    "global": true
+   },
+   {
+    "date": "2028-02-18",
+    "name": "Birthday of Luis Muñoz Marín",
+    "global": true
+   },
+   {
+    "date": "2028-02-21",
+    "name": "Presidents' Day",
+    "global": true
+   },
+   {
+    "date": "2028-03-22",
+    "name": "Emancipation Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Birthday of José de Diego",
+    "global": true
+   },
+   {
+    "date": "2028-05-29",
+    "name": "Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-04",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-17",
+    "name": "Birthday of Don Luis Muñoz Rivera",
+    "global": true
+   },
+   {
+    "date": "2028-07-25",
+    "name": "Puerto Rico Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-27",
+    "name": "Birthday of Dr. José Celso Barbosa",
+    "global": true
+   },
+   {
+    "date": "2028-09-04",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-09",
+    "name": "Columbus Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-10",
+    "name": "Veterans Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-19",
+    "name": "Discovery of Puerto Rico",
+    "global": true
+   },
+   {
+    "date": "2028-11-23",
+    "name": "Thanksgiving Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-24",
+    "name": "Christmas Eve",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

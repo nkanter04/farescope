@@ -1,0 +1,181 @@
+{
+ "country": "PE",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-25",
+    "name": "Maundy Thursday",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-03-28",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-06-07",
+    "name": "Battle of Arica and Flag Day",
+    "global": true
+   },
+   {
+    "date": "2027-06-29",
+    "name": "Saint Peter and Saint Paul",
+    "global": true
+   },
+   {
+    "date": "2027-07-23",
+    "name": "Air Force Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-28",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-29",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-08-06",
+    "name": "Battle of Junin",
+    "global": true
+   },
+   {
+    "date": "2027-08-30",
+    "name": "Santa Rosa de Lima",
+    "global": true
+   },
+   {
+    "date": "2027-10-08",
+    "name": "Battle of Angamos",
+    "global": true
+   },
+   {
+    "date": "2027-11-01",
+    "name": "All Saints Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-08",
+    "name": "Immaculate Conception",
+    "global": true
+   },
+   {
+    "date": "2027-12-09",
+    "name": "Battle of Ayacucho",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-13",
+    "name": "Maundy Thursday",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-16",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-07",
+    "name": "Battle of Arica and Flag Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-29",
+    "name": "Saint Peter and Saint Paul",
+    "global": true
+   },
+   {
+    "date": "2028-07-23",
+    "name": "Air Force Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-28",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-29",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-08-06",
+    "name": "Battle of Junin",
+    "global": true
+   },
+   {
+    "date": "2028-08-30",
+    "name": "Santa Rosa de Lima",
+    "global": true
+   },
+   {
+    "date": "2028-10-08",
+    "name": "Battle of Angamos",
+    "global": true
+   },
+   {
+    "date": "2028-11-01",
+    "name": "All Saints Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-08",
+    "name": "Immaculate Conception",
+    "global": true
+   },
+   {
+    "date": "2028-12-09",
+    "name": "Battle of Ayacucho",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

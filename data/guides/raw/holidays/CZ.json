@@ -1,0 +1,141 @@
+{
+ "country": "CZ",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-03-29",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-08",
+    "name": "Liberation Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-05",
+    "name": "Saints Cyril and Methodius Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-06",
+    "name": "Jan Hus Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-28",
+    "name": "St. Wenceslas Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-28",
+    "name": "Independent Czechoslovak State Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-17",
+    "name": "Struggle for Freedom and Democracy Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-24",
+    "name": "Christmas Eve",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-08",
+    "name": "Liberation Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-05",
+    "name": "Saints Cyril and Methodius Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-06",
+    "name": "Jan Hus Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-28",
+    "name": "St. Wenceslas Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-28",
+    "name": "Independent Czechoslovak State Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-17",
+    "name": "Struggle for Freedom and Democracy Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-24",
+    "name": "Christmas Eve",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ]
+ }
+}

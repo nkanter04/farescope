@@ -1,0 +1,181 @@
+{
+ "country": "HK",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-06",
+    "name": "Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2027-02-08",
+    "name": "Second day of Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2027-02-09",
+    "name": "Third day of Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-03-27",
+    "name": "Holy Saturday",
+    "global": true
+   },
+   {
+    "date": "2027-03-29",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2027-04-05",
+    "name": "Ching Ming Festival",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-13",
+    "name": "Buddha's Birthday",
+    "global": true
+   },
+   {
+    "date": "2027-06-09",
+    "name": "Dragon Boat Festival",
+    "global": true
+   },
+   {
+    "date": "2027-07-01",
+    "name": "Hong Kong Special Administrative Region Establishment Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-16",
+    "name": "Day following the Mid-Autumn Festival",
+    "global": true
+   },
+   {
+    "date": "2027-10-01",
+    "name": "National Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-08",
+    "name": "Chung Yeung Festival",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-27",
+    "name": "Boxing Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-26",
+    "name": "Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2028-01-27",
+    "name": "Second day of Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2028-01-28",
+    "name": "Third day of Lunar New Year",
+    "global": true
+   },
+   {
+    "date": "2028-04-04",
+    "name": "Ching Ming Festival",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-15",
+    "name": "Holy Saturday",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-02",
+    "name": "Buddha's Birthday",
+    "global": true
+   },
+   {
+    "date": "2028-05-29",
+    "name": "Dragon Boat Festival",
+    "global": true
+   },
+   {
+    "date": "2028-07-01",
+    "name": "Hong Kong Special Administrative Region Establishment Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-02",
+    "name": "National Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-04",
+    "name": "Day following the Mid-Autumn Festival",
+    "global": true
+   },
+   {
+    "date": "2028-10-26",
+    "name": "Chung Yeung Festival",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-26",
+    "name": "Boxing Day",
+    "global": true
+   }
+  ]
+ }
+}

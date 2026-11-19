@@ -1,0 +1,141 @@
+{
+ "country": "DO",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-01-06",
+    "name": "Day of Kings",
+    "global": true
+   },
+   {
+    "date": "2027-01-21",
+    "name": "Our Lady of Altagracia",
+    "global": true
+   },
+   {
+    "date": "2027-01-26",
+    "name": "Duarte's Birthday",
+    "global": true
+   },
+   {
+    "date": "2027-02-27",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-27",
+    "name": "Corpus Christi",
+    "global": true
+   },
+   {
+    "date": "2027-05-28",
+    "name": "Mother's Day",
+    "global": true
+   },
+   {
+    "date": "2027-08-16",
+    "name": "Restoration Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-24",
+    "name": "Our Lady of Mercy",
+    "global": true
+   },
+   {
+    "date": "2027-11-06",
+    "name": "Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-06",
+    "name": "Day of Kings",
+    "global": true
+   },
+   {
+    "date": "2028-01-21",
+    "name": "Our Lady of Altagracia",
+    "global": true
+   },
+   {
+    "date": "2028-01-26",
+    "name": "Duarte's Birthday",
+    "global": true
+   },
+   {
+    "date": "2028-02-27",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-28",
+    "name": "Mother's Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-15",
+    "name": "Corpus Christi",
+    "global": true
+   },
+   {
+    "date": "2028-08-16",
+    "name": "Restoration Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-24",
+    "name": "Our Lady of Mercy",
+    "global": true
+   },
+   {
+    "date": "2028-11-06",
+    "name": "Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

@@ -1,0 +1,81 @@
+{
+ "country": "MX",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-01",
+    "name": "Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-15",
+    "name": "Benito Juárez's birthday",
+    "global": true
+   },
+   {
+    "date": "2027-04-30",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-16",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-15",
+    "name": "Revolution Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2027-12-31",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-02-07",
+    "name": "Constitution Day",
+    "global": true
+   },
+   {
+    "date": "2028-03-20",
+    "name": "Benito Juárez's birthday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-16",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-20",
+    "name": "Revolution Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

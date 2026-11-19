@@ -1,0 +1,131 @@
+{
+ "country": "BR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-03-28",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2027-04-21",
+    "name": "Tiradentes",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-27",
+    "name": "Corpus Christi",
+    "global": true
+   },
+   {
+    "date": "2027-09-07",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-12",
+    "name": "Our Lady of Aparecida",
+    "global": true
+   },
+   {
+    "date": "2027-11-02",
+    "name": "All Souls' Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-15",
+    "name": "Republic Proclamation Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-20",
+    "name": "Black Awareness Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-16",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2028-04-21",
+    "name": "Tiradentes",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-15",
+    "name": "Corpus Christi",
+    "global": true
+   },
+   {
+    "date": "2028-09-07",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-12",
+    "name": "Our Lady of Aparecida",
+    "global": true
+   },
+   {
+    "date": "2028-11-02",
+    "name": "All Souls' Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-15",
+    "name": "Republic Proclamation Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-20",
+    "name": "Black Awareness Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

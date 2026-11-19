@@ -20,6 +20,8 @@ npx vitest run apps/api/src/search             # a single test folder/file
 npm run typecheck      # tsc for shared, api, web
 npm run build:demo -w @farescope/web           # static GitHub Pages build
 npm run backtest       # price-forecast accuracy (real price_history if ≥30 flights, else simulated)
+npm run guides:fetch   # refresh cached guide data (NASA POWER climate, Nager.Date holidays) → data/guides/raw
+npm run guides:build   # render static guide pages + sitemap into apps/web/dist (run after build:demo)
 ```
 
 Requires Node 22.13+ (built-in `node:sqlite`). Before calling work done, run `npm run typecheck` and `npm test`. If the UI changed, check it in a browser at desktop width and at 375px (no horizontal scroll, no console errors).
@@ -48,6 +50,7 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
   - `insights.ts` (a separate Zustand store) holds price trends and watches. UI: `PriceInsight` (verdict card + watch switch, in `FarePanel`), `PriceTrendChart` (SVG, drawn at real pixel width), `WatchedFlights` (in My trips). Watches are re-checked on load and every 30 min while open, and drops trigger a browser notification if allowed.
   - `derived.ts` holds the aggregates shared by the globe, calendar and list.
   - `api.ts` routes calls to `demo.ts` (the in-browser engine) when `MODE === "demo"`.
+- **"When to visit" guides** (static, SEO): `packages/shared/src/guides.ts` (pure) turns NASA POWER climate normals + public holidays + curated seasonal events (`data/destinations.json` → `events`) into per-month comfort, demand, labels (Best value / Peak / Shoulder / Off-season), best months and template sentences built only from the numbers. `apps/web/src/guides/` renders `/guides/`, `/guides/<slug>/`, `/guides/month/<month>/`, `sitemap.xml` and `robots.txt` with `react-dom/server` (no client JS). The canonical domain is `SITE_URL`. The pages link into the app with `?to=…&depart=YYYY-MM` (`urlSearch.ts`), which pre-fills and runs a search. **Never put simulated prices on guide pages;** a price-by-month section needs real fare data.
 - **Themes:** `apps/web/src/themes/daylight.css` is the only shipped stylesheet, loaded at runtime by `theme.ts`. The globe reads `--globe-texture`, `--globe-atmosphere`, `--globe-origin`, `--globe-label`, `--globe-muted-point` and `--globe-arc-scale` from `:root`. Unused drafts live in `design/theme-drafts/`.
 - **Deploy:** pushing to `main` runs `.github/workflows/deploy.yml` (typecheck → test → demo build → GitHub Pages).
 
@@ -75,6 +78,7 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 - **Stale mock data:** mock results are cached. After editing `providers/mock.ts`, delete `apps/api/.local-data/farescope.sqlite*`.
 - **SerpApi round trips:** the price is the round-trip total, but only outbound legs are returned. Return legs would need a second call, which we skip to save quota.
 - **Broad places and quota:** a live provider covers about 7 airports per call. Don't widen country/region expansion beyond major airports without accounting for the per-search budget.
+- **Guide data is cached in git** (`data/guides/raw`) so builds need no network. NASA POWER values are ~50 km grid averages (e.g. Kyoto reads a few °C cool), and the pages say so. Nager.Date has no holidays for some countries (TH, TW, AE): show "not available", never "none".
 - **Predictions are estimates:** the UI must always say what data a prediction used (and "simulated" in the demo), and never present it as a guarantee.
 - **No Amadeus:** its Self-Service API closed on 2026-07-17. Airlines publish about 11 months out, so the UI caps dates at today + 330 days.
 

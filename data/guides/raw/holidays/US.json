@@ -1,0 +1,111 @@
+{
+ "country": "US",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-01-18",
+    "name": "Martin Luther King, Jr. Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-15",
+    "name": "Presidents Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-31",
+    "name": "Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2027-06-18",
+    "name": "Juneteenth National Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-05",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-06",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-11",
+    "name": "Veterans Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-25",
+    "name": "Thanksgiving Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-24",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2027-12-31",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-17",
+    "name": "Martin Luther King, Jr. Day",
+    "global": true
+   },
+   {
+    "date": "2028-02-21",
+    "name": "Presidents Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-29",
+    "name": "Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-19",
+    "name": "Juneteenth National Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-04",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-04",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-10",
+    "name": "Veterans Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-23",
+    "name": "Thanksgiving Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

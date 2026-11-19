@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
-import { resolvePlace } from "@farescope/shared";
+import { resolvePlace, todayISO } from "@farescope/shared";
 import { FarePanel } from "./components/FarePanel.tsx";
 import { PriceCalendar } from "./components/PriceCalendar.tsx";
 import { ResultsList } from "./components/ResultsList.tsx";
@@ -9,6 +9,7 @@ import { SharedTrips } from "./components/SharedTrips.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
+import { readUrlSearch } from "./urlSearch.ts";
 import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
@@ -22,6 +23,9 @@ class MapBoundary extends Component<{ children: ReactNode }, { failed: boolean }
     return this.state.failed ? <p role="status">The map could not load. Open List or Calendar to explore these fares.</p> : this.props.children;
   }
 }
+
+/** Deep-link params are applied once per page load (React may run effects twice in development). */
+let urlSearchHandled = false;
 
 export function App() {
   const view = useStore((s) => s.view);
@@ -43,6 +47,16 @@ export function App() {
   }, [refreshQuota]);
   const initWatches = useInsights((s) => s.initWatches);
   useEffect(() => { void initWatches(); }, [initWatches]);
+  // Deep links (e.g. from the guides): ?to=…&depart=YYYY-MM pre-fills the search and runs it once.
+  useEffect(() => {
+    if (urlSearchHandled) return;
+    urlSearchHandled = true;
+    const patch = readUrlSearch(window.location.search, todayISO());
+    if (!patch) return;
+    useStore.getState().setRequest(patch);
+    void useStore.getState().runSearch();
+    window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+  }, []);
   useEffect(() => { if (selected) { setPanel("List"); setEditing(false); } }, [selected]);
   useEffect(() => { if (submitted) { setPanel("List"); setEditing(false); } }, [submitted]);
   useEffect(() => {
@@ -67,6 +81,7 @@ export function App() {
             Source on GitHub ↗
           </a>
         )}
+        <a className="guides-link" href="guides/">When to visit</a>
         <nav className="tabs">
           <button className={view === "search" ? "on" : ""} onClick={() => setView("search")}>
             Search

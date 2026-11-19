@@ -1,0 +1,91 @@
+{
+ "country": "CA",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-05-24",
+    "name": "Victoria Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-01",
+    "name": "Canada Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-06",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-30",
+    "name": "National Day for Truth and Reconciliation",
+    "global": true
+   },
+   {
+    "date": "2027-10-11",
+    "name": "Thanksgiving",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-05-22",
+    "name": "Victoria Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-01",
+    "name": "Canada Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-04",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-30",
+    "name": "National Day for Truth and Reconciliation",
+    "global": true
+   },
+   {
+    "date": "2028-10-09",
+    "name": "Thanksgiving",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

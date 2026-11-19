@@ -1,0 +1,171 @@
+{
+ "country": "AR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-02-08",
+    "name": "Carnival",
+    "global": true
+   },
+   {
+    "date": "2027-02-09",
+    "name": "Carnival",
+    "global": true
+   },
+   {
+    "date": "2027-03-24",
+    "name": "Day of Remembrance for Truth and Justice",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-04-02",
+    "name": "Day of the Veterans and Fallen of the Malvinas War",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-25",
+    "name": "May Revolution",
+    "global": true
+   },
+   {
+    "date": "2027-06-21",
+    "name": "Anniversary of the Passing of General Martín Miguel de Güemes",
+    "global": true
+   },
+   {
+    "date": "2027-06-20",
+    "name": "General Manuel Belgrano Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-09",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-08-16",
+    "name": "General José de San Martín Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-11",
+    "name": "Day of Respect for Cultural Diversity",
+    "global": true
+   },
+   {
+    "date": "2027-11-20",
+    "name": "National Sovereignty Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-08",
+    "name": "Immaculate Conception Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-02-28",
+    "name": "Carnival",
+    "global": true
+   },
+   {
+    "date": "2028-02-29",
+    "name": "Carnival",
+    "global": true
+   },
+   {
+    "date": "2028-03-24",
+    "name": "Day of Remembrance for Truth and Justice",
+    "global": true
+   },
+   {
+    "date": "2028-04-02",
+    "name": "Day of the Veterans and Fallen of the Malvinas War",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-25",
+    "name": "May Revolution",
+    "global": true
+   },
+   {
+    "date": "2028-06-17",
+    "name": "Anniversary of the Passing of General Martín Miguel de Güemes",
+    "global": true
+   },
+   {
+    "date": "2028-06-20",
+    "name": "General Manuel Belgrano Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-09",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-08-21",
+    "name": "General José de San Martín Memorial Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-16",
+    "name": "Day of Respect for Cultural Diversity",
+    "global": true
+   },
+   {
+    "date": "2028-11-20",
+    "name": "National Sovereignty Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-08",
+    "name": "Immaculate Conception Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

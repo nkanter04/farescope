@@ -1,0 +1,161 @@
+{
+ "country": "GR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-01-06",
+    "name": "Epiphany",
+    "global": true
+   },
+   {
+    "date": "2027-03-15",
+    "name": "Clean Monday",
+    "global": true
+   },
+   {
+    "date": "2027-03-25",
+    "name": "Annunciation",
+    "global": true
+   },
+   {
+    "date": "2027-03-25",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-04-30",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-02",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2027-05-03",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2027-06-20",
+    "name": "Pentecost",
+    "global": true
+   },
+   {
+    "date": "2027-06-21",
+    "name": "Whit Monday",
+    "global": true
+   },
+   {
+    "date": "2027-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-28",
+    "name": "Ochi Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-06",
+    "name": "Epiphany",
+    "global": true
+   },
+   {
+    "date": "2028-02-28",
+    "name": "Clean Monday",
+    "global": true
+   },
+   {
+    "date": "2028-03-25",
+    "name": "Annunciation",
+    "global": true
+   },
+   {
+    "date": "2028-03-25",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-04-16",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-04",
+    "name": "Pentecost",
+    "global": true
+   },
+   {
+    "date": "2028-06-05",
+    "name": "Whit Monday",
+    "global": true
+   },
+   {
+    "date": "2028-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-28",
+    "name": "Ochi Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ]
+ }
+}

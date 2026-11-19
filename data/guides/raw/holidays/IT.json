@@ -1,0 +1,141 @@
+{
+ "country": "IT",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-01-06",
+    "name": "Epiphany",
+    "global": true
+   },
+   {
+    "date": "2027-03-28",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2027-03-29",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2027-04-25",
+    "name": "Liberation Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "International Workers Day",
+    "global": true
+   },
+   {
+    "date": "2027-06-02",
+    "name": "Republic Day",
+    "global": true
+   },
+   {
+    "date": "2027-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2027-10-04",
+    "name": "St. Francis of Assisi's Day",
+    "global": true
+   },
+   {
+    "date": "2027-11-01",
+    "name": "All Saints Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-08",
+    "name": "Immaculate Conception",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-01-06",
+    "name": "Epiphany",
+    "global": true
+   },
+   {
+    "date": "2028-04-16",
+    "name": "Easter Sunday",
+    "global": true
+   },
+   {
+    "date": "2028-04-17",
+    "name": "Easter Monday",
+    "global": true
+   },
+   {
+    "date": "2028-04-25",
+    "name": "Liberation Day",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "International Workers Day",
+    "global": true
+   },
+   {
+    "date": "2028-06-02",
+    "name": "Republic Day",
+    "global": true
+   },
+   {
+    "date": "2028-08-15",
+    "name": "Assumption Day",
+    "global": true
+   },
+   {
+    "date": "2028-10-04",
+    "name": "St. Francis of Assisi's Day",
+    "global": true
+   },
+   {
+    "date": "2028-11-01",
+    "name": "All Saints Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-08",
+    "name": "Immaculate Conception",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-26",
+    "name": "St. Stephen's Day",
+    "global": true
+   }
+  ]
+ }
+}

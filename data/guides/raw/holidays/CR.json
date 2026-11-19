@@ -1,0 +1,121 @@
+{
+ "country": "CR",
+ "source": "Nager.Date",
+ "fetched": "2026-11-19",
+ "years": {
+  "2027": [
+   {
+    "date": "2027-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2027-03-25",
+    "name": "Maundy Thursday",
+    "global": true
+   },
+   {
+    "date": "2027-03-26",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2027-04-11",
+    "name": "Juan Santamaría Day",
+    "global": true
+   },
+   {
+    "date": "2027-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2027-07-25",
+    "name": "Annexation of the Party of Nicoya to Costa Rica",
+    "global": true
+   },
+   {
+    "date": "2027-08-02",
+    "name": "Feast of Our Lady of the Angels",
+    "global": true
+   },
+   {
+    "date": "2027-08-15",
+    "name": "Mother's Day",
+    "global": true
+   },
+   {
+    "date": "2027-09-15",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-01",
+    "name": "Army Abolition Day",
+    "global": true
+   },
+   {
+    "date": "2027-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ],
+  "2028": [
+   {
+    "date": "2028-01-01",
+    "name": "New Year's Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-11",
+    "name": "Juan Santamaría Day",
+    "global": true
+   },
+   {
+    "date": "2028-04-13",
+    "name": "Maundy Thursday",
+    "global": true
+   },
+   {
+    "date": "2028-04-14",
+    "name": "Good Friday",
+    "global": true
+   },
+   {
+    "date": "2028-05-01",
+    "name": "Labour Day",
+    "global": true
+   },
+   {
+    "date": "2028-07-25",
+    "name": "Annexation of the Party of Nicoya to Costa Rica",
+    "global": true
+   },
+   {
+    "date": "2028-08-02",
+    "name": "Feast of Our Lady of the Angels",
+    "global": true
+   },
+   {
+    "date": "2028-08-15",
+    "name": "Mother's Day",
+    "global": true
+   },
+   {
+    "date": "2028-09-15",
+    "name": "Independence Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-01",
+    "name": "Army Abolition Day",
+    "global": true
+   },
+   {
+    "date": "2028-12-25",
+    "name": "Christmas Day",
+    "global": true
+   }
+  ]
+ }
+}

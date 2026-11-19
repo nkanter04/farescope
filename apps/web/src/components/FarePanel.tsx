@@ -5,6 +5,7 @@ import { cityOf, duration, money, shortDate, stopsLabel, travelerCount, tripPric
 import { useStore } from "../store.ts";
 import { LodgingEditor } from "./LodgingEditor.tsx";
 import { PriceInsight } from "./PriceInsight.tsx";
+import { guideForAirport } from "../urlSearch.ts";
 import { TripTimeline } from "./TripTimeline.tsx";
 
 export function FarePanel() {
@@ -41,6 +42,10 @@ export function FarePanel() {
       {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
       {fare.bookingUrl?.startsWith("https://") && <a className="secondary" href={fare.bookingUrl} target="_blank" rel="noreferrer">Search these flight dates ↗</a>}
     </div>
+    {(() => {
+      const guide = guideForAirport(fare.destination);
+      return guide ? <a className="guide-link" href={`guides/${guide.slug}/`}>When to visit {guide.name}: weather, crowds and best months →</a> : null;
+    })()}
     <PriceInsight fare={fare} cabin={draft.search?.cabin ?? "economy"} adults={draft.adults ?? draft.search?.adults ?? 1} />
     <div className="row">
       <label className="field">Trip name<input maxLength={120} value={draft.name} onChange={event => { setDraft({ name: event.target.value }); setStatus(""); }} /></label>

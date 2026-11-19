@@ -28,6 +28,8 @@ jobs:
       - run: npm test
       # Static demo: the search engine and mock prices run in the browser, no API server.
       - run: npm run build:demo -w @farescope/web
+      # Static "When to visit" guide pages + sitemap.xml, from cached data in data/guides/raw (no network).
+      - run: npm run guides:build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist

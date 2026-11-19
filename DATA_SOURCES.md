@@ -21,6 +21,14 @@ To regenerate, download these files into a local directory and run the import sc
 ./scripts/import-airports.ps1 -SourceDirectory /path/to/downloads
 ```
 
+## Destination guides
+
+- **Climate:** [NASA POWER](https://power.larc.nasa.gov/) climatology API (2001–2025 monthly averages, about 50 km grid). Free and open data; NASA asks for attribution, which every guide page shows. Typical highs and lows are computed as T2M ± T2M_RANGE / 2. The API's T2M_MAX and T2M_MIN are monthly extremes, not typical highs and lows.
+- **Public holidays:** [Nager.Date](https://date.nager.at/) (open source), nationwide public holidays for 2027. Some countries (Thailand, Taiwan, UAE) have no data; the pages say so.
+- **Seasonal events** (cherry blossoms, Carnival, Mardi Gras, etc.) are curated by Farescope in `packages/shared/src/data/destinations.json`, with approximate dates in words.
+- Open-Meteo and Meteostat are not used: their free tiers are non-commercial.
+- Cached responses live in `data/guides/raw/`. Refresh them with `npm run guides:fetch`.
+
 ## Airline logos
 
 Airline names and logos are the airlines' trademarks, shown only to identify which airline operates a flight. With live data, each flight segment's logo URL comes from the provider (SerpApi returns Google Flights' logo URLs). The demo uses the same public CDN (`www.gstatic.com/flights/airline_logos/70px/<IATA>.png`) for airlines in `packages/shared/src/airlines.ts` only, and falls back to a brand-colored badge with the IATA code. Before a commercial launch, confirm the terms for displaying logos or switch to a licensed logo source.
