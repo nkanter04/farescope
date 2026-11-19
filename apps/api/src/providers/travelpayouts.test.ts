@@ -14,12 +14,13 @@ const q: FlightQuery = { origins: ["AUS"], destinations: ["TYO"], departDate: "2
 
 describe("travelpayouts", () => {
   it("builds one-pair, date-specific request params", () => {
-    const p = buildTravelpayoutsParams({ ...q, maxStops: 0 }, "TOKEN");
+    const p = buildTravelpayoutsParams({ ...q, maxStops: 0 });
+    expect(p.has("token")).toBe(false);
     expect(Object.fromEntries(p)).toMatchObject({
       origin: "AUS", destination: "TYO", departure_at: "2027-04-03", return_at: "2027-04-12",
-      one_way: "false", direct: "true", currency: "usd", sorting: "price", token: "TOKEN",
+      one_way: "false", direct: "true", currency: "usd", sorting: "price",
     });
-    expect(buildTravelpayoutsParams({ ...q, returnDate: undefined }, "T").get("one_way")).toBe("true");
+    expect(buildTravelpayoutsParams({ ...q, returnDate: undefined }).get("one_way")).toBe("true");
   });
 
   it("maps tickets to fares with airline names, real airports and affiliate links", () => {
@@ -48,14 +49,20 @@ describe("travelpayouts", () => {
 
   it("calls the v3 endpoint with the token and parses the response", async () => {
     let called = "";
+    let sentToken: string | null = null;
     const provider = createTravelpayoutsFlightProvider({
       token: "SECRET",
-      fetchImpl: (async (url: string) => { called = url; return new Response(JSON.stringify(json), { status: 200 }); }) as unknown as typeof fetch,
+      fetchImpl: (async (url: string, init?: RequestInit) => {
+        called = url;
+        sentToken = new Headers(init?.headers).get("X-Access-Token");
+        return new Response(JSON.stringify(json), { status: 200 });
+      }) as unknown as typeof fetch,
     });
     expect(provider).toMatchObject({ name: "travelpayouts", live: true, maxAirportsPerSide: 1 });
     const r = await provider.search(q);
     expect(called).toMatch(/^https:\/\/api\.travelpayouts\.com\/aviasales\/v3\/prices_for_dates\?/);
-    expect(called).toContain("token=SECRET");
+    expect(called).not.toContain("SECRET");
+    expect(sentToken).toBe("SECRET");
     expect(r.fares).toHaveLength(2);
   });
 });

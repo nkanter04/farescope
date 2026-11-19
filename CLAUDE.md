@@ -89,6 +89,6 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 1. Itinerary builder: extend the existing `LodgingStop` trips with flexible nights ranges, a flight/drive mode per leg and a start window. New shared types go in `packages/shared`.
 2. Cheapest-dates optimizer: **dynamic programming** over (stop, arrival date), choosing nights per stop. It must be exact, pure and browser-safe. Don't use an LLM for the price math.
 3. Driving legs (OSRM) and a 2D map (MapLibre).
-4. Real data: confirm the Travelpayouts response fields with one live call (token in `apps/api/.env`), then budget-aware SerpApi price-grid fetching. Add partner templates (`VITE_PARTNER_LINKS`) once affiliate accounts are approved.
+4. Real data: Travelpayouts fields are confirmed, but its cache is sparse (few date pairs per route per month), so it needs month-wide queries rather than the exact-date grid. Then budget-aware SerpApi price-grid fetching. Add partner templates (`VITE_PARTNER_LINKS`) once affiliate accounts are approved.
 5. Supabase auth and Postgres, plus API hosting.
 6. Claude API for natural-language trip input and explanations of the results.

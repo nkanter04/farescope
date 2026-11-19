@@ -33,7 +33,7 @@ To regenerate, download these files into a local directory and run the import sc
 
 - **Demo:** simulated prices only (`providers/mock.ts`), always labeled.
 - **SerpApi** (paid, Google Flights / Google Hotels results): `PROVIDER=serpapi`.
-- **Travelpayouts / Aviasales Data API** (`PROVIDER=travelpayouts`): cached fares from recent Aviasales searches, free for Travelpayouts affiliates under their program terms. Prices can be hours or days old and routes nobody searched recently return nothing. Bookings through its links (with your marker) earn commission. Field names beyond the documented example are unconfirmed until a live call; see `apps/api/src/fixtures/travelpayouts-aus-tyo.json`.
+- **Travelpayouts / Aviasales Data API** (`PROVIDER=travelpayouts`): cached fares from recent Aviasales searches, free for Travelpayouts affiliates under their program terms. Prices can be hours or days old and routes nobody searched recently return nothing. Bookings through its links (with your marker) earn commission. Field names were confirmed with a live call on 2026-11-19. Coverage from mid-size US airports is thin: a whole month may hold only a few cached date pairs per route.
 - **Booking links** for hotels, hostels, activities and cars are plain Google searches unless partner templates are configured in `VITE_PARTNER_LINKS`. Follow each partner's terms, and keep the on-page commission disclosure.
 
 ## Airline logos

@@ -1,5 +1,5 @@
 {
-  "_note": "Hand-built. origin/destination/origin_airport/destination_airport/price/airline/flight_number/departure_at follow Travelpayouts' documented example; return_at, transfers, duration_to and link are assumed and must be confirmed with a live call.",
+  "_note": "Hand-built (not recorded). Field names and types match a live prices_for_dates response checked on 2026-11-19; the values and links are made up.",
   "success": true,
   "currency": "usd",
   "data": [

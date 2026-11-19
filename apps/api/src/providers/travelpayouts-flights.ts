@@ -7,10 +7,12 @@ import type { FlightProvider, FlightQuery, FlightResult } from "./types.ts";
  * per minute for this endpoint, and bookings through its links earn commission.
  *
  * Endpoint: GET https://api.travelpayouts.com/aviasales/v3/prices_for_dates
- * Confirmed response fields: origin, destination, origin_airport, destination_airport, price,
- * airline, flight_number, departure_at. Treated as OPTIONAL until confirmed with a live call:
- * return_at, transfers, duration / duration_to, link. Prices are cached, not live, so a route
- * nobody searched recently returns nothing.
+ * Fields confirmed with a live call (2026-11-19): origin, destination, origin_airport,
+ * destination_airport, price (round-trip total for one adult), airline, flight_number (string),
+ * departure_at, return_at, transfers, return_transfers, duration, duration_to, duration_back
+ * (minutes), link, gate (the selling agency). Prices are cached from recent Aviasales searches, so
+ * coverage is sparse: an exact date pair nobody searched returns nothing, and a whole month from a
+ * mid-size US airport may hold only a few date pairs.
  *
  * One call covers one origin → one destination on one date pair, so maxAirportsPerSide is 1.
  */
@@ -37,7 +39,7 @@ export interface TravelpayoutsResponse {
   error?: string;
 }
 
-export function buildTravelpayoutsParams(q: FlightQuery, token: string): URLSearchParams {
+export function buildTravelpayoutsParams(q: FlightQuery): URLSearchParams {
   const p = new URLSearchParams({
     origin: q.origins[0],
     destination: q.destinations[0],
@@ -48,7 +50,6 @@ export function buildTravelpayoutsParams(q: FlightQuery, token: string): URLSear
     sorting: "price",
     unique: "false",
     limit: "30",
-    token,
   });
   if (q.returnDate) p.set("return_at", q.returnDate);
   return p;
@@ -122,8 +123,9 @@ export function createTravelpayoutsFlightProvider(opts: { token: string; marker?
     live: true,
     maxAirportsPerSide: 1,
     async search(q) {
-      const res = await f(`https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${buildTravelpayoutsParams(q, opts.token)}`, {
-        headers: { "Accept-Encoding": "gzip" },
+      // The token goes in a header so it never appears in URLs or request logs.
+      const res = await f(`https://api.travelpayouts.com/aviasales/v3/prices_for_dates?${buildTravelpayoutsParams(q)}`, {
+        headers: { "Accept-Encoding": "gzip", "X-Access-Token": opts.token },
         signal: AbortSignal.timeout(20_000),
       });
       const json = (await res.json().catch(() => ({}))) as TravelpayoutsResponse;
