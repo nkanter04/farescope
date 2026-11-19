@@ -9,6 +9,7 @@ import { PriceInsight } from "./PriceInsight.tsx";
 import { BookLinks } from "./BookLinks.tsx";
 import { guideForAirport } from "../urlSearch.ts";
 import { TripTimeline } from "./TripTimeline.tsx";
+import { NightPlanner } from "./NightPlanner.tsx";
 
 export function FarePanel() {
   const draft = useStore(state => state.draft);
@@ -17,6 +18,7 @@ export function FarePanel() {
   const save = useStore(state => state.saveCurrentTrip);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
+  const [planning, setPlanning] = useState(false);
   if (!draft) return null;
   const { fare } = draft;
   const stops = draft.lodging ?? [];
@@ -54,9 +56,14 @@ export function FarePanel() {
       <label className="field">Trip name<input maxLength={120} value={draft.name} onChange={event => { setDraft({ name: event.target.value }); setStatus(""); }} /></label>
       {!draft.adults && <label className="field">Adults<input type="number" min={1} max={9} placeholder="Unknown" onChange={event => setDraft({ adults: Math.max(1, Math.min(9, Number(event.target.value))) })} /></label>}
     </div>
-    <div className="editor-heading"><h2>Where you’ll stay</h2><button className="secondary" disabled={stops.length >= 30} onClick={addStop}>Add a stay</button></div>
-    {!stops.length && <p className="muted">Choose any city, neighborhood, or address and the nights you’ll spend there.</p>}
-    {stops.map(stop => <LodgingEditor key={stop.id} fare={fare} stop={stop} adults={draft.adults}
+    <div className="editor-heading"><h2>Where you’ll stay</h2>{!planning && <div className="editor-actions">
+      <button className="secondary" onClick={() => { setStatus(""); setPlanning(true); }}>Plan by nights</button>
+      <button className="link" disabled={stops.length >= 30} onClick={addStop}>Add a stay</button></div>}</div>
+    {planning && <NightPlanner fare={fare} stops={stops} cancel={() => setPlanning(false)} apply={lodging => {
+      setDraft({ lodging }); setPlanning(false); setStatus("Route applied. Save your trip to keep these stays.");
+    }} />}
+    {!planning && !stops.length && <p className="muted">Choose any city, neighborhood, or address and the nights you’ll spend there.</p>}
+    {!planning && stops.map(stop => <LodgingEditor key={stop.id} fare={fare} stop={stop} adults={draft.adults}
       onChange={patch => { setDraft({ lodging: stops.map(item => item.id === stop.id ? { ...item, ...patch } : item) }); setStatus(""); }}
       onRemove={() => { setDraft({ lodging: stops.filter(item => item.id !== stop.id) }); setStatus(""); }} />)}
     {coverage.conflict && <p className="notice warn">Some stays overlap or fall outside your flight dates. Check the dates before booking.</p>}
@@ -82,7 +89,7 @@ export function FarePanel() {
         {tripPriceNote(draft) && <div className="stale small">{tripPriceNote(draft)}</div>}
         <div className="muted small">Airfare {money(fare.price)} + accommodation {money(tripTotal(draft) - fare.price)}</div>
       </div>
-      <button className="primary" disabled={!valid || saving} onClick={async () => {
+      <button className="primary" disabled={!valid || saving || planning} onClick={async () => {
         setSaving(true);
         setStatus("Saving…");
         try { setStatus(await save() ? "Saved to My trips." : "Saved. Your newer edits still need saving."); }
