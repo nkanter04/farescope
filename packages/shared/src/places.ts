@@ -1,6 +1,13 @@
 import { AIRPORTS, AIRPORT_BY_IATA, COUNTRIES, REGIONS, type Airport } from "./airports.ts";
+import placeIds from "./data/place-ids.json";
 
-export type PlaceKind = "airport" | "city" | "country" | "region" | "anywhere";
+export type PlaceKind = "airport" | "city" | "state" | "country" | "region" | "anywhere";
+
+/** Google location IDs (Freebase "kgmid", from Wikidata) for countries and US states. */
+const COUNTRY_IDS = placeIds.countries as Record<string, string>;
+export const US_STATES = placeIds.states as Record<string, { name: string; id: string }>;
+/** Google area IDs for each travel region (some regions span two Google areas). */
+export const REGION_IDS = placeIds.regions as Record<string, string[]>;
 
 export interface Place {
   kind: PlaceKind;
@@ -9,6 +16,8 @@ export interface Place {
   label: string;
   sublabel: string;
   airports: string[];
+  /** Google location ID for the whole place (countries, US states), when known. */
+  googleId?: string;
 }
 
 const norm = (s: string) => s.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -16,7 +25,9 @@ const CITY_ALIASES: Record<string, string> = { philly: "philadelphia", "st peter
 const byCity = new Map<string, string[]>();
 const byCountry = new Map<string, Airport[]>();
 const byRegion = new Map<string, Airport[]>();
+const byState = new Map<string, Airport[]>();
 for (const airport of AIRPORTS) {
+  if (airport.country === "US" && airport.state) byState.set(airport.state, [...(byState.get(airport.state) ?? []), airport]);
   const cityKey = `${airport.city}|${airport.country}`;
   byCity.set(cityKey, [...(byCity.get(cityKey) ?? []), airport.iata]);
   byCountry.set(airport.country, [...(byCountry.get(airport.country) ?? []), airport]);
@@ -51,7 +62,14 @@ function cityPlace(city: string, country: string): Place {
 
 function countryPlace(code: string): Place {
   const airports = mainAirports(byCountry.get(code) ?? []);
-  return { kind: "country", token: `country:${code}`, label: COUNTRIES[code].name, sublabel: airportWord(airports.length), airports };
+  return { kind: "country", token: `country:${code}`, label: COUNTRIES[code].name, sublabel: airportWord(airports.length), airports, googleId: COUNTRY_IDS[code] };
+}
+
+function statePlace(code: string): Place | undefined {
+  const state = US_STATES[code];
+  const airports = mainAirports(byState.get(code) ?? []);
+  if (!state || !airports.length) return undefined;
+  return { kind: "state", token: `state:US-${code}`, label: state.name, sublabel: `US state · ${airportWord(airports.length)}`, airports, googleId: state.id };
 }
 
 function regionPlace(region: string): Place {
@@ -94,6 +112,7 @@ export function resolvePlace(input: string): Place | undefined {
     const code = raw.slice(8).toUpperCase();
     return COUNTRIES[code] ? countryPlace(code) : undefined;
   }
+  if (raw.startsWith("state:US-")) return statePlace(raw.slice(9).toUpperCase());
   if (raw.startsWith("region:")) {
     const region = REGIONS.find((r) => norm(r) === norm(raw.slice(7)));
     return region ? regionPlace(region) : undefined;
@@ -109,6 +128,11 @@ export function resolvePlace(input: string): Place | undefined {
     (c) => norm(COUNTRIES[c].name) === n || (COUNTRIES[c].aliases ?? []).includes(n),
   );
   if (countryCode) return countryPlace(countryCode);
+
+  // A US city with the same name ("New York", "Washington") wins over the state.
+  const stateCode = Object.keys(US_STATES).find((c) => norm(US_STATES[c].name) === n);
+  const state = stateCode && !AIRPORTS.some((a) => a.country === "US" && norm(a.city) === n) ? statePlace(stateCode) : undefined;
+  if (state) return state;
 
   const cityAirport = AIRPORTS.find((a) => norm(a.city) === (CITY_ALIASES[n] ?? n));
   if (cityAirport) return cityPlace(cityAirport.city, cityAirport.country);
@@ -145,6 +169,11 @@ export function suggestPlaces(query: string, limit = 8): Place[] {
     const c = COUNTRIES[code];
     const s = Math.max(scoreText(c.name), ...(c.aliases ?? []).map(scoreText), n.length === 2 && code === n.toUpperCase() ? 70 : 0);
     if (s) push(countryPlace(code), s + 4);
+  }
+  for (const code of Object.keys(US_STATES)) {
+    const s = scoreText(US_STATES[code].name);
+    const p = s ? statePlace(code) : undefined;
+    if (p) push(p, s + 4);
   }
   const cities = new Map<string, Airport>();
   for (const a of AIRPORTS) cities.set(`${a.city}|${a.country}`, a);

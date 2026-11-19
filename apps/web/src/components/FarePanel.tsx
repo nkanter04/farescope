@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { addDays, AIRPORT_BY_IATA, carrierFrom, codeFromFlightNumber, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
 import { AirlineLogo, FareAirlines } from "./AirlineLogo.tsx";
-import { cityOf, duration, money, shortDate, stopsLabel, travelerCount, tripPriceNote } from "../format.ts";
+import { cityOf, fareEnds, duration, money, shortDate, stopsLabel, travelerCount, tripPriceNote } from "../format.ts";
+import type { Fare } from "@farescope/shared";
 import { useStore } from "../store.ts";
 import { LodgingEditor } from "./LodgingEditor.tsx";
 import { PriceInsight } from "./PriceInsight.tsx";
@@ -90,5 +91,28 @@ export function FarePanel() {
       }}>{saving ? "Saving…" : draft.id ? "Save changes" : "Save trip"}</button>
     </div>
     {status && <p role="status" className="notice info">{status}</p>}
+  </section>;
+}
+
+/** Shown while the real flights for a date-grid price load (or when none are left). */
+export function FareDetailsLoader({ fare }: { fare: Fare }) {
+  const details = useStore((s) => s.details);
+  const selectFare = useStore((s) => s.selectFare);
+  const adults = useStore((s) => s.submitted?.adults ?? 1);
+  const failed = details?.fareId === fare.id && details.status === "error";
+  const ends = fareEnds(fare);
+  return <section className="fare-panel">
+    <button className="link" onClick={() => void selectFare(null)}>← Back to results</button>
+    <div className="card flight-summary">
+      <div className="fare-main"><strong>{ends.fromCity} → {ends.toCity}</strong><strong className="price">{money(fare.price)}</strong></div>
+      <p>{shortDate(fare.departDate)}{fare.returnDate && ` – ${shortDate(fare.returnDate)}`} · {ends.from} → {ends.to} · {travelerCount(adults)}</p>
+      {failed
+        ? <p className="notice warn" role="alert">{details?.message}</p>
+        : <p role="status" className="muted"><span className="spinner" aria-hidden /> Loading the flights Google Flights has for these dates…</p>}
+      {failed && <>
+        <BookLinks kind="flight" primary ctx={{ origin: fare.origin, destination: fare.destination, depart: fare.departDate, return: fare.returnDate, adults }} />
+        <button className="secondary" onClick={() => void selectFare(fare)}>Try again</button>
+      </>}
+    </div>
   </section>;
 }

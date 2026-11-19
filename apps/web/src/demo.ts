@@ -2,7 +2,7 @@
  * Browser-only "backend" for the static GitHub Pages demo. It runs the same search engine and
  * mock providers as the API server, with an in-memory cache and trips kept in localStorage.
  */
-import { buildPriceTrend, checkWatch, createMockFlightProvider, createMockStayProvider, MAX_WATCHES, newWatch, runSearch, ttlFor, type SearchCache } from "@farescope/api/engine";
+import { buildPriceTrend, checkWatch, createMockFlightProvider, fareDetails as engineFareDetails, createMockStayProvider, MAX_WATCHES, newWatch, runSearch, ttlFor, type SearchCache } from "@farescope/api/engine";
 import { SearchRequestSchema, tripTotal, type Cabin, type Fare, type PriceTrend, type PriceWatch, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
 
 const memory = new Map<string, { value: unknown; fetchedAt: number; expiresAt: number }>();
@@ -42,6 +42,12 @@ export async function streamSearch(req: SearchRequest, onEvent: (e: SearchEvent)
     },
     onEvent,
   );
+}
+
+const noQuota = { remaining: () => Infinity, tryConsume: () => ({ ok: true as const }) };
+
+export function fareDetails(fare: Fare, opts: { cabin: Cabin; maxStops: 0 | 1 | 2 | null; adults: number; airlines?: string[] }) {
+  return engineFareDetails({ fare, ...opts }, { provider: flights, cache, quota: noQuota, clientId: "demo" });
 }
 
 export async function fetchStays(airport: string, checkIn: string, checkOut: string, adults: number, location?: string) {

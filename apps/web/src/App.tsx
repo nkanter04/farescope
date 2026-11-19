@@ -1,6 +1,6 @@
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { resolvePlace, todayISO } from "@farescope/shared";
-import { FarePanel } from "./components/FarePanel.tsx";
+import { FareDetailsLoader, FarePanel } from "./components/FarePanel.tsx";
 import { PriceCalendar } from "./components/PriceCalendar.tsx";
 import { ResultsList } from "./components/ResultsList.tsx";
 import { SearchForm } from "./components/SearchForm.tsx";
@@ -120,7 +120,7 @@ export function App() {
               {searchViews.map((name) => <button key={name} className={name === panel ? "on" : ""} aria-pressed={name === panel} onClick={() => setPanel(name)}>{name}</button>)}
             </div>
             {searching && !editing && <button className="link mobile-cancel" onClick={cancel}>Stop search</button>}
-            {panel === "List" && (selected ? <FarePanel key={selected.id} /> : <ResultsList />)}
+            {panel === "List" && (selected ? (selected.priceOnly ? <FareDetailsLoader key={selected.id} fare={selected} /> : <FarePanel key={selected.id} />) : <ResultsList />)}
             {panel === "Calendar" && <PriceCalendar />}
             {panel === "Map" && <MapBoundary><Suspense fallback={<p role="status">Loading the globe…</p>}><Globe /></Suspense></MapBoundary>}
             </>}

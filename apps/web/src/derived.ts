@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { fareMatchesAirlines, type Fare } from "@farescope/shared";
 import { ANY_AIRLINE, useStore } from "./store.ts";
 
+/** Date-grid prices were filtered by the provider and list no airlines, so they always pass. */
+export const passesAirlines = (f: Fare, airlines: readonly string[]) => !!f.priceOnly || fareMatchesAirlines(f, airlines);
+
 export interface DayCell {
   date: string;
   price: number;
@@ -19,7 +22,7 @@ export function useDerived() {
 
   return useMemo(() => {
     // Globe, calendar and list all respect the airline filter.
-    const shown = airlines.length ? fares.filter((f) => fareMatchesAirlines(f, airlines)) : fares;
+    const shown = airlines.length ? fares.filter((f) => passesAirlines(f, airlines)) : fares;
     const destBest = new Map<string, Fare>();
     const byDay = new Map<string, DayCell>();
     const byNights = new Map<number, number>();

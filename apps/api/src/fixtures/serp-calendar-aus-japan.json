@@ -1,0 +1,12 @@
+{
+  "_note": "Hand-built from SerpApi's documented google_flights_calendar response shape (prices[].outbound_date/return_date/price/low_price). Field names match a live call on 2026-11-19; values are made up.",
+  "search_metadata": { "status": "Success" },
+  "prices": [
+    { "outbound_date": "2027-03-01", "return_date": "2027-03-08", "price": 1180 },
+    { "outbound_date": "2027-03-02", "return_date": "2027-03-09", "price": 1043, "low_price": true },
+    { "outbound_date": "2027-03-03", "return_date": "2027-03-10", "price": 1096 },
+    { "outbound_date": "2027-03-04", "return_date": "2027-03-11", "price": 0 },
+    { "outbound_date": "2027-03-05" , "price": 1210 },
+    { "outbound_date": "2027-02-27", "return_date": "2027-03-06", "price": 990 }
+  ]
+}

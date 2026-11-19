@@ -68,3 +68,22 @@ describe("places", () => {
     expect(d).toBeLessThan(11_000);
   });
 });
+
+describe("US states", () => {
+  it("resolve by token or name to the state's main airports and Google ID", () => {
+    expect(resolvePlace("state:US-TX")).toMatchObject({ kind: "state", label: "Texas", googleId: "/m/07b_l" });
+    expect(resolvePlace("state:US-TX")?.airports).toEqual(expect.arrayContaining(["AUS", "DFW", "IAH"]));
+    expect(resolvePlace("California")?.token).toBe("state:US-CA");
+    expect(resolvePlace("state:US-ZZ")).toBeUndefined();
+  });
+
+  it("leave countries and same-named US cities alone", () => {
+    expect(resolvePlace("Georgia")?.kind).toBe("country");
+    expect(resolvePlace("Washington")?.kind).toBe("city");
+    expect(suggestPlaces("georgia").map((p) => p.token)).toEqual(expect.arrayContaining(["country:GE", "state:US-GA"]));
+  });
+
+  it("gives countries their Google ID", () => {
+    expect(resolvePlace("country:JP")?.googleId).toBe("/m/03_3d");
+  });
+});

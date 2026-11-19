@@ -1,0 +1,511 @@
+{
+ "_source": "Wikidata (CC0): Freebase IDs (P646) of countries (ISO 3166-1, P297) and US states/territories (ISO 3166-2, P300) and continents/regions, fetched 2026-11-19. Google uses these as location IDs (kgmid).",
+ "countries": {
+ "AD": "/m/0hg5",
+ "AE": "/m/0j1z8",
+ "AF": "/m/0jdd",
+ "AG": "/m/0l3h",
+ "AI": "/m/0n3g",
+ "AL": "/m/0jdx",
+ "AM": "/m/0jgx",
+ "AN": "/m/05byy",
+ "AO": "/m/0j4b",
+ "AQ": "/m/0jfx",
+ "AR": "/m/0jgd",
+ "AS": "/m/0h8d",
+ "AT": "/m/0h7x",
+ "AU": "/m/0chghy",
+ "AW": "/m/0j11",
+ "AX": "/m/014mxp",
+ "AZ": "/m/0jhd",
+ "BA": "/m/0166b",
+ "BB": "/m/0162v",
+ "BD": "/m/0162b",
+ "BE": "/m/0154j",
+ "BF": "/m/01699",
+ "BG": "/m/015qh",
+ "BH": "/m/0161c",
+ "BI": "/m/0169t",
+ "BJ": "/m/0164v",
+ "BL": "/m/0h7f9",
+ "BM": "/m/0165b",
+ "BN": "/m/0167v",
+ "BO": "/m/0165v",
+ "BQ": "/m/0bwhs8r",
+ "BR": "/m/015fr",
+ "BS": "/m/0160w",
+ "BT": "/m/07bxhl",
+ "BV": "/m/0167b",
+ "BW": "/m/0166v",
+ "BY": "/m/0163v",
+ "BZ": "/m/0164b",
+ "CA": "/m/0d060g",
+ "CC": "/m/01p6l",
+ "CD": "/m/088xp",
+ "CF": "/m/01nyl",
+ "CG": "/m/01rxw",
+ "CH": "/m/06mzp",
+ "CI": "/m/0fv4v",
+ "CK": "/m/020p1",
+ "CL": "/m/01p1v",
+ "CM": "/m/01nln",
+ "CN": "/m/0d05w3",
+ "CO": "/m/01ls2",
+ "CP": "/m/01p62",
+ "CQ": "/m/0ms01",
+ "CR": "/m/01p8s",
+ "CU": "/m/0d04z6",
+ "CV": "/m/01nqj",
+ "CW": "/m/0hbgh",
+ "CX": "/m/01p5l",
+ "CY": "/m/01ppq",
+ "CZ": "/m/01mjq",
+ "DD": "/m/03f2w",
+ "DE": "/m/0345h",
+ "DG": "/m/02ddv",
+ "DJ": "/m/027jk",
+ "DK": "/m/0k6nt",
+ "DM": "/m/027nb",
+ "DO": "/m/027rn",
+ "DZ": "/m/0h3y",
+ "EC": "/m/02k1b",
+ "EE": "/m/02kmm",
+ "EG": "/m/02k54",
+ "EH": "/m/082qk",
+ "ER": "/m/02khs",
+ "ES": "/m/06mkj",
+ "ET": "/m/019pcs",
+ "FI": "/m/02vzc",
+ "FJ": "/m/02wt0",
+ "FK": "/m/02wmy",
+ "FM": "/m/03188",
+ "FO": "/m/02w9s",
+ "FR": "/m/0f8l9c",
+ "GA": "/m/03548",
+ "GB": "/m/07ssc",
+ "GD": "/m/035yg",
+ "GE": "/m/0d0kn",
+ "GF": "/m/02x21",
+ "GH": "/m/035dk",
+ "GI": "/m/035hm",
+ "GL": "/m/035v3",
+ "GM": "/m/0hdx8",
+ "GN": "/m/03676",
+ "GP": "/m/037nm",
+ "GQ": "/m/02kcz",
+ "GR": "/m/035qy",
+ "GS": "/m/06tnn",
+ "GT": "/m/0345_",
+ "GU": "/m/034tl",
+ "GW": "/m/036b_",
+ "GY": "/m/034m8",
+ "HK": "/m/03h64",
+ "HM": "/m/03h1f",
+ "HN": "/m/03h2c",
+ "HR": "/m/01pj7",
+ "HT": "/m/03gyl",
+ "HU": "/m/03gj2",
+ "ID": "/m/03ryn",
+ "IE": "/m/03rt9",
+ "IL": "/m/03spz",
+ "IM": "/m/03t1s",
+ "IN": "/m/03rk0",
+ "IO": "/m/0168b",
+ "IQ": "/m/0d05q4",
+ "IR": "/m/03shp",
+ "IS": "/m/03rj0",
+ "IT": "/m/03rjj",
+ "JE": "/m/03_xj",
+ "JM": "/m/03_r3",
+ "JO": "/m/03__y",
+ "JP": "/m/03_3d",
+ "KE": "/m/019rg5",
+ "KG": "/m/0jt3tjf",
+ "KH": "/m/01xbgx",
+ "KI": "/m/047t_",
+ "KM": "/m/01n6c",
+ "KN": "/m/06ryl",
+ "KP": "/m/05b7q",
+ "KR": "/m/06qd3",
+ "KW": "/m/047yc",
+ "KY": "/m/01nty",
+ "KZ": "/m/047lj",
+ "LA": "/m/04hhv",
+ "LB": "/m/04hqz",
+ "LC": "/m/06s0l",
+ "LI": "/m/04j53",
+ "LK": "/m/06m_5",
+ "LR": "/m/04hzj",
+ "LS": "/m/04hvw",
+ "LT": "/m/04gzd",
+ "LU": "/m/04g61",
+ "LV": "/m/04g5k",
+ "LY": "/m/04gqr",
+ "MA": "/m/04wgh",
+ "MC": "/m/04w58",
+ "MD": "/m/04w4s",
+ "ME": "/m/056vv",
+ "MF": "/m/02phy_9",
+ "MG": "/m/04sj3",
+ "MH": "/m/04v6v",
+ "MK": "/m/0bjv6",
+ "ML": "/m/04v09",
+ "MM": "/m/04xn_",
+ "MN": "/m/04w8f",
+ "MO": "/m/04thp",
+ "MP": "/m/05cnr",
+ "MQ": "/m/04vg8",
+ "MR": "/m/04vjh",
+ "MS": "/m/04wcf",
+ "MT": "/m/04v3q",
+ "MU": "/m/04vs9",
+ "MV": "/m/04ty8",
+ "MW": "/m/04tr1",
+ "MX": "/m/0b90_r",
+ "MY": "/m/09pmkv",
+ "MZ": "/m/04wlh",
+ "NA": "/m/05bmq",
+ "NC": "/m/05c17",
+ "NE": "/m/05cc1",
+ "NF": "/m/05cqm",
+ "NG": "/m/05cgv",
+ "NI": "/m/05c74",
+ "NL": "/m/049nq",
+ "NO": "/m/05b4w",
+ "NP": "/m/016zwt",
+ "NR": "/m/05br2",
+ "NU": "/m/05b2h",
+ "NZ": "/m/0ctw_b",
+ "OM": "/m/05l8y",
+ "PA": "/m/05qx1",
+ "PC": "/m/07ndb",
+ "PE": "/m/016wzw",
+ "PF": "/m/02wzv",
+ "PG": "/m/05qkp",
+ "PH": "/m/05v8c",
+ "PK": "/m/05sb1",
+ "PL": "/m/05qhw",
+ "PM": "/m/06s4c",
+ "PN": "/m/05vd5",
+ "PR": "/m/05r7t",
+ "PS": "/m/01k0p4",
+ "PT": "/m/05r4w",
+ "PW": "/m/05tr7",
+ "PY": "/m/05v10",
+ "QA": "/m/0697s",
+ "RE": "/m/0lxhj",
+ "RO": "/m/06c1y",
+ "RS": "/m/077qn",
+ "RU": "/m/06bnz",
+ "RW": "/m/06dfg",
+ "SA": "/m/01z215",
+ "SB": "/m/01n8qg",
+ "SC": "/m/06sw9",
+ "SD": "/m/06tw8",
+ "SE": "/m/0d0vqn",
+ "SG": "/m/06t2t",
+ "SH": "/m/080pfr5",
+ "SI": "/m/06t8v",
+ "SJ": "/m/01glxj",
+ "SK": "/m/06npd",
+ "SL": "/m/06s_2",
+ "SM": "/m/06sff",
+ "SN": "/m/06srk",
+ "SO": "/m/06tgw",
+ "SR": "/m/06nnj",
+ "SS": "/m/05rznz",
+ "ST": "/m/0j681",
+ "SU": "/m/05vz3zq",
+ "SV": "/m/02k8k",
+ "SX": "/m/02phz12",
+ "SY": "/m/06vbd",
+ "SZ": "/m/06v36",
+ "TC": "/m/07fr_",
+ "TD": "/m/01p1b",
+ "TF": "/m/02x1k",
+ "TG": "/m/07f5x",
+ "TH": "/m/07f1x",
+ "TJ": "/m/07dvs",
+ "TK": "/m/07f9q",
+ "TL": "/m/02lx0",
+ "TM": "/m/01c4pv",
+ "TN": "/m/07fj_",
+ "TO": "/m/07fb6",
+ "TR": "/m/01znc_",
+ "TT": "/m/09lxtg",
+ "TV": "/m/07fsv",
+ "TW": "/m/06f32",
+ "TZ": "/m/07dzf",
+ "UA": "/m/07t21",
+ "UG": "/m/07tp2",
+ "UM": "/m/07x4w",
+ "US": "/m/09c7w0",
+ "UY": "/m/07twz",
+ "UZ": "/m/07t_x",
+ "VA": "/m/07ytt",
+ "VC": "/m/06s6l",
+ "VE": "/m/07ylj",
+ "VG": "/m/0168t",
+ "VI": "/m/07ww5",
+ "VN": "/m/01crd5",
+ "VU": "/m/07z5n",
+ "WF": "/m/082nw",
+ "WS": "/m/06s9y",
+ "XK": "/m/04fh3",
+ "YE": "/m/01z88t",
+ "YT": "/m/04vws",
+ "YU": "/m/087vz",
+ "ZA": "/m/0hzlz",
+ "ZM": "/m/088vb",
+ "ZW": "/m/088q4"
+},
+ "states": {
+ "AK": {
+ "name": "Alaska",
+ "id": "/m/0hjy"
+},
+ "AL": {
+ "name": "Alabama",
+ "id": "/m/0gyh"
+},
+ "AR": {
+ "name": "Arkansas",
+ "id": "/m/0vbk"
+},
+ "AS": {
+ "name": "American Samoa",
+ "id": "/m/0h8d"
+},
+ "CA": {
+ "name": "California",
+ "id": "/m/01n7q"
+},
+ "CO": {
+ "name": "Colorado",
+ "id": "/m/01n4w"
+},
+ "CT": {
+ "name": "Connecticut",
+ "id": "/m/01x73"
+},
+ "DC": {
+ "name": "District of Columbia",
+ "id": "/m/0rh6k"
+},
+ "DE": {
+ "name": "Delaware",
+ "id": "/m/026mj"
+},
+ "FL": {
+ "name": "Florida",
+ "id": "/m/02xry"
+},
+ "GA": {
+ "name": "Georgia",
+ "id": "/m/0d0x8"
+},
+ "GU": {
+ "name": "Guam",
+ "id": "/m/034tl"
+},
+ "HI": {
+ "name": "Hawaii",
+ "id": "/m/03gh4"
+},
+ "IA": {
+ "name": "Iowa",
+ "id": "/m/03s0w"
+},
+ "ID": {
+ "name": "Idaho",
+ "id": "/m/03s5t"
+},
+ "IL": {
+ "name": "Illinois",
+ "id": "/m/03v0t"
+},
+ "IN": {
+ "name": "Indiana",
+ "id": "/m/03v1s"
+},
+ "KS": {
+ "name": "Kansas",
+ "id": "/m/0488g"
+},
+ "KY": {
+ "name": "Kentucky",
+ "id": "/m/0498y"
+},
+ "LA": {
+ "name": "Louisiana",
+ "id": "/m/04ly1"
+},
+ "MA": {
+ "name": "Massachusetts",
+ "id": "/m/05k7sb"
+},
+ "MD": {
+ "name": "Maryland",
+ "id": "/m/04rrd"
+},
+ "ME": {
+ "name": "Maine",
+ "id": "/m/050ks"
+},
+ "MI": {
+ "name": "Michigan",
+ "id": "/m/04rrx"
+},
+ "MN": {
+ "name": "Minnesota",
+ "id": "/m/04ykg"
+},
+ "MO": {
+ "name": "Missouri",
+ "id": "/m/04ych"
+},
+ "MP": {
+ "name": "Northern Mariana Islands",
+ "id": "/m/05cnr"
+},
+ "MS": {
+ "name": "Mississippi",
+ "id": "/m/04tgp"
+},
+ "MT": {
+ "name": "Montana",
+ "id": "/m/050l8"
+},
+ "NC": {
+ "name": "North Carolina",
+ "id": "/m/05fkf"
+},
+ "ND": {
+ "name": "North Dakota",
+ "id": "/m/05fky"
+},
+ "NE": {
+ "name": "Nebraska",
+ "id": "/m/05fhy"
+},
+ "NH": {
+ "name": "New Hampshire",
+ "id": "/m/059f4"
+},
+ "NJ": {
+ "name": "New Jersey",
+ "id": "/m/05fjf"
+},
+ "NM": {
+ "name": "New Mexico",
+ "id": "/m/05fjy"
+},
+ "NV": {
+ "name": "Nevada",
+ "id": "/m/059_c"
+},
+ "NY": {
+ "name": "New York",
+ "id": "/m/059rby"
+},
+ "OH": {
+ "name": "Ohio",
+ "id": "/m/05kkh"
+},
+ "OK": {
+ "name": "Oklahoma",
+ "id": "/m/05mph"
+},
+ "OR": {
+ "name": "Oregon",
+ "id": "/m/05kj_"
+},
+ "PA": {
+ "name": "Pennsylvania",
+ "id": "/m/05tbn"
+},
+ "PR": {
+ "name": "Puerto Rico",
+ "id": "/m/05r7t"
+},
+ "RI": {
+ "name": "Rhode Island",
+ "id": "/m/06btq"
+},
+ "SC": {
+ "name": "South Carolina",
+ "id": "/m/06yxd"
+},
+ "SD": {
+ "name": "South Dakota",
+ "id": "/m/06mz5"
+},
+ "TN": {
+ "name": "Tennessee",
+ "id": "/m/07h34"
+},
+ "TX": {
+ "name": "Texas",
+ "id": "/m/07b_l"
+},
+ "UT": {
+ "name": "Utah",
+ "id": "/m/07srw"
+},
+ "VA": {
+ "name": "Virginia",
+ "id": "/m/07z1m"
+},
+ "VI": {
+ "name": "United States Virgin Islands",
+ "id": "/m/07ww5"
+},
+ "VT": {
+ "name": "Vermont",
+ "id": "/m/07_f2"
+},
+ "WA": {
+ "name": "Washington",
+ "id": "/m/081yw"
+},
+ "WI": {
+ "name": "Wisconsin",
+ "id": "/m/0824r"
+},
+ "WV": {
+ "name": "West Virginia",
+ "id": "/m/081mh"
+},
+ "WY": {
+ "name": "Wyoming",
+ "id": "/m/0846v"
+}
+},
+ "regions": {
+ "North America": [
+ "/m/059g4"
+],
+ "Central America & Caribbean": [
+ "/m/01tzh",
+ "/m/0261m"
+],
+ "South America": [
+ "/m/06n3y"
+],
+ "Europe": [
+ "/m/02j9z"
+],
+ "Middle East": [
+ "/m/04wsz"
+],
+ "Africa": [
+ "/m/0dg3n1"
+],
+ "Asia": [
+ "/m/0j0k"
+],
+ "Oceania": [
+ "/m/05nrg"
+]
+}
+}

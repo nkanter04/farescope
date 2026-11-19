@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { daysBetween, fareMatchesAirlines, type Fare, type Stay } from "@farescope/shared";
+import { daysBetween, type Fare, type Stay } from "@farescope/shared";
 import { AirlineFilter } from "./AirlineFilter.tsx";
 import { FareAirlines } from "./AirlineLogo.tsx";
 import { useDerived } from "../derived.ts";
-import { cityOf, duration, money, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
+import { cityOf, fareEnds, duration, money, relativeAge, shortDate, stopsLabel, travelerCount } from "../format.ts";
+import { passesAirlines } from "../derived.ts";
 import { ANY_AIRLINE, useStore } from "../store.ts";
 
 export function ResultsList() {
@@ -26,7 +27,7 @@ export function ResultsList() {
   const setSort = useStore(s => s.setSort);
   const airlines = useStore((s) => s.request.airlines ?? ANY_AIRLINE);
   const quotes = shortlist?.quotes.filter(({ fare }) =>
-    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate) && fareMatchesAirlines(fare, airlines))
+    (!filterDest || fare.destination === filterDest) && (!filterDate || fare.departDate === filterDate) && passesAirlines(fare, airlines))
     .sort((a, b) => (sort === "duration" ? a.fare.durationMin - b.fare.durationMin : sort === "stops" ? a.fare.stops - b.fare.stops :
       sort === "airfare" ? a.fare.price - b.fare.price : a.fare.price + a.stay.total - b.fare.price - b.stay.total) || a.fare.price - b.fare.price);
   const { list } = useDerived();
@@ -115,7 +116,7 @@ export function ResultsList() {
             <button className={`fare ${selected?.id === f.id ? "sel" : ""}`} onClick={() => void selectFare(f)}>
               <div className="fare-main">
                 <span className="route">
-                  {f.origin} → {f.destination}
+                  {fareEnds(f).from} → {fareEnds(f).to}
                 </span>
                 <span className="price">{money(f.price)}</span>
               </div>
@@ -124,12 +125,12 @@ export function ResultsList() {
                   {shortDate(f.departDate)}
                   {f.returnDate && ` – ${shortDate(f.returnDate)}`}
                 </span>
-                <span>{cityOf(f.destination)}</span>
+                <span>{fareEnds(f).toCity}</span>
               </div>
               <div className="fare-sub muted">
-                <span className="fare-carrier-line">
+                {f.priceOnly ? <span className="price-only-note">{f.airlines.length ? `${f.airlines.join(" + ")} · ${stopsLabel(f.stops)} · ` : "Lowest price on Google Flights · "}open to see flights</span> : <span className="fare-carrier-line">
                   <FareAirlines fare={f} /> · {stopsLabel(f.stops)} outbound · {duration(f.durationMin)}
-                </span>
+                </span>}
                 {f.cached && <span className={f.stale ? "stale" : ""}>{f.stale ? "stale · " : ""}{relativeAge(f.fetchedAt)}</span>}
               </div>
               {f.stops > 0 && <div className="fare-sub muted">Via {f.outbound.slice(0, -1).map(leg => `${cityOf(leg.to)} (${leg.to})`).join(" → ")}</div>}

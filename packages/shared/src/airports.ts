@@ -22,6 +22,8 @@ export interface Airport {
   name: string;
   city: string;
   country: string; // ISO 3166-1 alpha-2
+  /** US state or territory code ("TX"), US airports only. */
+  state?: string;
   lat: number;
   lng: number;
   tier: AirportTier;

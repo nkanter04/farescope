@@ -11,9 +11,12 @@ $airports = @(Import-Csv (Join-Path $SourceDirectory 'airports.csv') |
         $airport = $_.Group | Sort-Object @{ Expression = { @('large_airport', 'medium_airport', 'small_airport').IndexOf($_.type) } }, ident | Select-Object -First 1
         $city = $airport.municipality
         if (-not $city) { $city = $airport.name }
-        [ordered]@{ iata = $airport.iata_code; name = $airport.name; city = $city; country = $airport.iso_country
+        $row = [ordered]@{ iata = $airport.iata_code; name = $airport.name; city = $city; country = $airport.iso_country
             lat = [double]::Parse($airport.latitude_deg, [cultureinfo]::InvariantCulture)
             lng = [double]::Parse($airport.longitude_deg, [cultureinfo]::InvariantCulture) }
+        # US airports also carry their state ("TX"), so states work as search places.
+        if ($airport.iso_country -eq 'US' -and $airport.iso_region -like 'US-*') { $row.Insert(4, 'state', $airport.iso_region.Substring(3)) }
+        $row
     })
 $codes = @{}
 foreach ($airport in $airports) { $codes[$airport.iata] = $true }

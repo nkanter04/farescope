@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { SearchRequestSchema, type Fare, type SearchEvent } from "@farescope/shared";
+import { addDays, SearchRequestSchema, type Fare, type SearchEvent } from "@farescope/shared";
 import { QueryCache, ttlFor } from "../cache.ts";
 import { openDb } from "../db.ts";
 import { QuotaGuard } from "../quota.ts";
 import { createMockFlightProvider, createMockStayProvider } from "../providers/mock.ts";
-import { stayQueryKey, type FlightProvider, type FlightQuery, type StayProvider } from "../providers/types.ts";
+import { stayQueryKey, type CalendarPrice, type CalendarQuery, type ExploreQuery, type FlightProvider, type FlightQuery, type StayProvider } from "../providers/types.ts";
 import { lookupStays } from "./stays.ts";
 import { planSearch, refineCandidates, sampleCandidates, spread } from "./planner.ts";
-import { runSearch } from "./run.ts";
+import { calendarJobCount, planCalendar, planCalendarRoutes, planExplore, runSearch } from "./run.ts";
 
 const NOW = new Date("2026-11-16T12:00:00Z");
 const TODAY = "2026-11-16";
@@ -218,5 +218,132 @@ describe("runSearch", () => {
     const { events } = await collect(p, { perSearch: 6, monthly: 0 });
     expect(p.calls).toHaveLength(0);
     expect(events.some((e) => e.type === "notice" && e.level === "warn")).toBe(true);
+  });
+});
+
+/** A live provider with a date grid: each calendar call prices every date, $1000 + 10 per day index. */
+function fakeCalendar(): FlightProvider & { calls: FlightQuery[]; calendarCalls: CalendarQuery[] } {
+  const inner = fakeLive();
+  const calendarCalls: CalendarQuery[] = [];
+  return {
+    ...inner,
+    name: "fakecal",
+    calendarMaxDays: 20,
+    calendarCalls,
+    async calendar(q) {
+      calendarCalls.push(q);
+      const out: CalendarPrice[] = [];
+      for (let d = q.rangeStart, i = 0; d <= q.rangeEnd; d = addDays(d, 1), i++) {
+        out.push({ departDate: d, returnDate: q.nights === undefined ? undefined : addDays(d, q.nights), price: 1000 + ((i * 37) % 23) * 10 + (q.nights ?? 0) });
+      }
+      return out;
+    },
+  };
+}
+
+describe("calendar-first search", () => {
+  it("prices whole countries and states with one Google place ID, and cities airport by airport", () => {
+    expect(planCalendarRoutes({ origins: ["AUS"], destinations: ["country:JP"] })).toEqual([
+      { origins: ["AUS"], destinations: ["/m/03_3d"], originAirport: "AUS", destinationAirport: "HND", originLabel: undefined, destinationLabel: "Japan" },
+    ]);
+    const texas = planCalendarRoutes({ origins: ["state:US-TX"], destinations: ["HNL"] });
+    expect(texas).toHaveLength(1);
+    expect(texas[0]).toMatchObject({ origins: ["/m/07b_l"], originLabel: "Texas", destinations: ["HNL"] });
+    expect(planCalendarRoutes({ origins: ["AUS"], destinations: ["city:Tokyo|JP"] }).map((r) => r.destinations[0]).sort()).toEqual(["HND", "NRT"]);
+    const asia = planCalendarRoutes({ origins: ["AUS"], destinations: ["region:Asia"] });
+    expect(asia.length).toBeGreaterThan(10);
+    expect(asia.every((r) => r.destinations[0].startsWith("/m/") || r.destinations[0].startsWith("/g/"))).toBe(true);
+    expect(planCalendarRoutes({ origins: ["AUS"], destinations: ["AUS"] })).toEqual([]);
+  });
+
+  it("plans middle trip lengths first, splits long ranges and leaves budget for details", () => {
+    const route = { origins: ["AUS"], destinations: ["NRT"], originAirport: "AUS", destinationAirport: "NRT" };
+    const plan = { routes: [route], departFrom: "2027-03-01", departTo: "2027-03-31" };
+    const jobs = planCalendar(req, plan, 20, 6);
+    expect(jobs).toHaveLength(4); // 6 - max(1, 6/3)
+    expect(jobs.map((j) => [j.query.nights, j.query.rangeStart, j.query.rangeEnd])).toEqual([
+      [8, "2027-03-01", "2027-03-20"], [8, "2027-03-21", "2027-03-31"],
+      [7, "2027-03-01", "2027-03-20"], [7, "2027-03-21", "2027-03-31"],
+    ]);
+    expect(calendarJobCount(req, plan, 20)).toBe(8);
+    expect(planCalendar(req, plan, 20, 1)).toHaveLength(1);
+  });
+
+  it("prices every date with a few calls, then fetches real itineraries for the cheapest dates", async () => {
+    const p = fakeCalendar();
+    const { events, fares } = await collect(p, { perSearch: 6 });
+    expect(p.calendarCalls).toHaveLength(4);
+    expect(p.calls).toHaveLength(2); // detail lookups with the rest of the budget
+    expect(events.find((e) => e.type === "done")).toMatchObject({ providerCalls: 6 });
+    // NRT then HND at the middle length (8 nights), two 20-day range chunks each.
+    expect(p.calendarCalls.map((q) => [q.destinations[0], q.nights])).toEqual([["NRT", 8], ["NRT", 8], ["HND", 8], ["HND", 8]]);
+    const priceOnly = fares.filter((f) => f.priceOnly);
+    expect(new Set(priceOnly.map((f) => `${f.departDate}|${f.returnDate}`)).size).toBe(31); // every March departure
+    expect(priceOnly[0]).toMatchObject({ airlines: [], outbound: [], destination: "NRT" });
+    expect(priceOnly[0].coverage).toBeUndefined(); // single airports need no coverage
+    const cheapestCal = [...priceOnly].sort((a, b) => a.price - b.price)[0];
+    expect(p.calls[0]).toMatchObject({ departDate: cheapestCal.departDate, returnDate: cheapestCal.returnDate });
+    expect(fares.some((f) => !f.priceOnly && f.outbound.length > 0)).toBe(true);
+    expect(events.some((e) => e.type === "notice" && /more places, months or trip lengths/.test(e.message))).toBe(true);
+  });
+
+  it("reuses cached calendars on a repeat search", async () => {
+    const p = fakeCalendar();
+    const first = await collect(p, { perSearch: 6 });
+    const before = p.calendarCalls.length;
+    const second = await collect(p, { perSearch: 6, db: first.db });
+    expect(p.calendarCalls.length).toBe(before);
+    expect(second.fares.filter((f) => f.priceOnly).length).toBeGreaterThan(0);
+  });
+});
+
+/** A live provider with explore: three destinations per call, one outside the trip-length range. */
+function fakeExplore(): FlightProvider & { calls: FlightQuery[]; exploreCalls: ExploreQuery[] } {
+  const inner = fakeLive();
+  const exploreCalls: ExploreQuery[] = [];
+  return {
+    ...inner,
+    name: "fakeexp",
+    exploreCalls,
+    async explore(q) {
+      exploreCalls.push(q);
+      const m = String(q.month).padStart(2, "0");
+      return [
+        { destination: "CUN", name: "Cancún", departDate: `2027-${m}-05`, returnDate: `2027-${m}-13`, price: 300, airline: "United", stops: 1 },
+        { destination: "LHR", name: "London", departDate: `2027-${m}-10`, returnDate: `2027-${m}-18`, price: 650, airline: "British Airways", stops: 0 },
+        { destination: "DEN", name: "Denver", departDate: `2027-${m}-02`, returnDate: `2027-${m}-04`, price: 99 }, // 2 nights: outside 7-10
+      ];
+    },
+  };
+}
+
+describe("explore-first search", () => {
+  const anywhere = { ...req, destinations: ["anywhere"], departFrom: "2027-03-01", departTo: "2027-04-30" };
+
+  it("plans one call per month and trip-length bucket, within Google's six months", () => {
+    const jobs = planExplore(SearchRequestSchema.parse(anywhere), TODAY);
+    expect(jobs.map((j) => [j.query.month, j.query.duration, j.query.areaId])).toEqual([[3, 2, undefined], [4, 2, undefined], [3, 3, undefined], [4, 3, undefined]]);
+    const europe = planExplore(SearchRequestSchema.parse({ ...anywhere, destinations: ["region:Europe"], minNights: 7, maxNights: 8 }), TODAY);
+    expect(europe.map((j) => j.query.areaId)).toEqual(["/m/02j9z", "/m/02j9z"]);
+    const far = planExplore(SearchRequestSchema.parse({ ...anywhere, departFrom: "2027-09-01", departTo: "2027-09-30" }), TODAY);
+    expect(far).toEqual([]); // more than six months out
+  });
+
+  it("streams explore deals in the trip-length range as price-only fares, then details the cheapest", async () => {
+    const p = fakeExplore();
+    const { fares, events } = await collect(p, { perSearch: 6, request: SearchRequestSchema.parse(anywhere) });
+    expect(p.exploreCalls).toHaveLength(4); // 6 - 1 kept for details, capped at the 4 planned calls
+    const grid = fares.filter((f) => f.priceOnly);
+    expect(new Set(grid.map((f) => f.destination))).toEqual(new Set(["CUN", "LHR"]));
+    expect(grid.find((f) => f.destination === "LHR")).toMatchObject({ airlines: ["British Airways"], stops: 0, origin: "AUS" });
+    expect(p.calls[0]).toMatchObject({ origins: ["AUS"], destinations: ["CUN"], departDate: "2027-03-05", returnDate: "2027-03-13" });
+    expect(events.find((e) => e.type === "done")).toMatchObject({ providerCalls: 6 });
+  });
+
+  it("quick searches spend the budget on prices only", async () => {
+    const p = fakeExplore();
+    await collect(p, { perSearch: 6, request: SearchRequestSchema.parse({ ...anywhere, quick: true, departTo: "2027-03-31", maxNights: 9 }) });
+    expect(p.exploreCalls).toHaveLength(1);
+    expect(p.calls).toHaveLength(0);
   });
 });

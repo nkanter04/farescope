@@ -103,7 +103,7 @@ export function ExploreHome() {
 
       {!result && live && (
         <div className="explore-empty">
-          <p>Each look costs a few live price searches, so we only run it when you ask.</p>
+          <p>Each month uses one live price search (then it’s cached), so we only run it when you ask.</p>
           <button className="primary" onClick={() => run(month)}>Show the cheapest places in {MONTH_NAMES[month.month - 1]}</button>
         </div>
       )}

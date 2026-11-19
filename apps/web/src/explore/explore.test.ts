@@ -18,7 +18,7 @@ describe("explore", () => {
 
   it("builds a round-trip search to anywhere", () => {
     const [m] = exploreMonths("2026-11-19", 1);
-    expect(exploreRequest("AUS", m, 2)).toMatchObject({ origins: ["AUS"], destinations: ["anywhere"], tripType: "roundtrip", adults: 2, departFrom: "2026-11-26" });
+    expect(exploreRequest("AUS", m, 2)).toMatchObject({ origins: ["AUS"], destinations: ["anywhere"], tripType: "roundtrip", adults: 2, departFrom: "2026-11-26", quick: true });
   });
 
   it("keeps the cheapest fare per city and skips the origin's own city", () => {

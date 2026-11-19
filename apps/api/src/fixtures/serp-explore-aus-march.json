@@ -1,0 +1,45 @@
+{
+ "_note": "Hand-built. Field names and types match a live google_travel_explore response checked on 2026-11-19 (unpriced entries included, as Google returns them); the values are made up.",
+ "destinations": [
+  {
+   "name": "Las Vegas",
+   "country": "United States",
+   "destination_airport": { "code": "LAS" },
+   "start_date": "2027-03-01",
+   "end_date": "2027-03-09",
+   "flight_price": 199,
+   "flight_duration": 180,
+   "number_of_stops": 0,
+   "airline": "Frontier",
+   "airline_code": "F9"
+  },
+  {
+   "name": "Cancún",
+   "country": "Mexico",
+   "destination_airport": { "code": "CUN" },
+   "start_date": "2027-03-06",
+   "end_date": "2027-03-13",
+   "flight_price": 349.5,
+   "flight_duration": 165,
+   "number_of_stops": 1,
+   "airline": "United",
+   "airline_code": "UA"
+  },
+  {
+   "name": "Denver",
+   "country": "United States",
+   "destination_airport": { "code": "DEN" },
+   "start_date": "2027-04-02",
+   "end_date": "2027-04-09",
+   "flight_price": 150,
+   "number_of_stops": 0,
+   "airline": "Southwest",
+   "airline_code": "WN"
+  },
+  {
+   "name": "Montreal",
+   "country": "Canada",
+   "car_duration": 0
+  }
+ ]
+}

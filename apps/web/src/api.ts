@@ -83,6 +83,17 @@ export async function deleteTrip(id: string): Promise<void> {
   if (!response.ok) throw new Error("Could not delete trip.");
 }
 
+/** Real itineraries for a date-grid (price-only) fare. One live lookup unless cached. */
+export async function fetchFareDetails(
+  fare: Fare,
+  opts: { cabin: Cabin; maxStops: 0 | 1 | 2 | null; adults: number; airlines?: string[] },
+): Promise<{ fares: Fare[]; error?: string }> {
+  if (DEMO) return (await demo()).fareDetails(fare, opts);
+  const r = await fetch("/api/fare-details", { method: "POST", headers: headers(), body: JSON.stringify({ fare, ...opts }) });
+  if (!r.ok) return { fares: [], error: (await r.json().catch(() => ({}))).error ?? "Could not load these flights." };
+  return r.json();
+}
+
 /** Price history and prediction for one fare; `peers` (other fares from the search) teach the booking curve. */
 export async function fetchPriceTrend(fare: Fare, peers: Fare[]): Promise<PriceTrend> {
   if (DEMO) return (await demo()).priceTrend(fare, peers);
@@ -112,6 +123,6 @@ export async function removeWatch(id: string): Promise<void> {
 /** Re-price watched flights (cache-first; at most once per 6 hours per flight). */
 export async function checkWatches(): Promise<PriceWatch[]> {
   if (DEMO) return (await demo()).checkWatches();
-  const r = await fetch("/api/watches/check", { method: "POST", headers: headers() });
+  const r = await fetch("/api/watches/check", { method: "POST", headers: headers(), body: "{}" });
   return r.ok ? (await r.json()).watches : [];
 }

@@ -48,6 +48,8 @@ export function exploreRequest(origin: string, m: ExploreMonth, adults: number):
     maxStops: null,
     adults,
     airlines: [],
+    // Prices only: no itinerary lookups or lodging, so a live explore costs one search per month.
+    quick: true,
   };
 }
 

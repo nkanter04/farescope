@@ -24,6 +24,8 @@ export const SearchRequestSchema = z
     adults: z.number().int().min(1).max(9).default(1),
     /** Only show itineraries flown entirely by these airlines (IATA codes). Empty = any airline. */
     airlines: z.array(z.string().regex(/^[A-Z0-9]{2}$/)).max(40).default([]),
+    /** Prices only: skip itinerary lookups and lodging (the explore page). */
+    quick: z.boolean().optional(),
   })
   .refine((r) => r.departFrom <= r.departTo, { message: "departFrom must be on or before departTo" })
   .refine((r) => r.minNights <= r.maxNights, { message: "minNights must be <= maxNights" });
@@ -67,9 +69,21 @@ export interface Fare {
   stale?: boolean;
   /** Cache key of the provider query that produced this fare (for its price history). */
   queryKey?: string;
+  /**
+   * True for a date-grid price (e.g. Google Flights' calendar): the cheapest total for these dates,
+   * without airlines, stops or times. Opening it fetches the real itineraries.
+   */
+  priceOnly?: boolean;
+  /**
+   * What a calendar price covers when it isn't one airport pair: airport codes or Google place IDs
+   * ("/m/03_3d" = Japan), with display labels. Opening the fare searches exactly these.
+   */
+  coverage?: { origins: string[]; destinations: string[]; originLabel?: string; destinationLabel?: string };
 }
 
 const iata = z.string().regex(/^[A-Z]{3}$/);
+/** An airport code or a Google place ID ("/m/03_3d"). */
+const placeId = z.string().regex(/^(?:[A-Z]{3}|\/[mg]\/[0-9a-z_]{2,20})$/);
 /** Validates a Fare sent back to the API (price trend, watches). */
 export const FareSchema = z.object({
   id: z.string().max(200),
@@ -93,6 +107,13 @@ export const FareSchema = z.object({
   cached: z.boolean(),
   stale: z.boolean().optional(),
   queryKey: z.string().max(500).optional(),
+  priceOnly: z.boolean().optional(),
+  coverage: z.object({
+    origins: z.array(placeId).min(1).max(10),
+    destinations: z.array(placeId).min(1).max(10),
+    originLabel: z.string().max(80).optional(),
+    destinationLabel: z.string().max(80).optional(),
+  }).optional(),
 });
 
 export interface PriceInsights {

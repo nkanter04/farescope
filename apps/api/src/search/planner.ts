@@ -13,6 +13,11 @@ export interface Plan {
   candidates: Candidate[];
   totalCandidates: number;
   routeGroups: number;
+  /** Airports of each route group (index = routeGroup). */
+  routes: { origins: string[]; destinations: string[] }[];
+  /** First and last departure dates searched. */
+  departFrom: string;
+  departTo: string;
   originAirports: string[];
   destinationAirports: string[];
   unknown: string[];
@@ -67,9 +72,13 @@ export function planSearch(req: SearchRequest, provider: { name: string; maxAirp
     };
     candidates.push({ key: flightQueryKey(provider.name, query), query, routeGroup: group, nights: p.nights });
   }
+  const routes = Array.from({ length: routeGroups }, (_, g) => ({ origins: oChunks[Math.floor(g / dChunks.length)], destinations: dChunks[g % dChunks.length] }));
   return {
     candidates,
     routeGroups,
+    routes,
+    departFrom: from,
+    departTo: req.departTo,
     totalCandidates,
     originAirports: origins,
     destinationAirports: destinations,

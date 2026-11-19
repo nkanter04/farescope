@@ -32,9 +32,14 @@ To regenerate, download these files into a local directory and run the import sc
 ## Flight prices and booking links
 
 - **Demo:** simulated prices only (`providers/mock.ts`), always labeled.
-- **SerpApi** (paid, Google Flights / Google Hotels results): `PROVIDER=serpapi`.
+- **SerpApi** (paid, Google Flights / Google Hotels results): `PROVIDER=serpapi`. Uses three Google engines: `google_flights_calendar` (price per departure date), `google_travel_explore` (cheapest destinations for a month) and `google_flights` (itineraries). Free plan: 250 searches/month; each calendar, explore or itinerary call is one search.
 - **Travelpayouts / Aviasales Data API** (`PROVIDER=travelpayouts`): cached fares from recent Aviasales searches, free for Travelpayouts affiliates under their program terms. Prices can be hours or days old and routes nobody searched recently return nothing. Bookings through its links (with your marker) earn commission. Field names were confirmed with a live call on 2026-11-19. Coverage from mid-size US airports is thin: a whole month may hold only a few cached date pairs per route.
 - **Booking links** for hotels, hostels, activities and cars are plain Google searches unless partner templates are configured in `VITE_PARTNER_LINKS`. Follow each partner's terms, and keep the on-page commission disclosure.
+
+## Place IDs and US states
+
+- `packages/shared/src/data/place-ids.json`: Google location IDs (Freebase "kgmid", Wikidata property P646) for countries (ISO 3166-1), US states and territories (ISO 3166-2) and travel regions, from **Wikidata** (CC0, no attribution required). Fetched 2026-11-19. SerpApi's Google calendar and explore engines accept these IDs.
+- US airports carry a `state` field from OurAirports' `iso_region` (public domain), so states work as search places. `scripts/import-airports.ps1` keeps it on re-import.
 
 ## Airline logos
 

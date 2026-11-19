@@ -18,6 +18,7 @@ import type { FlightProvider, StayProvider } from "./providers/types.ts";
 import { lookupStays } from "./search/stays.ts";
 import { QuotaGuard } from "./quota.ts";
 import { runSearch } from "./search/run.ts";
+import { fareDetails } from "./search/details.ts";
 import { TripStore } from "./trips.ts";
 
 export interface AppOverrides {
@@ -171,6 +172,20 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     if (!parsed.success) return reply.code(400).send({ error: "Invalid trip" });
     const trip = trips.update(owner, req.params.id, parsed.data as unknown as Omit<TripPlan, "id" | "createdAt" | "total">);
     return trip ? { trip } : reply.code(404).send({ error: "Trip not found" });
+  });
+
+  // ---- Real itineraries for a date-grid (price-only) fare ----
+  const DetailsInput = z.object({
+    fare: FareSchema,
+    cabin: z.enum(CABINS),
+    maxStops: z.union([z.literal(0), z.literal(1), z.literal(2), z.null()]),
+    adults: z.number().int().min(1).max(9),
+    airlines: z.array(z.string().regex(/^[A-Z0-9]{2}$/)).max(20).optional(),
+  });
+  app.post("/api/fare-details", async (req, reply) => {
+    const parsed = DetailsInput.safeParse(req.body);
+    if (!parsed.success) return reply.code(400).send({ error: "Invalid fare" });
+    return fareDetails(parsed.data, { provider: flights, cache, quota, clientId: clientKey(req) });
   });
 
   // ---- Price predictions ----

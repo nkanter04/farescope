@@ -1,9 +1,28 @@
 import { create } from "zustand";
 import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type Stay, type TripPlan } from "@farescope/shared";
-import { deleteTrip, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
+import { deleteTrip, fetchFareDetails, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
 
 /** Shared empty airline filter (stable identity for React selectors). */
 export const ANY_AIRLINE: string[] = [];
+
+/** True when `full` (a real itinerary) covers the same trip as the date-grid price `priceOnly`. */
+export function supersedes(full: Fare, priceOnly: Fare): boolean {
+  if (full.priceOnly || !priceOnly.priceOnly) return false;
+  if (full.departDate !== priceOnly.departDate || (full.returnDate ?? "") !== (priceOnly.returnDate ?? "")) return false;
+  // Same provider query (the grid price's exact-date lookup) is the reliable match, even for whole countries.
+  if (full.queryKey && priceOnly.queryKey) return full.queryKey === priceOnly.queryKey;
+  const origins = priceOnly.coverage?.origins ?? [priceOnly.origin];
+  const destinations = priceOnly.coverage?.destinations ?? [priceOnly.destination];
+  return origins.includes(full.origin) && destinations.includes(full.destination);
+}
+
+/** Add fares, dropping date-grid prices that now have real itineraries. */
+export function mergeFares(current: Fare[], incoming: Fare[]): Fare[] {
+  const full = incoming.filter((f) => !f.priceOnly);
+  const kept = full.length ? current.filter((f) => !f.priceOnly || !full.some((x) => supersedes(x, f))) : current;
+  const ids = new Set(kept.map((f) => f.id));
+  return [...kept, ...incoming.filter((f) => !ids.has(f.id) && !(f.priceOnly && kept.some((x) => supersedes(x, f))))];
+}
 
 export type TripDraft = Omit<TripPlan, "id" | "total" | "createdAt"> & { id?: string };
 
@@ -24,6 +43,8 @@ interface State {
   filterDest: string | null;
   filterDate: string | null;
   selectedFare: Fare | null;
+  /** Loading real itineraries for a selected date-grid price. */
+  details?: { fareId: string; status: "loading" | "error"; message?: string };
   draft?: TripDraft;
   sort: "price" | "airfare" | "duration" | "stops";
   trips: TripPlan[];
@@ -100,6 +121,7 @@ export const useStore = create<State>((set, get) => ({
       filterDest: null,
       filterDate: null,
       selectedFare: null,
+      details: undefined,
       draft: undefined,
       progress: { done: 0, total: 0, providerCalls: 0, planned: 0, candidates: 0 },
     });
@@ -109,7 +131,7 @@ export const useStore = create<State>((set, get) => ({
     const flush = () => {
       raf = 0;
       if (controller?.signal === signal && pending.length) {
-        set({ fares: [...get().fares, ...pending] });
+        set({ fares: mergeFares(get().fares, pending) });
         pending = [];
       }
     };
@@ -158,14 +180,29 @@ export const useStore = create<State>((set, get) => ({
   },
   goHome() {
     controller?.abort();
-    set({ view: "search", submitted: undefined, status: "idle", fares: [], shortlist: undefined, notices: [], selectedFare: null, draft: undefined, filterDest: null, filterDate: null });
+    set({ view: "search", submitted: undefined, status: "idle", fares: [], shortlist: undefined, notices: [], selectedFare: null, details: undefined, draft: undefined, filterDest: null, filterDate: null });
   },
 
   setFilterDest: (filterDest) => set({ filterDest }),
   setFilterDate: (filterDate) => set({ filterDate }),
 
   async selectFare(fare, quotedStay) {
-    set({ selectedFare: fare });
+    if (fare?.priceOnly) {
+      // A date-grid price has no itinerary yet: fetch the real flights for these dates, then open the cheapest.
+      set({ selectedFare: fare, draft: undefined, details: { fareId: fare.id, status: "loading" } });
+      const search = get().submitted ?? get().request;
+      const result = await fetchFareDetails(fare, { cabin: search.cabin, maxStops: search.maxStops, adults: search.adults, airlines: search.airlines })
+        .catch((e: Error) => ({ fares: [] as Fare[], error: e.message }));
+      if (get().selectedFare?.id !== fare.id) return;
+      const cheapest = result.fares[0];
+      if (!cheapest) {
+        set({ details: { fareId: fare.id, status: "error", message: result.error ?? "Google Flights has no flights at this price for these dates anymore. Prices change often." } });
+        return;
+      }
+      set({ fares: mergeFares(get().fares, result.fares), details: undefined });
+      return get().selectFare(cheapest, quotedStay);
+    }
+    set({ selectedFare: fare, details: undefined });
     if (!fare || get().draft?.fare.id === fare.id) return;
     const search = get().submitted;
     const place = AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination;
