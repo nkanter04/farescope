@@ -6,3 +6,5 @@ dist/
 .local-data/
 .wrangler/
 .dev.vars
+.env.local
+*.local
