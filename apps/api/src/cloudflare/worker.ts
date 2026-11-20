@@ -32,6 +32,7 @@ export interface Env {
   STRIPE_PRICE_MONTHLY?: string;
   STRIPE_PRICE_YEARLY?: string;
   STRIPE_AUTOMATIC_TAX?: string;
+  STRIPE_PORTAL_CONFIG?: string;
   PRO_MONTHLY_BUDGET?: string;
   TRIAL_BUDGET?: string;
   TRIAL_DAYS?: string;

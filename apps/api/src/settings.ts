@@ -45,6 +45,7 @@ export function settingsFromEnv(env: Env) {
     stripePriceMonthly: env.STRIPE_PRICE_MONTHLY ?? "",
     stripePriceYearly: env.STRIPE_PRICE_YEARLY ?? "",
     stripeAutomaticTax: env.STRIPE_AUTOMATIC_TAX === "true",
+    stripePortalConfig: env.STRIPE_PORTAL_CONFIG ?? "",
     trialDays: num(env.TRIAL_DAYS, 3),
     /** Live lookups per month for Pro subscribers, and during the free trial. */
     proMonthlyBudget: num(env.PRO_MONTHLY_BUDGET, 500),
@@ -91,6 +92,7 @@ export function billingFor(s: Settings, fetchImpl?: typeof fetch): BillingDeps |
       priceYearly: s.stripePriceYearly,
       trialDays: s.trialDays,
       automaticTax: s.stripeAutomaticTax,
+      portalConfig: s.stripePortalConfig || undefined,
     }, fetchImpl),
     webhookSecret: s.stripeWebhookSecret,
     prices: { monthly: s.stripePriceMonthly, yearly: s.stripePriceYearly },

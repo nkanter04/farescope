@@ -11,6 +11,8 @@ export interface StripeSettings {
   trialDays: number;
   /** Let Stripe Tax compute sales tax (needs Stripe Tax turned on in the dashboard). */
   automaticTax?: boolean;
+  /** Customer portal configuration (from scripts/stripe-setup.ts); else Stripe's default. */
+  portalConfig?: string;
 }
 
 export type ProPlan = "monthly" | "yearly";
@@ -82,7 +84,9 @@ export function createStripe(s: StripeSettings, fetchImpl: typeof fetch = fetch)
       return session.url;
     },
     async portal(o) {
-      const session = await post("billing_portal/sessions", new URLSearchParams({ customer: o.customerId, return_url: `${o.origin}/app/` }));
+      const params = new URLSearchParams({ customer: o.customerId, return_url: `${o.origin}/app/` });
+      if (s.portalConfig) params.set("configuration", s.portalConfig);
+      const session = await post("billing_portal/sessions", params);
       if (typeof session.url !== "string") throw new Error("Stripe did not return a portal link.");
       return session.url;
     },

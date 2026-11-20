@@ -74,9 +74,12 @@ const portal = await stripe("POST", "billing_portal/configurations", {
   "features[subscription_update][products][0][prices][0]": ids.STRIPE_PRICE_MONTHLY,
   "features[subscription_update][products][0][prices][1]": ids.STRIPE_PRICE_YEARLY,
   default_return_url: "https://tripica.farescope.workers.dev/app/",
-  "default": "true",
 }).catch((e: Error) => ({ error: e.message }));
-console.log("error" in portal ? `Portal settings not changed: ${portal.error}` : "Customer portal configured.");
+if ("error" in portal) console.log(`Portal settings not changed: ${portal.error}`);
+else {
+  ids.STRIPE_PORTAL_CONFIG = String(portal.id);
+  console.log("Customer portal configured.");
+}
 
 if (flag("webhook")) {
   const url = value("webhook");
