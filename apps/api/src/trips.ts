@@ -26,6 +26,11 @@ export class TripStore {
     return trip;
   }
 
+  /** Move every trip from one owner to another (a browser's trips to a new account). */
+  reassign(from: string, to: string): number {
+    return Number(this.db.prepare("UPDATE trips SET owner = ? WHERE owner = ?").run(to, from).changes);
+  }
+
   remove(owner: string, id: string): boolean {
     const r = this.db.prepare("DELETE FROM trips WHERE owner = ? AND id = ?").run(owner, id);
     return Number(r.changes) > 0;

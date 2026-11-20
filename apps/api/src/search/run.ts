@@ -3,6 +3,7 @@ import type { Cabin } from "@farescope/shared";
 import { ttlFor } from "../ttl.ts";
 import { calendarQueryKey, exploreQueryKey, flightQueryKey, type CalendarPrice, type CalendarQuery, type ExploreDeal, type ExploreQuery, type FlightProvider, type FlightQuery, type FlightResult } from "../providers/types.ts";
 import { planSearch, refineCandidates, sampleCandidates, type Candidate } from "./planner.ts";
+import { limitNotice, type LimitReason } from "./limits.ts";
 
 /**
  * What the search needs from storage. SQLite (QueryCache/QuotaGuard) on the server; plain
@@ -15,7 +16,7 @@ export interface SearchCache {
 }
 export interface SearchQuota {
   remaining(clientId: string): number;
-  tryConsume(clientId: string, units?: number): { ok: true } | { ok: false; reason: "monthly" | "daily" };
+  tryConsume(clientId: string, units?: number): { ok: true } | { ok: false; reason: LimitReason };
 }
 
 export interface RunDeps {
@@ -27,6 +28,8 @@ export interface RunDeps {
   perSearchBudget: number;
   /** Max calls for free (mock) providers, to bound CPU and payload size. */
   freeCallCap: number;
+  /** Accounts exist: limit notices for visitors suggest signing in. */
+  signInHint?: boolean;
   concurrency?: number;
   now?: () => Date;
   signal?: AbortSignal;
@@ -162,10 +165,7 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
           emit({
             type: "notice",
             level: "warn",
-            message:
-              decision.reason === "monthly"
-                ? "This month's live search budget is used up. Showing cached prices."
-                : "You've hit today's live search limit. Showing cached prices.",
+            message: limitNotice(decision.reason, { signInHint: deps.signInHint }),
           });
         }
         return;
@@ -205,9 +205,7 @@ export async function runSearch(req: SearchRequest, deps: RunDeps, emit: (e: Sea
         emit({
           type: "notice",
           level: "warn",
-          message: decision.reason === "monthly"
-            ? "This month's live search budget is used up. Showing cached prices."
-            : "You've hit today's live search limit. Showing cached prices.",
+          message: limitNotice(decision.reason, { signInHint: deps.signInHint }),
         });
       }
       return { value: hit?.value, flags: { cached: true, stale: true } };

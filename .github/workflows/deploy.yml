@@ -76,6 +76,7 @@ jobs:
           CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
           SITE_URL: ${{ vars.CF_SITE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
           VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}
       - run: npx wrangler deploy
         if: env.HAS_TOKEN == 'true'

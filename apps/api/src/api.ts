@@ -21,6 +21,8 @@ import { checkWatch, MAX_WATCHES, newWatch } from "./search/watch.ts";
 export interface ApiSettings {
   monthlyBudget: number;
   dailyClientBudget: number;
+  /** Live lookups per signed-in account per month. */
+  accountMonthlyBudget?: number;
   perSearchBudget: number;
   freeCallCap: number;
 }
@@ -39,6 +41,8 @@ export interface ApiDeps {
   liveGate?: (c: Context) => Promise<Response | undefined>;
   /** Extra routes (e.g. the bot-check token exchange). */
   extend?: (app: Hono) => void;
+  /** Sign-in check (Clerk): session token → user id, or undefined if invalid. Absent = no accounts. */
+  verifyUser?: (token: string) => Promise<string | undefined>;
   log?: (message: string, error?: unknown) => void;
 }
 
@@ -85,16 +89,33 @@ async function body(c: Context): Promise<unknown> {
 export function createApi(deps: ApiDeps): Hono {
   const { db, settings, flights, stays } = deps;
   const cache = new QueryCache(db);
-  const quota = new QuotaGuard(db, { monthlyBudget: settings.monthlyBudget, dailyClientBudget: settings.dailyClientBudget });
+  const quota = new QuotaGuard(db, {
+    monthlyBudget: settings.monthlyBudget,
+    dailyClientBudget: settings.dailyClientBudget,
+    accountMonthlyBudget: settings.accountMonthlyBudget,
+  });
   const trips = new TripStore(db);
   const watches = new WatchStore(db);
   const priceHistory = new PriceHistory(db);
-  /** Quota is keyed by IP (not spoofable like a header). */
-  const clientKey = (c: Context) => `ip:${deps.clientIp(c)}`;
-  /** Trips and watches are keyed by the browser's anonymous id until real accounts exist. */
-  const ownerId = (c: Context) => {
+  /** Signed-in user per request (set by the auth middleware below). */
+  const users = new WeakMap<Request, string>();
+  const userOf = (c: Context) => users.get(c.req.raw);
+  const accounts = !!deps.verifyUser;
+  /** Quota: the account when signed in, else the IP (not spoofable like a header). */
+  const clientKey = (c: Context) => {
+    const user = userOf(c);
+    return user ? `user:${user}` : `ip:${deps.clientIp(c)}`;
+  };
+  /** Visitors without an account get a "sign in for more" hint when they hit their limit. */
+  const signInHint = (c: Context) => accounts && !userOf(c);
+  /** Trips and watches: the account when signed in, else this browser's anonymous id. */
+  const browserId = (c: Context) => {
     const h = c.req.header("x-client-id");
     return h && CLIENT_ID.test(h) ? h : undefined;
+  };
+  const ownerId = (c: Context) => {
+    const user = userOf(c);
+    return user ? `user:${user}` : browserId(c);
   };
   const missingOwner = (c: Context) => c.json({ error: "Missing X-Client-Id" }, 400);
   const gate = async (c: Context) => (flights.live && deps.liveGate ? deps.liveGate(c) : undefined);
@@ -106,11 +127,37 @@ export function createApi(deps: ApiDeps): Hono {
     try { prune(); } catch (e) { deps.log?.("prune failed", e); }
     await next();
   });
+  // Sign-in: a valid Clerk session token makes this request the account's. A token that doesn't
+  // verify (expired, wrong site) is refused so the browser can refresh it, instead of silently
+  // falling back to the visitor's limits.
+  app.use("/api/*", async (c, next) => {
+    const header = c.req.header("authorization");
+    if (header && deps.verifyUser) {
+      const token = /^Bearer (.{20,8192})$/.exec(header)?.[1];
+      const user = token ? await deps.verifyUser(token) : undefined;
+      if (!user) return c.json({ error: "Your sign-in expired. Please sign in again.", signIn: true }, 401);
+      users.set(c.req.raw, user);
+    }
+    await next();
+  });
   deps.extend?.(app);
 
   app.get("/api/health", (c) => c.json({ ok: true, provider: flights.name, live: flights.live }));
 
-  app.get("/api/quota", (c) => c.json({ provider: flights.name, live: flights.live, ...quota.status(clientKey(c)) } satisfies QuotaStatus));
+  app.get("/api/quota", (c) => c.json({ provider: flights.name, live: flights.live, accounts, ...quota.status(clientKey(c)) } satisfies QuotaStatus));
+
+  /**
+   * First sign-in on a browser: move the trips and watches it saved anonymously to the account,
+   * so nothing is lost. Needs the browser id header and a signed-in user.
+   */
+  app.post("/api/account/claim", (c) => {
+    const user = userOf(c);
+    const browser = browserId(c);
+    if (!user) return c.json({ error: "Sign in first." }, 401);
+    if (!browser) return missingOwner(c);
+    const owner = `user:${user}`;
+    return c.json({ trips: trips.reassign(browser, owner), watches: watches.reassign(browser, owner) });
+  });
 
   app.post("/api/search", async (c) => {
     const parsed = SearchRequestSchema.safeParse(await body(c));
@@ -141,6 +188,7 @@ export function createApi(deps: ApiDeps): Hono {
             clientId,
             perSearchBudget: settings.perSearchBudget,
             freeCallCap: settings.freeCallCap,
+            signInHint: signInHint(c),
             signal: abort.signal,
           }, emit);
         } catch (e) {
@@ -207,7 +255,7 @@ export function createApi(deps: ApiDeps): Hono {
     if (!parsed.success) return c.json({ error: "Invalid fare" }, 400);
     const refused = await gate(c);
     if (refused) return refused;
-    return c.json(await fareDetails(parsed.data, { provider: flights, cache, quota, clientId: clientKey(c) }));
+    return c.json(await fareDetails(parsed.data, { provider: flights, cache, quota, clientId: clientKey(c), signInHint: signInHint(c) }));
   });
 
   app.post("/api/price-trend", async (c) => {

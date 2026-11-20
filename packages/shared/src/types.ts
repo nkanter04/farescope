@@ -191,8 +191,16 @@ export interface PriceWatch {
 export interface QuotaStatus {
   provider: string;
   live: boolean;
+  /** The whole site's monthly budget. */
   monthlyBudget: number;
   monthlyUsed: number;
+  /** This visitor's or account's own allowance (live lookups). */
+  scope?: "visitor" | "account";
+  clientPeriod?: "day" | "month";
+  clientBudget?: number;
+  clientUsed?: number;
+  /** True when sign-in is available (accounts get a monthly allowance). */
+  accounts?: boolean;
   dailyClientBudget: number;
   dailyClientUsed: number;
 }

@@ -31,6 +31,13 @@ export function settingsFromEnv(env: Env) {
     freeCallCap: num(env.FREE_CALL_CAP, 800),
     /** Cloudflare Turnstile secret: when set, routes that can spend live quota need a bot-check pass. */
     turnstileSecret: env.TURNSTILE_SECRET_KEY ?? "",
+    /** Accounts (Clerk): set the secret key (or the PEM JWT key) to turn sign-in on. */
+    clerkSecretKey: env.CLERK_SECRET_KEY ?? "",
+    clerkJwtKey: env.CLERK_JWT_KEY ?? "",
+    /** Site origins allowed to use sign-in tokens, comma-separated. */
+    clerkAuthorizedParties: (env.CLERK_AUTHORIZED_PARTIES ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    /** Live lookups per signed-in account per month (a search uses up to PER_SEARCH_BUDGET). */
+    accountMonthlyBudget: num(env.ACCOUNT_MONTHLY_BUDGET, 50),
   };
 }
 

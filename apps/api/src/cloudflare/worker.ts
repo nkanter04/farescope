@@ -5,6 +5,7 @@ import { SCHEMA } from "../sql.ts";
 import { providersFor, settingsFromEnv, type Env as SettingsEnv } from "../settings.ts";
 import { doSql } from "./do-sql.ts";
 import { turnstileGate, turnstileRoutes } from "../turnstile.ts";
+import { clerkVerifier } from "../auth.ts";
 
 /**
  * Cloudflare entry point. Static files (the app and the guide pages) are served by Workers Static
@@ -22,6 +23,10 @@ export interface Env {
   DAILY_CLIENT_BUDGET?: string;
   PER_SEARCH_BUDGET?: string;
   TURNSTILE_SECRET_KEY?: string;
+  CLERK_SECRET_KEY?: string;
+  CLERK_JWT_KEY?: string;
+  CLERK_AUTHORIZED_PARTIES?: string;
+  ACCOUNT_MONTHLY_BUDGET?: string;
 }
 
 export class TripicaStore extends DurableObject<Env> {
@@ -42,6 +47,11 @@ export class TripicaStore extends DurableObject<Env> {
       // Cloudflare sets the visitor's IP; it travels with the request into the Durable Object.
       clientIp: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
       liveGate: gate?.check,
+      verifyUser: clerkVerifier({
+        secretKey: settings.clerkSecretKey,
+        jwtKey: settings.clerkJwtKey,
+        authorizedParties: settings.clerkAuthorizedParties,
+      }),
       extend: gate ? (app) => turnstileRoutes(app, gate) : undefined,
       log: (message, error) => console.error(message, error),
     });

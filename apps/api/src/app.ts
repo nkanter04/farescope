@@ -6,11 +6,14 @@ import type { Config } from "./config.ts";
 import { openDb } from "./db.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
 import { providersFor } from "./settings.ts";
+import { clerkVerifier } from "./auth.ts";
 
 export interface AppOverrides {
   flights?: FlightProvider;
   stays?: StayProvider;
   dbPath?: string;
+  /** Sign-in check override (tests). */
+  verifyUser?: (token: string) => Promise<string | undefined>;
 }
 
 /** The caller's IP under @hono/node-server (local dev sits behind the Vite proxy on localhost). */
@@ -30,6 +33,8 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     flights: overrides.flights ?? providers.flights,
     stays: overrides.stays ?? providers.stays,
     clientIp: nodeIp,
+    verifyUser: overrides.verifyUser ??
+      clerkVerifier({ secretKey: cfg.clerkSecretKey, jwtKey: cfg.clerkJwtKey, authorizedParties: cfg.clerkAuthorizedParties }),
     log: (message, error) => console.error(message, error),
   });
   return Object.assign(app, { close: () => db.close() });

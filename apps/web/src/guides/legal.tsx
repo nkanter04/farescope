@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
  * code actually does; keep them in sync when data handling changes (retention: see api prune.ts).
  * Not legal advice: have a lawyer review before marketing the site.
  */
-export const LEGAL_UPDATED = "November 19, 2026";
+export const LEGAL_UPDATED = "November 20, 2026";
 
 export interface LegalSite {
   /** Public contact address (build setting CONTACT_EMAIL). */
@@ -37,6 +37,9 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
         <li><strong>Your IP address.</strong> Used to apply daily search limits and the robot check, so one visitor can't use up the service.</li>
         <li><strong>A browser identifier.</strong> A random ID stored in your browser that links your saved trips, notes and price watches to this
           browser. It is not tied to your name or email.</li>
+        <li><strong>Your account, if you create one.</strong> Accounts are optional. Clerk, our sign-in provider, handles your email address,
+          name and sign-in (including Google sign-in). Tripica stores only your account ID, with your trips, watches and search counts, so they
+          follow you across devices. When you first sign in on a browser, its saved trips and watches move to your account.</li>
         <li><strong>Fare observations.</strong> Prices seen in searches (route, dates, price), without anything that identifies you. They improve
           price predictions.</li>
         <li><strong>Booking-link clicks.</strong> A count by category (flight, stay, activity, car) and page type. No IP address or identifier is stored
@@ -47,6 +50,7 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
       <ul>
         <li>Search-limit counters tied to an IP address are deleted after 31 days.</li>
         <li>Saved trips, notes and price watches are kept until you delete them in My trips.</li>
+        <li>Your account stays until you delete it from the account menu; to also delete the trips and watches linked to it, write to us.</li>
         <li>Cached prices expire within days; fare observations are kept to improve predictions.</li>
         <li>The robot-check pass is stored only in your browser and expires at the end of the day (UTC).</li>
         <li>Cloudflare keeps request logs for a short period under its own policies.</li>
@@ -54,6 +58,7 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
 
       <h2>Services Tripica uses</h2>
       <ul>
+        <li><strong>Clerk</strong> provides accounts and sign-in, under its own privacy policy.</li>
         <li><strong>Cloudflare</strong> hosts the site and runs the robot check (Turnstile). See the{" "}
           <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Cloudflare Turnstile Privacy Addendum</a>. When enabled, Cloudflare Web
           Analytics measures visits and page speed without cookies.</li>

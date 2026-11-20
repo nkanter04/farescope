@@ -2,6 +2,7 @@ import { fareMatchesAirlines, type Cabin, type Fare } from "@farescope/shared";
 import { ttlFor } from "../ttl.ts";
 import { flightQueryKey, type FlightProvider, type FlightQuery, type FlightResult } from "../providers/types.ts";
 import type { SearchCache, SearchQuota } from "./run.ts";
+import { limitError } from "./limits.ts";
 
 /**
  * Real itineraries for one date pair: opening a date-grid (price-only) fare calls this. Cache first;
@@ -21,6 +22,7 @@ export interface DetailsDeps {
   quota: SearchQuota;
   clientId: string;
   now?: () => Date;
+  signInHint?: boolean;
 }
 
 export interface DetailsResult {
@@ -63,7 +65,7 @@ export async function fareDetails(input: DetailsInput, deps: DetailsDeps): Promi
       return {
         fares: [],
         cached: false,
-        error: decision.reason === "monthly" ? "This month's live search budget is used up." : "You've hit today's live search limit.",
+        error: limitError(decision.reason, { signInHint: deps.signInHint }),
       };
     }
   }

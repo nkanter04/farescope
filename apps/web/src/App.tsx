@@ -8,6 +8,7 @@ import { SearchForm } from "./components/SearchForm.tsx";
 import { ExploreHome } from "./components/ExploreHome.tsx";
 import { TripsView } from "./components/TripsView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
+import { AccountButtonSlot } from "./accountSlots.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
@@ -93,12 +94,15 @@ export function App() {
           </button>
         </nav>
         {quota && (
-          <div className={`quota ${quota.live ? "live" : "demo"}`} title="Live price searches this month">
-            {quota.live
-              ? `Live prices · ${quota.monthlyBudget - quota.monthlyUsed} searches left this month`
-              : "Demo · simulated prices"}
+          <div className={`quota ${quota.live ? "live" : "demo"}`}
+            title={quota.live ? "Each live price lookup uses one credit; a search uses up to a few. Cached prices are free." : undefined}>
+            {!quota.live ? "Demo · simulated prices"
+              : quota.clientBudget !== undefined
+                ? `Live prices · ${Math.max(0, quota.clientBudget - (quota.clientUsed ?? 0))} credits left ${quota.clientPeriod === "month" ? "this month" : "today"}`
+                : `Live prices · ${quota.monthlyBudget - quota.monthlyUsed} searches left this month`}
           </div>
         )}
+        <AccountButtonSlot />
       </header>
       <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/app/">Open Tripica for live prices</a> · </>}<a href={`${SITE_ROOT}privacy/`}>Privacy</a> · <a href={`${SITE_ROOT}terms/`}>Terms</a></div>
 

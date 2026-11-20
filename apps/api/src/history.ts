@@ -78,6 +78,11 @@ export class WatchStore {
       .run(watch.id, owner, JSON.stringify(watch), Date.parse(watch.createdAt));
   }
 
+  /** Move every watch from one owner to another (a browser's watches to a new account). */
+  reassign(from: string, to: string): number {
+    return Number(this.db.prepare("UPDATE watches SET owner = ? WHERE owner = ?").run(to, from).changes);
+  }
+
   remove(owner: string, id: string): boolean {
     return Number(this.db.prepare("DELETE FROM watches WHERE owner = ? AND id = ?").run(owner, id).changes) > 0;
   }

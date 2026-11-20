@@ -26,6 +26,9 @@
     "PROVIDER": "serpapi",
     "MONTHLY_QUERY_BUDGET": "200",
     "DAILY_CLIENT_BUDGET": "12",
-    "PER_SEARCH_BUDGET": "5"
+    "PER_SEARCH_BUDGET": "5",
+    // Accounts (once CLERK_SECRET_KEY is set): 50 live lookups a month each (about 10 searches).
+    "ACCOUNT_MONTHLY_BUDGET": "50",
+    "CLERK_AUTHORIZED_PARTIES": "https://tripica.farescope.workers.dev"
   }
 }
