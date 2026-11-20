@@ -3,7 +3,7 @@ import { CHECK_EVENT } from "../human.ts";
 import type { Fare } from "@farescope/shared";
 import { AirlineFilter } from "./AirlineFilter.tsx";
 import { FareAirlines } from "./AirlineLogo.tsx";
-import { SignInPromptSlot } from "../accountSlots.tsx";
+import { ProPromptSlot, SignInPromptSlot } from "../accountSlots.tsx";
 import { useDerived } from "../derived.ts";
 import { cityOf, fareEnds, duration, money, relativeAge, shortDate, stopsLabel } from "../format.ts";
 import { ANY_AIRLINE, useStore } from "../store.ts";
@@ -62,6 +62,7 @@ export function ResultsList() {
         <div key={i} className={`notice ${n.level}`}>
           {n.message}
           {n.message.includes("Sign in") && <> <SignInPromptSlot /></>}
+          {n.message.includes("for your account") && <> <ProPromptSlot /></>}
         </div>
       ))}
       {(filterDest || filterDate) && (

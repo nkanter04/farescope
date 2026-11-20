@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 import type { Hono } from "hono";
 import { createApi } from "../api.ts";
 import { SCHEMA } from "../sql.ts";
-import { providersFor, settingsFromEnv, type Env as SettingsEnv } from "../settings.ts";
+import { billingFor, providersFor, settingsFromEnv, type Env as SettingsEnv } from "../settings.ts";
 import { doSql } from "./do-sql.ts";
 import { turnstileGate, turnstileRoutes } from "../turnstile.ts";
 import { clerkVerifier } from "../auth.ts";
@@ -27,6 +27,14 @@ export interface Env {
   CLERK_JWT_KEY?: string;
   CLERK_AUTHORIZED_PARTIES?: string;
   ACCOUNT_MONTHLY_BUDGET?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_MONTHLY?: string;
+  STRIPE_PRICE_YEARLY?: string;
+  STRIPE_AUTOMATIC_TAX?: string;
+  PRO_MONTHLY_BUDGET?: string;
+  TRIAL_BUDGET?: string;
+  TRIAL_DAYS?: string;
 }
 
 export class TripicaStore extends DurableObject<Env> {
@@ -41,7 +49,8 @@ export class TripicaStore extends DurableObject<Env> {
     const gate = settings.turnstileSecret ? turnstileGate(settings.turnstileSecret) : undefined;
     this.app = createApi({
       db,
-      settings,
+      settings: { ...settings, siteOrigins: settings.clerkAuthorizedParties },
+      billing: billingFor(settings),
       flights,
       stays,
       // Cloudflare sets the visitor's IP; it travels with the request into the Durable Object.

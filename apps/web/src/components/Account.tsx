@@ -4,6 +4,9 @@ import { claimAccount } from "../api.ts";
 import { ACCOUNTS, CLERK_KEY, setTokenGetter } from "../auth.ts";
 import { useInsights } from "../insights.ts";
 import { useStore } from "../store.ts";
+import { ProControls, ProPrompt, ProReturn } from "./Pro.tsx";
+
+export { ProPrompt, ProReturn };
 
 /**
  * Accounts (Clerk). Everything here renders nothing unless the build has a publishable key, so
@@ -52,6 +55,7 @@ export function AccountButton() {
         </SignInButton>
       </Show>
       <Show when="signed-in">
+        <ProControls />
         <UserButton />
       </Show>
     </div>

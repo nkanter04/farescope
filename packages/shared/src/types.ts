@@ -201,6 +201,9 @@ export interface QuotaStatus {
   clientUsed?: number;
   /** True when sign-in is available (accounts get a monthly allowance). */
   accounts?: boolean;
+  /** True when Tripica Pro can be bought; `pro` when this account has it (or is in its trial). */
+  billing?: boolean;
+  pro?: boolean;
   dailyClientBudget: number;
   dailyClientUsed: number;
 }

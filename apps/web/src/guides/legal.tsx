@@ -59,6 +59,8 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
       <h2>Services Tripica uses</h2>
       <ul>
         <li><strong>Clerk</strong> provides accounts and sign-in, under its own privacy policy.</li>
+        <li><strong>Stripe</strong> handles Tripica Pro payments. Your card details go to Stripe, never to Tripica; Tripica stores only your
+          Stripe customer and subscription IDs and the subscription's status and dates.</li>
         <li><strong>Cloudflare</strong> hosts the site and runs the robot check (Turnstile). See the{" "}
           <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Cloudflare Turnstile Privacy Addendum</a>. When enabled, Cloudflare Web
           Analytics measures visits and page speed without cookies.</li>
@@ -106,6 +108,21 @@ export function TermsContent({ site }: { site: LegalSite }) {
         Tripica does not sell travel. You book and pay directly with the provider you choose, and its terms govern payment, changes, cancellations
         and refunds. Some links earn Tripica a commission at no extra cost to you.
       </p>
+
+      <h2>Tripica Pro subscriptions</h2>
+      <ul>
+        <li><strong>Billing and renewal.</strong> Tripica Pro is billed in advance, monthly or yearly, through Stripe, and renews automatically
+          at the then-current price until you cancel. Taxes may apply.</li>
+        <li><strong>Free trial.</strong> New subscribers can get one free trial per account. A card is required to start it, and you are charged
+          when the trial ends unless you cancel before then.</li>
+        <li><strong>Cancelling.</strong> Cancel anytime from the Pro button in Tripica (it opens Stripe's billing page). Pro stays on until the end
+          of the period you've paid for, and you won't be charged again.</li>
+        <li><strong>Refunds.</strong> Payments aren't refunded for partial periods, except where the law requires it. If something went wrong,
+          write to us and we'll look at it.</li>
+        <li><strong>Live searches.</strong> Pro includes a monthly allowance of live price lookups; unused lookups don't carry over. We may limit
+          automated or abusive use.</li>
+        <li><strong>Changes.</strong> We'll tell subscribers about price changes before their next renewal.</li>
+      </ul>
 
       <h2>Fair use</h2>
       <p>

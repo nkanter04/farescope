@@ -139,3 +139,44 @@ export async function claimAccount(): Promise<void> {
   if (DEMO) return;
   await fetch("/api/account/claim", { method: "POST", headers: await headers(), body: "{}" }).catch(() => undefined);
 }
+
+// ---- Tripica Pro (Stripe) ----
+export interface BillingInfo {
+  enabled: boolean;
+  signedIn?: boolean;
+  pro?: boolean;
+  status?: string | null;
+  plan?: "monthly" | "yearly" | null;
+  trialEnd?: number | null;
+  periodEnd?: number | null;
+  canTrial?: boolean;
+  canManage?: boolean;
+}
+
+export async function fetchBilling(): Promise<BillingInfo> {
+  if (DEMO) return { enabled: false };
+  const r = await fetch("/api/billing", { headers: await headers() });
+  return r.ok ? r.json() : { enabled: false };
+}
+
+async function billingCall(path: string, payload: object): Promise<Record<string, unknown>> {
+  const r = await fetch(path, { method: "POST", headers: await headers(), body: JSON.stringify(payload) });
+  const json = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!r.ok) throw new Error(typeof json.error === "string" ? json.error : "Something went wrong. Please try again.");
+  return json;
+}
+
+/** Stripe Checkout link for Tripica Pro. */
+export async function startCheckout(plan: "monthly" | "yearly"): Promise<string> {
+  return String((await billingCall("/api/billing/checkout", { plan })).url);
+}
+
+/** Stripe's page to update the card, switch plans or cancel. */
+export async function openPortal(): Promise<string> {
+  return String((await billingCall("/api/billing/portal", {})).url);
+}
+
+/** Back from checkout: confirm the purchase so Pro starts right away. */
+export async function syncCheckout(sessionId: string): Promise<{ pro: boolean }> {
+  return (await billingCall("/api/billing/sync", { sessionId })) as { pro: boolean };
+}

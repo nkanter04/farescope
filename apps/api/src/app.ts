@@ -5,7 +5,7 @@ import { createApi } from "./api.ts";
 import type { Config } from "./config.ts";
 import { openDb } from "./db.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
-import { providersFor } from "./settings.ts";
+import { billingFor, providersFor } from "./settings.ts";
 import { clerkVerifier } from "./auth.ts";
 
 export interface AppOverrides {
@@ -14,6 +14,8 @@ export interface AppOverrides {
   dbPath?: string;
   /** Sign-in check override (tests). */
   verifyUser?: (token: string) => Promise<string | undefined>;
+  /** Stripe fetch override (tests). */
+  stripeFetch?: typeof fetch;
 }
 
 /** The caller's IP under @hono/node-server (local dev sits behind the Vite proxy on localhost). */
@@ -29,12 +31,13 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
   const providers = providersFor(cfg);
   const app = createApi({
     db,
-    settings: cfg,
+    settings: { ...cfg, siteOrigins: cfg.clerkAuthorizedParties },
     flights: overrides.flights ?? providers.flights,
     stays: overrides.stays ?? providers.stays,
     clientIp: nodeIp,
     verifyUser: overrides.verifyUser ??
       clerkVerifier({ secretKey: cfg.clerkSecretKey, jwtKey: cfg.clerkJwtKey, authorizedParties: cfg.clerkAuthorizedParties }),
+    billing: billingFor(cfg, overrides.stripeFetch),
     log: (message, error) => console.error(message, error),
   });
   return Object.assign(app, { close: () => db.close() });

@@ -8,7 +8,7 @@ import { SearchForm } from "./components/SearchForm.tsx";
 import { ExploreHome } from "./components/ExploreHome.tsx";
 import { TripsView } from "./components/TripsView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
-import { AccountButtonSlot } from "./accountSlots.tsx";
+import { AccountButtonSlot, ProReturnSlot } from "./accountSlots.tsx";
 import { DEMO } from "./api.ts";
 import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
@@ -104,6 +104,7 @@ export function App() {
         )}
         <AccountButtonSlot />
       </header>
+      <ProReturnSlot />
       <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/app/">Open Tripica for live prices</a> · </>}<a href={`${SITE_ROOT}privacy/`}>Privacy</a> · <a href={`${SITE_ROOT}terms/`}>Terms</a></div>
 
       {view === "search" ? (

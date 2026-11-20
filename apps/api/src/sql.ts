@@ -69,4 +69,16 @@ export const SCHEMA = `
     created_at INTEGER NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_watches_owner ON watches (owner, created_at);
+  -- Tripica Pro subscriptions, kept in sync by Stripe webhooks.
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    user_id TEXT PRIMARY KEY,
+    customer_id TEXT,
+    subscription_id TEXT,
+    status TEXT,
+    plan TEXT,
+    trial_end INTEGER,
+    period_end INTEGER,
+    trial_used INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL
+  );
 `;

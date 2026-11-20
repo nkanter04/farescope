@@ -16,6 +16,18 @@ export function AccountButtonSlot() {
   return C ? <C /> : null;
 }
 
+/** "Get more with Tripica Pro" next to an account's out-of-searches notice. */
+export function ProPromptSlot() {
+  const C = mod?.ProPrompt;
+  return C ? <C /> : null;
+}
+
+/** Confirmation after returning from Stripe Checkout. */
+export function ProReturnSlot() {
+  const C = mod?.ProReturn;
+  return C ? <C /> : null;
+}
+
 export function SignInPromptSlot() {
   const C = mod?.SignInPrompt;
   return C ? <C /> : null;

@@ -4,6 +4,7 @@ import { createSerpApiFlightProvider } from "./providers/serpapi-flights.ts";
 import { createSerpApiStayProvider } from "./providers/serpapi-hotels.ts";
 import { createTravelpayoutsFlightProvider } from "./providers/travelpayouts-flights.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
+import { createStripe, type StripeClient } from "./stripe.ts";
 
 /**
  * Settings from environment variables, shared by the Node server (process.env) and the Cloudflare
@@ -38,6 +39,16 @@ export function settingsFromEnv(env: Env) {
     clerkAuthorizedParties: (env.CLERK_AUTHORIZED_PARTIES ?? "").split(",").map((s) => s.trim()).filter(Boolean),
     /** Live lookups per signed-in account per month (a search uses up to PER_SEARCH_BUDGET). */
     accountMonthlyBudget: num(env.ACCOUNT_MONTHLY_BUDGET, 50),
+    /** Tripica Pro (Stripe). Billing turns on when the secret key, webhook secret and both price ids are set. */
+    stripeSecretKey: env.STRIPE_SECRET_KEY ?? "",
+    stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET ?? "",
+    stripePriceMonthly: env.STRIPE_PRICE_MONTHLY ?? "",
+    stripePriceYearly: env.STRIPE_PRICE_YEARLY ?? "",
+    stripeAutomaticTax: env.STRIPE_AUTOMATIC_TAX === "true",
+    trialDays: num(env.TRIAL_DAYS, 3),
+    /** Live lookups per month for Pro subscribers, and during the free trial. */
+    proMonthlyBudget: num(env.PRO_MONTHLY_BUDGET, 500),
+    trialBudget: num(env.TRIAL_BUDGET, 100),
   };
 }
 
@@ -59,4 +70,31 @@ export function providersFor(s: Settings): { flights: FlightProvider; stays: Sta
         ? createMockStayProvider()
         : createNoStayProvider();
   return { flights, stays };
+}
+
+export interface BillingDeps {
+  stripe: StripeClient;
+  webhookSecret: string;
+  prices: { monthly: string; yearly: string };
+  proMonthlyBudget: number;
+  trialBudget: number;
+}
+
+/** Stripe billing when fully configured, else undefined (no Pro plan). */
+export function billingFor(s: Settings, fetchImpl?: typeof fetch): BillingDeps | undefined {
+  if (!s.stripeSecretKey || !s.stripeWebhookSecret || !s.stripePriceMonthly || !s.stripePriceYearly) return undefined;
+  return {
+    stripe: createStripe({
+      secretKey: s.stripeSecretKey,
+      webhookSecret: s.stripeWebhookSecret,
+      priceMonthly: s.stripePriceMonthly,
+      priceYearly: s.stripePriceYearly,
+      trialDays: s.trialDays,
+      automaticTax: s.stripeAutomaticTax,
+    }, fetchImpl),
+    webhookSecret: s.stripeWebhookSecret,
+    prices: { monthly: s.stripePriceMonthly, yearly: s.stripePriceYearly },
+    proMonthlyBudget: s.proMonthlyBudget,
+    trialBudget: s.trialBudget,
+  };
 }
