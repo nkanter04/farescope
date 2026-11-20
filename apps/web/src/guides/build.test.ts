@@ -33,7 +33,7 @@ describe("static guide pages", () => {
     expect(html).toContain('href="../../favicon.svg"');
     expect(html).toContain('class="brand-mark"');
     // CTA into the app: relative to the site root, pre-filled with the airports and a month.
-    expect(html).toMatch(/href="\.\.\/\.\.\/\?to=city%3AOsaka%7CJP&amp;depart=20\d\d-\d\d"/);
+    expect(html).toMatch(/href="\.\.\/\.\.\/app\/\?to=city%3AOsaka%7CJP&amp;depart=20\d\d-\d\d"/);
     expect(html).toContain("Cherry blossom season");
     expect(html).not.toMatch(/\$\d/); // no prices on public guide pages
   });
@@ -90,6 +90,29 @@ describe("static guide pages", () => {
       expect(readFileSync(join(withContact, "privacy/index.html"), "utf8")).toContain("mailto:hello@example.test");
     } finally {
       rmSync(withContact, { recursive: true, force: true });
+    }
+  });
+
+  it("renders the homepage: links into the app at /app/, forwards old app links, and makes no price claims", () => {
+    const html = page("index.html");
+    expect(html).toContain("Find the cheapest time to take the whole trip");
+    expect(html).toContain('href="app/"');
+    expect(html).toMatch(/href="app\/\?to=country%3AJP&amp;depart=20\d\d-03"/);
+    expect(html).toContain('l.replace("app/"+l.search+l.hash)');
+    expect(html).toContain("This demo uses simulated prices");
+    expect(html).not.toMatch(/\$\d/); // no prices anywhere on the homepage
+    expect(readFileSync(join(out, "favicon.svg"), "utf8")).toContain("<svg");
+  });
+
+  it("says the homepage uses live prices in the live build", () => {
+    const liveOut = mkdtempSync(join(tmpdir(), "guides-live-"));
+    try {
+      buildAll({ siteUrl: "https://example.test", today: "2026-11-19", live: true }, liveOut);
+      const html = readFileSync(join(liveOut, "index.html"), "utf8");
+      expect(html).toContain("Live prices from Google Flights");
+      expect(html).not.toContain("simulated");
+    } finally {
+      rmSync(liveOut, { recursive: true, force: true });
     }
   });
 });

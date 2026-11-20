@@ -1,3 +1,4 @@
+import { SITE_ROOT } from "./site.ts";
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { resolvePlace, todayISO } from "@farescope/shared";
 import { FareDetailsLoader, FarePanel } from "./components/FarePanel.tsx";
@@ -82,7 +83,7 @@ export function App() {
             Source on GitHub ↗
           </a>
         )}
-        <a className="guides-link" href="guides/">When to visit</a>
+        <a className="guides-link" href={`${SITE_ROOT}guides/`}>When to visit</a>
         <nav className="tabs">
           <button className={view === "search" ? "on" : ""} onClick={() => setView("search")}>
             Search
@@ -99,7 +100,7 @@ export function App() {
           </div>
         )}
       </header>
-      <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/">Open Tripica for live prices</a> · </>}<a href="./privacy/">Privacy</a> · <a href="./terms/">Terms</a></div>
+      <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/app/">Open Tripica for live prices</a> · </>}<a href={`${SITE_ROOT}privacy/`}>Privacy</a> · <a href={`${SITE_ROOT}terms/`}>Terms</a></div>
 
       {view === "search" ? (
         <main className="layout">

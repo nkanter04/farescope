@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { buildGuide, DESTINATIONS, guideMonthIndex, parsePartnerTemplates, todayISO, type ClimateRaw, type DestinationGuide, type Holiday } from "@farescope/shared";
-import { DestinationPage, IndexPage, MonthPage, monthSlug, PrivacyPage, TermsPage, type SiteConfig } from "./pages.tsx";
+import { DestinationPage, IndexPage, LandingPage, MonthPage, monthSlug, PrivacyPage, TermsPage, type SiteConfig } from "./pages.tsx";
 
 const root = fileURLToPath(new URL("../../../../", import.meta.url));
 const raw = `${root}data/guides/raw`;
@@ -56,6 +56,11 @@ export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
   };
   const guides = loadGuides();
   const paths: string[] = ["", "guides/"];
+  // The homepage. The app itself is built by Vite into <out>/app/.
+  write(`${outDir}/index.html`, renderPage(<LandingPage site={site} />));
+  // Static pages at the root link the icons and measurement script from the root too.
+  const publicDir = fileURLToPath(new URL("../../public/", import.meta.url));
+  for (const f of ["favicon.svg", "logo.svg", "measurement.js"]) copyFileSync(`${publicDir}${f}`, `${outDir}/${f}`);
   write(`${outDir}/guides/index.html`, renderPage(<IndexPage guides={guides} site={site} />));
   for (const g of guides) {
     write(`${outDir}/guides/${g.destination.slug}/index.html`, renderPage(<DestinationPage guide={g} site={site} />));
@@ -85,13 +90,15 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const rawToken = process.env.CF_WEB_ANALYTICS_TOKEN;
   const analyticsToken = rawToken && /^[a-f0-9]{32}$/i.test(rawToken) ? rawToken : undefined;
   if (measure) {
-    const appPage = out + "/index.html";
+    const appPage = out + "/app/index.html";
     const script = '<script defer src="./measurement.js"' + (analyticsToken ? ' data-token="' + analyticsToken + '"' : '') + '></script>';
     writeFileSync(appPage, readFileSync(appPage, "utf8").replace("</head>", script + "</head>"));
   }
   const rawEmail = process.env.CONTACT_EMAIL?.trim();
   const contactEmail = rawEmail && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(rawEmail) ? rawEmail : undefined;
-  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken, contactEmail });
+  const live = measure;
+  const liveUrl = (process.env.LIVE_SITE_URL ?? "https://tripica.farescope.workers.dev").replace(/\/$/, "") + "/";
+  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken, contactEmail, live, liveUrl });
   writeFileSync(MONTH_INDEX_PATH, monthIndexJson());
   console.log(`Wrote ${paths.length - 1} guide pages, sitemap.xml and robots.txt to ${out} (site ${siteUrl}).`);
 }

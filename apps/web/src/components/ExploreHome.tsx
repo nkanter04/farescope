@@ -1,3 +1,4 @@
+import { SITE_ROOT } from "../site.ts";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AIRPORT_BY_IATA, MONTH_NAMES, resolvePlace, todayISO, type Fare, type SearchEvent } from "@farescope/shared";
 import { DEMO, streamSearch } from "../api.ts";
@@ -125,7 +126,7 @@ export function ExploreHome() {
                   <span className="when muted">{shortDate(deal.fare.departDate)}{deal.fare.returnDate ? ` – ${shortDate(deal.fare.returnDate)}` : ""} · {deal.fare.origin}→{deal.fare.destination}</span>
                 </button>
                 {guide && (
-                  <a className="explore-guide" href={`guides/${guide.slug}/`}>
+                  <a className="explore-guide" href={`${SITE_ROOT}guides/${guide.slug}/`}>
                     {label && <span className={`season ${LABEL_CLASS[label] ?? ""}`}>{label}</span>}
                     When to visit {guide.name} →
                   </a>

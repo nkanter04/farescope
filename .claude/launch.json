@@ -63,6 +63,18 @@
         "8790"
       ],
       "port": 8790
+    },
+    {
+      "name": "static-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5184",
+        "--directory",
+        "apps/web/dist"
+      ],
+      "port": 5184
     }
   ]
 }

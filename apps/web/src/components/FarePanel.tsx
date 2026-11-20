@@ -1,3 +1,4 @@
+import { SITE_ROOT } from "../site.ts";
 import { useState } from "react";
 import { addDays, AIRPORT_BY_IATA, carrierFrom, codeFromFlightNumber, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
 import { AirlineLogo, FareAirlines } from "./AirlineLogo.tsx";
@@ -49,7 +50,7 @@ export function FarePanel() {
     </div>
     {(() => {
       const guide = guideForAirport(fare.destination);
-      return guide ? <a className="guide-link" href={`guides/${guide.slug}/`}>When to visit {guide.name}: weather, crowds and best months →</a> : null;
+      return guide ? <a className="guide-link" href={`${SITE_ROOT}guides/${guide.slug}/`}>When to visit {guide.name}: weather, crowds and best months →</a> : null;
     })()}
     <PriceInsight fare={fare} cabin={draft.search?.cabin ?? "economy"} adults={draft.adults ?? draft.search?.adults ?? 1} />
     <div className="row">

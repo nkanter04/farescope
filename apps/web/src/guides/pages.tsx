@@ -1,6 +1,7 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
 import { PrivacyContent, TermsContent } from "./legal.tsx";
+import { LandingContent } from "./landing.tsx";
 import type { ReactNode } from "react";
 import { Logo } from "../components/Logo.tsx";
 import {
@@ -39,6 +40,10 @@ export interface SiteConfig {
   analyticsToken?: string;
   /** Public contact address for the privacy and terms pages. */
   contactEmail?: string;
+  /** Real-price (Cloudflare) build; the GitHub Pages demo uses simulated prices. */
+  live?: boolean;
+  /** The live site, linked from the demo. */
+  liveUrl?: string;
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();
@@ -52,14 +57,18 @@ export function nextMonth(m: number, today: string): string {
   return `${m >= cur ? y : y + 1}-${String(m).padStart(2, "0")}`;
 }
 
-/** Deep link into the app that pre-fills and runs a search (see store.ts readUrlSearch). */
+/** Deep link into the app (at /app/) that pre-fills and runs a search (see urlSearch.ts readUrlSearch). */
 export function appLink(root: string, searchTo: string, month?: string): string {
   const q = new URLSearchParams({ to: searchTo });
   if (month) q.set("depart", month);
-  return `${root}?${q}`;
+  return `${root}app/?${q}`;
 }
 
-function Layout(props: { title: string; description: string; path: string; root: string; site: SiteConfig; jsonLd?: object; dataCredits?: boolean; children: ReactNode }) {
+function Layout(props: {
+  title: string; description: string; path: string; root: string; site: SiteConfig; jsonLd?: object; dataCredits?: boolean;
+  /** Small inline script for the <head> (the homepage forwards old app links with it). */
+  headScript?: string; wide?: boolean; children: ReactNode;
+}) {
   const canonical = `${props.site.siteUrl}/${props.path}`;
   return (
     <html lang="en">
@@ -80,6 +89,7 @@ function Layout(props: { title: string; description: string; path: string; root:
         <link rel="icon" type="image/svg+xml" href={`${props.root}favicon.svg`} />
         <meta property="og:image" content={`${props.site.siteUrl}/logo.svg`} />
         <link rel="stylesheet" href={`${props.root}guides/guides.css${props.site.cssVersion ? `?v=${props.site.cssVersion}` : ""}`} />
+        {props.headScript && <script dangerouslySetInnerHTML={{ __html: props.headScript }} />}
         {props.jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(props.jsonLd).replace(/</g, "\\u003c") }} />}
       </head>
       <body>
@@ -89,10 +99,10 @@ function Layout(props: { title: string; description: string; path: string; root:
           </a>
           <nav>
             <a href={`${props.root}guides/`}>Guides</a>
-            <a href={props.root}>Search flights</a>
+            <a className="g-nav-cta" href={`${props.root}app/`}>Search flights</a>
           </nav>
         </header>
-        <main className="g-main">{props.children}</main>
+        <main className={props.wide ? "g-main g-wide" : "g-main"}>{props.children}</main>
         <footer className="g-foot">
           {props.dataCredits !== false && <p>
             Climate: <a href="https://power.larc.nasa.gov/">NASA POWER</a> monthly averages (2001–2025) for the surrounding ~50 km area; city-center
@@ -350,6 +360,26 @@ export function TermsPage({ site }: { site: SiteConfig }) {
   return (
     <Layout title="Terms of use · Tripica" description="The terms for using Tripica for travel research and planning." path="terms/" root="../" site={site} dataCredits={false}>
       <TermsContent site={site} />
+    </Layout>
+  );
+}
+
+/**
+ * Old links pointed at the app on "/": searches (?to=…) and shared trips (#share=…). Send them to
+ * the app at /app/, keeping the query and hash.
+ */
+export const FORWARD_APP_LINKS =
+  'var l=location;if(/[?&]to=/.test(l.search)||l.hash.indexOf("#share=")===0)l.replace("app/"+l.search+l.hash);';
+
+export function LandingPage({ site }: { site: SiteConfig }) {
+  return (
+    <Layout
+      title="Tripica · Find the cheapest time to take the whole trip"
+      description="Search whole countries, months and trip lengths at once. Tripica shows when and where your trip costs least, then helps you plan the stays."
+      path="" root="" site={site} dataCredits={false} headScript={FORWARD_APP_LINKS} wide
+      jsonLd={{ "@context": "https://schema.org", "@type": "WebSite", name: "Tripica", url: `${site.siteUrl}/` }}
+    >
+      <LandingContent site={site} />
     </Layout>
   );
 }
