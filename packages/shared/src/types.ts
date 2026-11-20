@@ -74,6 +74,8 @@ export interface Fare {
    * without airlines, stops or times. Opening it fetches the real itineraries.
    */
   priceOnly?: boolean;
+  /** Provider token for loading this outbound flight's return options (round trips). Opaque. */
+  returnToken?: string;
   /**
    * What a calendar price covers when it isn't one airport pair: airport codes or Google place IDs
    * ("/m/03_3d" = Japan), with display labels. Opening the fare searches exactly these.
@@ -108,6 +110,7 @@ export const FareSchema = z.object({
   stale: z.boolean().optional(),
   queryKey: z.string().max(500).optional(),
   priceOnly: z.boolean().optional(),
+  returnToken: z.string().max(4000).optional(),
   coverage: z.object({
     origins: z.array(placeId).min(1).max(10),
     destinations: z.array(placeId).min(1).max(10),
@@ -217,3 +220,12 @@ export type SearchEvent =
   | { type: "notice"; level: "info" | "warn"; message: string }
   | { type: "done"; fares: number; providerCalls: number; cacheHits: number }
   | { type: "error"; message: string };
+
+/** A return flight for a chosen outbound flight. `price` is the round-trip total with it. */
+export interface ReturnOption {
+  legs: FlightLeg[];
+  airlines: string[];
+  stops: number;
+  durationMin: number;
+  price: number;
+}

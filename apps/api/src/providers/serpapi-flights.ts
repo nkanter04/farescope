@@ -1,4 +1,4 @@
-import { codeFromFlightNumber, fareMatchesAirlines, type Cabin, type Fare, type FlightLeg, type PriceInsights, type PricePoint } from "@farescope/shared";
+import { codeFromFlightNumber, fareMatchesAirlines, type Cabin, type Fare, type FlightLeg, type PriceInsights, type PricePoint, type ReturnOption } from "@farescope/shared";
 import type { CalendarPrice, CalendarQuery, ExploreDeal, ExploreQuery, FlightProvider, FlightQuery, FlightResult } from "./types.ts";
 
 /**
@@ -104,6 +104,7 @@ export function parseFlights(json: SerpFlightsResponse, q: FlightQuery, fetchedA
       bookingUrl: json.search_metadata?.google_flights_url,
       fetchedAt,
       cached: false,
+      returnToken: q.returnDate && it.departure_token ? it.departure_token : undefined,
     });
   });
   const pi = json.price_insights;
@@ -241,6 +242,40 @@ export function parseExplore(json: SerpExploreResponse, q: ExploreQuery): Explor
   return out.sort((a, b) => a.price - b.price);
 }
 
+/**
+ * Return flights for one outbound flight: the same search plus its departure_token. Each option's
+ * price is the round-trip total with that return.
+ */
+export function parseReturns(json: SerpFlightsResponse): ReturnOption[] {
+  if (json.error) {
+    if (/hasn't returned any results|no results/i.test(json.error)) return [];
+    throw new Error(json.error);
+  }
+  return [...(json.best_flights ?? []), ...(json.other_flights ?? [])]
+    .filter((it) => typeof it.price === "number" && it.flights?.length)
+    .map((it) => {
+      const legs = it.flights.map((s): FlightLeg => ({
+        from: s.departure_airport.id,
+        to: s.arrival_airport.id,
+        depart: s.departure_airport.time ?? "",
+        arrive: s.arrival_airport.time ?? "",
+        airline: s.airline ?? "",
+        flightNumber: s.flight_number ?? "",
+        airlineCode: codeFromFlightNumber(s.flight_number),
+        airlineLogo: s.airline_logo?.startsWith("https://") ? s.airline_logo : undefined,
+        durationMin: s.duration ?? 0,
+      }));
+      return {
+        legs,
+        airlines: [...new Set(legs.map((l) => l.airline).filter(Boolean))],
+        stops: legs.length - 1,
+        durationMin: it.total_duration ?? legs.reduce((s, l) => s + l.durationMin, 0),
+        price: it.price as number,
+      };
+    })
+    .sort((a, b) => a.price - b.price);
+}
+
 /** Google's price history: free with every search, so it costs no extra quota. */
 export function parsePriceHistory(raw: unknown): PricePoint[] | undefined {
   if (!Array.isArray(raw)) return undefined;
@@ -270,6 +305,18 @@ export function createSerpApiFlightProvider(opts: { apiKey: string; fetchImpl?: 
     },
     // A live call on 2026-11-19 returned all 121 days of a 121-day range; longer ranges are split.
     calendarMaxDays: 121,
+    async returns(fare, q) {
+      if (!fare.returnToken || !fare.returnDate) return [];
+      const params = buildFlightParams({
+        origins: [fare.origin], destinations: [fare.destination], departDate: fare.departDate, returnDate: fare.returnDate,
+        cabin: q.cabin, maxStops: q.maxStops, adults: q.adults,
+      }, opts.apiKey);
+      params.set("departure_token", fare.returnToken);
+      const res = await f(`https://serpapi.com/search.json?${params}`, { signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000) });
+      const json = (await res.json()) as SerpFlightsResponse;
+      if (!res.ok && !json.error) throw new Error(`SerpApi HTTP ${res.status}`);
+      return parseReturns(json);
+    },
     async explore(q) {
       const url = `https://serpapi.com/search.json?${buildExploreParams(q, opts.apiKey)}`;
       const res = await f(url, { signal: AbortSignal.timeout(opts.timeoutMs ?? 30_000) });

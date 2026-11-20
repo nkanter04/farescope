@@ -35,6 +35,8 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
         <li><strong>Your searches.</strong> The places, dates, trip lengths, cabin and number of travelers you search for. Tripica sends them to its
           travel data providers to get prices, and caches the results so later searches are faster.</li>
         <li><strong>Your IP address.</strong> Used to apply daily search limits and the robot check, so one visitor can't use up the service.</li>
+        <li><strong>Your approximate location.</strong> Our host (Cloudflare) estimates your city from your connection; Tripica uses it once,
+          only to suggest your nearest airport as the starting point. It isn't stored.</li>
         <li><strong>A browser identifier.</strong> A random ID stored in your browser that links your saved trips, notes and price watches to this
           browser. It is not tied to your name or email.</li>
         <li><strong>Your account, if you create one.</strong> Accounts are optional. Clerk, our sign-in provider, handles your email address,

@@ -1,4 +1,4 @@
-import type { Cabin, Fare, PriceInsights, PricePoint, Stay } from "@farescope/shared";
+import type { Cabin, Fare, PriceInsights, PricePoint, ReturnOption, Stay } from "@farescope/shared";
 
 /** One provider call: a set of origin airports x a set of destination airports on one date pair. */
 export interface FlightQuery {
@@ -84,6 +84,8 @@ export interface FlightProvider {
   calendar?(q: CalendarQuery): Promise<CalendarPrice[]>;
   /** Longest range one calendar call should cover. */
   calendarMaxDays?: number;
+  /** Optional: return flights for a round-trip fare that carries a `returnToken`. */
+  returns?(fare: Fare, q: { cabin: Cabin; maxStops: 0 | 1 | 2 | null; adults: number }): Promise<ReturnOption[]>;
   /** Optional destination discovery ("anywhere" or a region) in one call. */
   explore?(q: ExploreQuery): Promise<ExploreDeal[]>;
   /**

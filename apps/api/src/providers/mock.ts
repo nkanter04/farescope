@@ -194,6 +194,7 @@ function makeFare(q: FlightQuery, points: string[], option: number, today: strin
     )}`,
     fetchedAt: new Date().toISOString(),
     cached: false,
+    returnToken: q.returnDate ? "mock" : undefined,
   };
 }
 
@@ -204,6 +205,17 @@ export function createMockFlightProvider(opts: { today?: () => string; latencyMs
     live: false,
     maxAirportsPerSide: 50,
     priceHistory: (fare: Fare) => mockPriceHistory(fare, today()),
+    /** Simulated return flights on the return date; the round-trip price already includes them. */
+    async returns(fare, q) {
+      if (!fare.returnDate) return [];
+      const back: FlightQuery = { origins: [fare.destination], destinations: [fare.origin], departDate: fare.returnDate, cabin: q.cabin, maxStops: q.maxStops, adults: q.adults };
+      return demoPaths(fare.destination, fare.origin, q.maxStops ?? 2)
+        .slice(0, 3)
+        .flatMap((path, i) => {
+          const f = makeFare(back, path, i, today());
+          return f ? [{ legs: f.outbound, airlines: f.airlines, stops: f.stops, durationMin: f.durationMin, price: fare.price }] : [];
+        });
+    },
     async search(q: FlightQuery): Promise<FlightResult> {
       if (opts.latencyMs) await new Promise((r) => setTimeout(r, opts.latencyMs));
       const fares: Fare[] = [];

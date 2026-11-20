@@ -63,18 +63,20 @@ export function PriceCalendar() {
                 const cell = byDay.get(day);
                 const inRange = day >= req.departFrom && day <= req.departTo;
                 const t = cell ? (cell.price - dayMin) / span : 0;
+                const cheapest = !!cell && cell.price === dayMin;
                 return (
                   <button
                     key={day}
-                    className={`day ${cell ? "has" : ""} ${filterDate === day ? "sel" : ""} ${inRange ? "" : "out"}`}
+                    className={`day ${cell ? "has" : ""} ${cheapest ? "cheapest" : ""} ${filterDate === day ? "sel" : ""} ${inRange ? "" : "out"}`}
                     style={cell ? { background: priceColor(t, 0.28), borderColor: priceColor(t, 0.7) } : undefined}
                     disabled={!cell}
-                    aria-label={cell ? `${day}, airfare ${money(cell.price)}` : day}
+                    aria-label={cell ? `${day}, airfare ${money(cell.price)}${cheapest ? ", cheapest day" : ""}` : day}
                     aria-pressed={filterDate === day}
                     title={cell ? `${money(cell.price)}${cell.nights ? ` · ${cell.nights} nights` : ""}` : undefined}
                     onClick={() => setFilterDate(filterDate === day ? null : day)}
                   >
                     <span className="dnum">{Number(day.slice(8))}</span>
+                    {cheapest && <span className="dbest" aria-hidden>Cheapest</span>}
                     {cell && <span className="dprice">{cell.price >= 10000 ? `${Math.round(cell.price / 1000)}k` : `$${cell.price}`}</span>}
                   </button>
                 );

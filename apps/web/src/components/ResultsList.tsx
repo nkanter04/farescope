@@ -112,7 +112,7 @@ export function ResultsList() {
                 <span>{fareEnds(f).toCity}</span>
               </div>
               <div className="fare-sub muted">
-                {f.priceOnly ? <span className="price-only-note">{f.airlines.length ? `${f.airlines.join(" + ")} · ${stopsLabel(f.stops)} · ` : "Lowest price on Google Flights · "}open to see flights</span> : <span className="fare-carrier-line">
+                {f.priceOnly ? <span className="price-only-note"><span className="date-price-tag" title="Google's lowest price for these dates. Open it to see the flights.">Date price</span>{f.airlines.length ? `${f.airlines.join(" + ")} · ${stopsLabel(f.stops)} · ` : "Lowest price on Google Flights · "}open to see flights</span> : <span className="fare-carrier-line">
                   <FareAirlines fare={f} /> · {stopsLabel(f.stops)} outbound · {duration(f.durationMin)}
                 </span>}
                 {f.cached && <span className={f.stale ? "stale" : ""}>{f.stale ? "stale · " : ""}{relativeAge(f.fetchedAt)}</span>}

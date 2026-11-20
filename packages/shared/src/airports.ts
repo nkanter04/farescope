@@ -285,3 +285,22 @@ export function distanceKm(a: { lat: number; lng: number }, b: { lat: number; ln
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
+
+/**
+ * The airport a visitor most likely flies from: the nearest major airport within 250 km (where
+ * most people drive to fly), else the nearest major or regional one within 1,000 km.
+ */
+export function nearestAirport(lat: number, lng: number): Airport | undefined {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return undefined;
+  const here = { lat, lng };
+  let bestMajor: { a: Airport; d: number } | undefined;
+  let bestAny: { a: Airport; d: number } | undefined;
+  for (const a of AIRPORTS) {
+    if (a.tier === "local") continue;
+    const d = distanceKm(here, a);
+    if (a.tier === "major" && (!bestMajor || d < bestMajor.d)) bestMajor = { a, d };
+    if (!bestAny || d < bestAny.d) bestAny = { a, d };
+  }
+  if (bestMajor && bestMajor.d <= 250) return bestMajor.a;
+  return bestAny && bestAny.d <= 1000 ? bestAny.a : undefined;
+}

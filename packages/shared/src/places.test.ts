@@ -87,3 +87,14 @@ describe("US states", () => {
     expect(resolvePlace("country:JP")?.googleId).toBe("/m/03_3d");
   });
 });
+
+describe("nearest airport", () => {
+  it("picks the nearest major airport people drive to, else a regional one", async () => {
+    const { nearestAirport } = await import("./airports.ts");
+    expect(nearestAirport(30.27, -97.74)?.iata).toBe("AUS"); // downtown Austin
+    expect(["SAT", "AUS"]).toContain(nearestAirport(29.88, -97.94)?.iata); // San Marcos, between the two
+    expect(nearestAirport(35.68, 139.69)?.city).toBe("Tokyo");
+    expect(nearestAirport(0, -140)).toBeUndefined(); // middle of the Pacific
+    expect(nearestAirport(Number.NaN, 0)).toBeUndefined();
+  });
+});

@@ -1,6 +1,6 @@
 import { liveFetch } from "./human.ts";
 import { authHeader } from "./auth.ts";
-import type { Cabin, Fare, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
+import type { Cabin, Fare, ReturnOption, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
 function clientId(): string {
   const make = () => (crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
@@ -179,4 +179,27 @@ export async function openPortal(): Promise<string> {
 /** Back from checkout: confirm the purchase so Pro starts right away. */
 export async function syncCheckout(sessionId: string): Promise<{ pro: boolean }> {
   return (await billingCall("/api/billing/sync", { sessionId })) as { pro: boolean };
+}
+
+/** The visitor's nearest airport (from the host's approximate location), if known. */
+export async function fetchNearestAirport(): Promise<string | undefined> {
+  if (DEMO) return undefined;
+  try {
+    const r = await fetch("/api/locate");
+    const json = (await r.json()) as { airport?: string };
+    return r.ok && json.airport && /^[A-Z]{3}$/.test(json.airport) ? json.airport : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Return flights for a chosen round-trip fare (1 live credit unless cached). */
+export async function fetchReturns(
+  fare: Fare,
+  opts: { cabin: Cabin; maxStops: 0 | 1 | 2 | null; adults: number },
+): Promise<{ options: ReturnOption[]; error?: string }> {
+  if (DEMO) return (await demo()).fareReturns(fare, opts);
+  const r = await liveFetch("/api/fare-returns", { method: "POST", headers: await headers(), body: JSON.stringify({ fare, ...opts }) });
+  if (!r.ok) return { options: [], error: (await r.json().catch(() => ({}))).error ?? "Could not load return flights." };
+  return r.json();
 }

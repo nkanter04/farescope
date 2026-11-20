@@ -82,8 +82,14 @@ export default {
       return new Response(null, { status: 204 });
     }
     if (url.pathname.startsWith("/api/")) {
+      // Pass the visitor's approximate location (from Cloudflare, never from the client) for
+      // /api/locate; strip any client-sent copy.
+      const headers = new Headers(request.headers);
+      headers.delete("x-visitor-geo");
+      const { latitude, longitude } = (request.cf ?? {}) as { latitude?: string; longitude?: string };
+      if (latitude && longitude) headers.set("x-visitor-geo", `${latitude},${longitude}`);
       // One global store keeps the shared cache and the monthly budget in one place.
-      return env.STORE.get(env.STORE.idFromName("main")).fetch(request);
+      return env.STORE.get(env.STORE.idFromName("main")).fetch(new Request(request, { headers }));
     }
     return env.ASSETS.fetch(request);
   },

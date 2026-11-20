@@ -11,6 +11,7 @@ import { BookLinks } from "./BookLinks.tsx";
 import { guideForAirport } from "../urlSearch.ts";
 import { TripTimeline } from "./TripTimeline.tsx";
 import { NightPlanner } from "./NightPlanner.tsx";
+import { ReturnFlights } from "./ReturnFlights.tsx";
 
 export function FarePanel() {
   const draft = useStore(state => state.draft);
@@ -44,7 +45,7 @@ export function FarePanel() {
         <AirlineLogo carrier={carrierFrom(leg.airline, leg.airlineCode ?? codeFromFlightNumber(leg.flightNumber), leg.airlineLogo)} size={20} label />
         <span>{leg.from} → {leg.to} · {leg.airline} {leg.flightNumber} · {leg.depart} – {leg.arrive}</span>
       </li>)}</ol></details>
-      {fare.returnDate && <p className="muted small">Round-trip airfare. Return flight details are available with the supplier.</p>}
+      <ReturnFlights fare={fare} cabin={draft.search?.cabin ?? "economy"} adults={draft.adults ?? draft.search?.adults ?? 1} />
       <BookLinks kind="flight" primary ctx={{ origin: fare.origin, destination: fare.destination, depart: fare.departDate, return: fare.returnDate, adults: draft.adults ?? 1 }} />
       {fare.bookingUrl?.startsWith("https://") && !fare.bookingUrl.includes("google.com/travel/flights") && <a className="book-btn" data-booking-kind="flight" href={fare.bookingUrl} target="_blank" rel="noreferrer">See this fare on the provider ↗</a>}
     </div>

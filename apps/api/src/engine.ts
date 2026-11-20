@@ -8,3 +8,4 @@ export { ttlFor } from "./ttl.ts";
 export { buildPriceTrend, fareHistory, type TrendDeps } from "./search/trend.ts";
 export { checkWatch, matchFare, newWatch, MAX_WATCHES, WATCH_RECHECK_MS, type WatchDeps } from "./search/watch.ts";
 export { fareDetails, type DetailsInput, type DetailsResult } from "./search/details.ts";
+export { returnFlights } from "./search/returns.ts";

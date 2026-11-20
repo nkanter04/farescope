@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono";
 import { z } from "zod";
-import { CABINS, FareSchema, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { CABINS, FareSchema, nearestAirport, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
 import { QueryCache } from "./cache.ts";
 import { PriceHistory, WatchStore } from "./history.ts";
 import { QuotaGuard } from "./quota.ts";
@@ -12,6 +12,7 @@ import type { SqlDb } from "./sql.ts";
 import { TripStore } from "./trips.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
 import { fareDetails } from "./search/details.ts";
+import { returnFlights } from "./search/returns.ts";
 import { runSearch } from "./search/run.ts";
 import { lookupStays } from "./search/stays.ts";
 import { buildPriceTrend } from "./search/trend.ts";
@@ -160,6 +161,17 @@ export function createApi(deps: ApiDeps): Hono {
   deps.extend?.(app);
 
   app.get("/api/health", (c) => c.json({ ok: true, provider: flights.name, live: flights.live }));
+
+  /**
+   * The visitor's nearest airport, to pre-fill the search. Uses the approximate location the
+   * hosting platform attaches (Cloudflare: x-visitor-geo, set by the Worker); nothing is stored.
+   */
+  app.get("/api/locate", (c) => {
+    const [lat, lng] = (c.req.header("x-visitor-geo") ?? "").split(",").map(Number);
+    const airport = lat !== undefined && lng !== undefined ? nearestAirport(lat, lng) : undefined;
+    c.header("Cache-Control", "private, no-store");
+    return c.json(airport ? { airport: airport.iata, city: airport.city, country: airport.country } : {});
+  });
 
   app.get("/api/quota", (c) => {
     const user = userOf(c);
@@ -379,6 +391,15 @@ export function createApi(deps: ApiDeps): Hono {
     const refused = await gate(c);
     if (refused) return refused;
     return c.json(await fareDetails(parsed.data, { provider: flights, cache, quota, clientId: clientKey(c), signInHint: signInHint(c) }));
+  });
+
+  /** Return flight options for a chosen round-trip fare (1 quota unit unless cached). */
+  app.post("/api/fare-returns", async (c) => {
+    const parsed = DetailsInput.safeParse(await body(c));
+    if (!parsed.success) return c.json({ error: "Invalid fare" }, 400);
+    const refused = await gate(c);
+    if (refused) return refused;
+    return c.json(await returnFlights(parsed.data, { provider: flights, cache, quota, clientId: clientKey(c), signInHint: signInHint(c) }));
   });
 
   app.post("/api/price-trend", async (c) => {

@@ -9,7 +9,7 @@ import { ExploreHome } from "./components/ExploreHome.tsx";
 import { TripsView } from "./components/TripsView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
 import { AccountButtonSlot, ProReturnSlot } from "./accountSlots.tsx";
-import { DEMO } from "./api.ts";
+import { DEMO, fetchNearestAirport } from "./api.ts";
 import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
 import { readUrlSearch } from "./urlSearch.ts";
@@ -57,7 +57,15 @@ export function App() {
     if (urlSearchHandled) return;
     urlSearchHandled = true;
     const patch = readUrlSearch(window.location.search, todayISO());
-    if (!patch) return;
+    if (!patch) {
+      // No search in the link: start from the visitor's nearest airport, unless they already chose one.
+      const initial = useStore.getState().request.origins.join();
+      void fetchNearestAirport().then((airport) => {
+        const s = useStore.getState();
+        if (airport && s.request.origins.join() === initial && !s.submitted) s.setRequest({ origins: [airport] });
+      });
+      return;
+    }
     useStore.getState().setRequest(patch);
     void useStore.getState().runSearch();
     window.history.replaceState(null, "", window.location.pathname + window.location.hash);

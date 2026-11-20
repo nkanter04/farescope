@@ -66,3 +66,12 @@ describe("sign-in", () => {
     expect((await inject(plain, { url: "/api/trips", headers: { ...browserA, ...auth } })).statusCode).toBe(200);
   });
 });
+
+describe("nearest airport", () => {
+  it("answers from the location the host attaches, and nothing without one", async () => {
+    const a = app();
+    expect((await inject(a, { url: "/api/locate", headers: { "x-visitor-geo": "30.27,-97.74" } })).json()).toMatchObject({ airport: "AUS", city: "Austin" });
+    expect((await inject(a, "/api/locate")).json()).toEqual({});
+    expect((await inject(a, { url: "/api/locate", headers: { "x-visitor-geo": "nonsense" } })).json()).toEqual({});
+  });
+});
