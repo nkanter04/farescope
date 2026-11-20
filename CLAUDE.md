@@ -99,6 +99,9 @@ npm-workspaces monorepo, TypeScript only, ES modules, explicit `.ts` import exte
 
 ## Next up
 
+**Go-live for payments (paused by the owner until the product is polished):** (1) owner activates Stripe for Kanter Capital LLC, (2) checks Texas sales tax on subscriptions with an accountant (then `STRIPE_AUTOMATIC_TAX`), (3) buys a custom domain. Then: `scripts/stripe-setup.ts --live --webhook https://<domain>/api/billing/webhook`, Stripe and Clerk production keys as Cloudflare secrets/vars, update hostnames (Clerk, Turnstile, Travelpayouts, `SITE_URL`), deploy, test.
+
+
 1. Itinerary builder: extend the existing `LodgingStop` trips with flexible nights ranges, a flight/drive mode per leg and a start window. New shared types go in `packages/shared`.
 2. Cheapest-dates optimizer: **dynamic programming** over (stop, arrival date), choosing nights per stop. It must be exact, pure and browser-safe. Don't use an LLM for the price math.
 3. Driving legs (OSRM) and a 2D map (MapLibre).
