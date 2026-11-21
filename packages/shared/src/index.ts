@@ -9,3 +9,4 @@ export * from "./airlines.ts";
 export * from "./forecast-eval.ts";
 export * from "./guides.ts";
 export * from "./booking.ts";
+export * from "./itinerary.ts";

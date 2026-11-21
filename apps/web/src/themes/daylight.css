@@ -660,3 +660,54 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 .date-price-tag { display: inline-block; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; }
 .day.cheapest { outline: 2px solid var(--good); outline-offset: -2px; position: relative; }
 .dbest { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: var(--good); color: #fff; font-size: 0.58rem; font-weight: 800; padding: 1px 5px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.02em; }
+
+/* ---- Plan a trip (multi-stop planner) ---- */
+.plan-head h1 { margin: 0 0 6px; }
+.plan-head p { margin: 0 0 20px; max-width: 62ch; }
+.plan-grid { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.plan-form { display: grid; gap: 16px; min-width: 0; }
+.plan-form fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
+.plan-form legend { font-weight: 600; font-size: .9rem; margin-bottom: 8px; padding: 0; }
+.plan-form .row > label { flex: 1; min-width: 0; }
+.plan-stops { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.plan-stop { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--panel-2); }
+.plan-stop-body { display: grid; gap: 10px; min-width: 0; }
+.plan-stop-body .link { justify-self: start; }
+.plan-leg-mode { display: grid; gap: 6px; font-size: .86rem; }
+.plan-leg-mode .seg button { padding: 6px 8px; font-size: .84rem; }
+.plan-own-cost { display: grid; gap: 4px; }
+.plan-reorder { display: flex; gap: 10px; align-items: flex-start; }
+.plan-reorder input { margin-top: 3px; flex: none; }
+.plan-reorder span { display: grid; gap: 4px; flex: 1; min-width: 0; }
+.plan-problem, .plan-cost { margin: 0; font-size: .85rem; }
+.plan-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
+.plan-results h2 { font-size: 1rem; margin: 0 0 10px; }
+.plan-empty ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--muted); }
+.plan-total > div { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.plan-total .price { font-size: 1.8rem; }
+.plan-total p { margin: 8px 0 0; }
+.plan-starts ol { list-style: none; margin: 0; padding: 0 0 4px; display: flex; gap: 6px; overflow-x: auto; }
+.plan-starts li { flex: none; min-width: 64px; display: grid; gap: 2px; padding: 8px; border-radius: var(--radius-sm); border: 1px solid transparent; text-align: center; font-size: .8rem; }
+.plan-starts li.chosen { border-color: var(--accent); }
+.plan-starts li.cheapest strong::after { content: " ★"; color: var(--accent); }
+.plan-route .timeline { margin: 0; }
+.plan-leg, .plan-stay { gap: 6px; }
+.timeline li.plan-leg.ground::before { background: var(--muted); }
+.timeline li.plan-stay::before { background: var(--panel); border: 2px solid var(--accent); }
+.plan-leg-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.plan-flights { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.plan-flights li { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: .86rem; }
+.plan-flights li span { flex: 1; min-width: 140px; color: var(--muted); }
+.plan-alts ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.plan-alts button { width: 100%; display: flex; gap: 12px; align-items: baseline; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); color: var(--text); cursor: pointer; }
+.plan-alts button.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.plan-alts button span { color: var(--muted); font-size: .86rem; overflow-wrap: anywhere; }
+.plan-footnote { font-size: .82rem; margin: 0; }
+@media (max-width: 860px) {
+  .plan-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.plan-save { margin-top: 12px; display: grid; gap: 8px; justify-items: start; }
+.plan-saved { margin: 12px 0 0; font-weight: 600; }
+.trip-legs ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+.trip-legs li { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.trip-legs li:last-child { border-bottom: 0; padding-bottom: 0; }

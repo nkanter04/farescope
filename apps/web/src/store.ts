@@ -32,7 +32,7 @@ export interface Notice {
 }
 
 interface State {
-  view: "search" | "trips";
+  view: "search" | "plan" | "trips";
   request: SearchRequest;
   submitted?: SearchRequest;
   status: "idle" | "searching" | "done" | "error";

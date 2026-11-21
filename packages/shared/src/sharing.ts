@@ -30,5 +30,8 @@ export const TripShareSchema = z.object({
       stay: stay.optional(), ownCost: amount.optional(),
     }).refine(stop => stop.checkOut > stop.checkIn && (!stop.stay ||
       (stop.stay.checkIn === stop.checkIn && stop.stay.checkOut === stop.checkOut)))).max(30).optional(),
+    legs: z.array(z.object({ from: z.string().min(1).max(160), to: z.string().min(1).max(160),
+      fromAirport: z.string().regex(/^[A-Z]{3}$/).optional(), toAirport: z.string().regex(/^[A-Z]{3}$/).optional(),
+      date, mode: z.enum(["fly", "ground"]), price: amount })).min(1).max(12).optional(),
   })).min(1).max(3),
 });

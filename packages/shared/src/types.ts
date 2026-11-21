@@ -160,8 +160,21 @@ export interface TripPlan {
   lodging?: LodgingStop[];
   notes?: string;
   search?: SearchRequest;
+  /** Multi-stop trips (from the planner): every leg in order. `fare` is then the first leg. */
+  legs?: TripLeg[];
   total: number;
   createdAt: string;
+}
+
+/** One leg of a planned multi-stop trip: a flight (lowest price that day) or travel the user arranges. */
+export interface TripLeg {
+  from: string;
+  to: string;
+  fromAirport?: string;
+  toAirport?: string;
+  date: string;
+  mode: "fly" | "ground";
+  price: number;
 }
 
 export interface LodgingStop {

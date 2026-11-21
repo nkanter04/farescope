@@ -29,6 +29,8 @@
     "PER_SEARCH_BUDGET": "5",
     // Accounts (once CLERK_SECRET_KEY is set): 50 live lookups a month each (about 10 searches).
     "ACCOUNT_MONTHLY_BUDGET": "50",
+    // A multi-stop plan uses one credit per flown leg (up to 20 with "Try other orders").
+    "PER_PLAN_BUDGET": "20",
     "CLERK_AUTHORIZED_PARTIES": "https://tripica.farescope.workers.dev"
   }
 }

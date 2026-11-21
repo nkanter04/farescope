@@ -27,6 +27,7 @@ export interface Env {
   CLERK_JWT_KEY?: string;
   CLERK_AUTHORIZED_PARTIES?: string;
   ACCOUNT_MONTHLY_BUDGET?: string;
+  PER_PLAN_BUDGET?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_MONTHLY?: string;

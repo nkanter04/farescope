@@ -7,6 +7,7 @@ import { ResultsList } from "./components/ResultsList.tsx";
 import { SearchForm } from "./components/SearchForm.tsx";
 import { ExploreHome } from "./components/ExploreHome.tsx";
 import { TripsView } from "./components/TripsView.tsx";
+import { PlanView } from "./components/PlanView.tsx";
 import { SharedTrips } from "./components/SharedTrips.tsx";
 import { AccountButtonSlot, ProReturnSlot } from "./accountSlots.tsx";
 import { DEMO, fetchNearestAirport } from "./api.ts";
@@ -97,6 +98,9 @@ export function App() {
           <button className={view === "search" ? "on" : ""} onClick={() => setView("search")}>
             Search
           </button>
+          <button className={view === "plan" ? "on" : ""} onClick={() => setView("plan")}>
+            Plan a trip
+          </button>
           <button className={view === "trips" ? "on" : ""} onClick={() => setView("trips")}>
             My trips
           </button>
@@ -140,6 +144,10 @@ export function App() {
             {panel === "Map" && <MapBoundary><Suspense fallback={<p role="status">Loading the globe…</p>}><Globe /></Suspense></MapBoundary>}
             </>}
           </section>
+        </main>
+      ) : view === "plan" ? (
+        <main className="single">
+          <PlanView />
         </main>
       ) : (
         <main className="single">

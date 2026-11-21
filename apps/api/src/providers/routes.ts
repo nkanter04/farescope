@@ -35,3 +35,8 @@ export function demoPaths(from: string, to: string, maxStops = 2): string[][] {
   pathCache.set(key, paths);
   return paths;
 }
+
+/** Nonstop destinations from an airport in the route graph: a rough size signal for picking a city's main airport. */
+export function routeCount(iata: string): number {
+  return routes[iata]?.length ?? 0;
+}

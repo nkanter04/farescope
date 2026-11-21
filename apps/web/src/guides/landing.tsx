@@ -59,7 +59,7 @@ const FEATURES: { icon: string; title: string; text: string }[] = [
   { icon: "🌍", title: "Globe and map views", text: "See where your money goes furthest, with the cheapest fares to each destination on a 3D globe." },
   { icon: "🧭", title: "Explore by month", text: "Not sure where to go? Pick a month and see the cheapest places to fly from your home airport." },
   { icon: "☀️", title: "When to visit", text: "Weather, holidays and crowd seasons for popular destinations, so a cheap month is also a good one." },
-  { icon: "🧳", title: "Plan the whole trip", text: "Add stays for each stop, plan nights city by city, compare trips by total cost, share plans and watch fares." },
+  { icon: "🧳", title: "Plan the whole trip", text: "List several cities and how many nights in each. Tripica finds the cheapest start date, nights and order, then you add stays, compare trips and share plans." },
 ];
 
 export function LandingContent({ site }: { site: LandingSite }) {

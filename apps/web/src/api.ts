@@ -1,6 +1,6 @@
 import { liveFetch } from "./human.ts";
 import { authHeader } from "./auth.ts";
-import type { Cabin, Fare, ReturnOption, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
+import type { Cabin, Fare, ItineraryResult, PlanRequest, ReturnOption, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
 function clientId(): string {
   const make = () => (crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
@@ -202,4 +202,22 @@ export async function fetchReturns(
   const r = await liveFetch("/api/fare-returns", { method: "POST", headers: await headers(), body: JSON.stringify({ fare, ...opts }) });
   if (!r.ok) return { options: [], error: (await r.json().catch(() => ({}))).error ?? "Could not load return flights." };
   return r.json();
+}
+
+// ---- Multi-stop planner ----
+export interface PlanResponse {
+  result?: ItineraryResult;
+  airports: Record<number, string>;
+  creditsUsed: number;
+  notices: string[];
+  error?: string;
+}
+
+/** Price every leg and find the cheapest dates, nights and (optionally) order. */
+export async function planTripApi(req: PlanRequest): Promise<PlanResponse> {
+  if (DEMO) return (await demo()).planTrip(req);
+  const r = await liveFetch("/api/plan", { method: "POST", headers: await headers(), body: JSON.stringify(req) });
+  const json = (await r.json().catch(() => ({}))) as PlanResponse & { error?: string };
+  if (!r.ok) return { airports: {}, creditsUsed: 0, notices: [], error: json.error ?? "Could not plan this trip." };
+  return json;
 }

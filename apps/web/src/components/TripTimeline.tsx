@@ -1,5 +1,6 @@
-import { AIRPORT_BY_IATA, daysBetween, type Fare, type LodgingStop } from "@farescope/shared";
+import { AIRPORT_BY_IATA, daysBetween, type Fare, type LodgingStop, type TripLeg } from "@farescope/shared";
 import { money, shortDate } from "../format.ts";
+import { BookLinks } from "./BookLinks.tsx";
 
 function directions(from: string, to: string) {
   return "https://www.google.com/maps/dir/?" + new URLSearchParams({ api: "1", origin: from, destination: to });
@@ -26,5 +27,25 @@ export function TripTimeline({ fare, stops }: { fare: Fare; stops: LodgingStop[]
       </li>}
     </ol>
     <p className="muted small">Maps open in Google Maps. Ground transport costs are additional.</p>
+  </section>;
+}
+
+/** A planned multi-stop trip: each leg (with a booking link) and the stay between legs. */
+export function TripLegs({ legs, stops, adults }: { legs: TripLeg[]; stops: LodgingStop[]; adults: number }) {
+  const sorted = [...stops].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
+  return <section className="card flight-summary trip-legs" aria-label="Trip legs">
+    <div className="fare-main"><strong>{[legs[0].from, ...legs.map(leg => leg.to)].join(" → ")}</strong><strong className="price">{money(legs.reduce((s, leg) => s + leg.price, 0))}</strong></div>
+    <ol>
+      {legs.map((leg, i) => {
+        const stay = sorted.find(stop => stop.checkIn === leg.date);
+        return <li key={i}>
+          <div><strong>{leg.from} → {leg.to}</strong> <span className="muted">· {shortDate(leg.date)} · {leg.mode === "fly" ? `${leg.fromAirport ?? ""} → ${leg.toAirport ?? ""} · from ${money(leg.price)}` : `your own way · ${money(leg.price)}`}</span></div>
+          {leg.mode === "fly" && leg.fromAirport && leg.toAirport &&
+            <BookLinks kind="flight" ctx={{ origin: leg.fromAirport, destination: leg.toAirport, depart: leg.date, adults }} />}
+          {stay && i < legs.length - 1 && <span className="muted small">Then {daysBetween(stay.checkIn, stay.checkOut)} nights in {stay.place}{stay.stay ? ` · ${stay.stay.name}` : stay.ownCost !== undefined ? ` · arranged, ${money(stay.ownCost)}` : ""}</span>}
+        </li>;
+      })}
+    </ol>
+    <p className="muted small">Flight prices are the lowest one-way fares found for each day when the trip was planned.</p>
   </section>;
 }

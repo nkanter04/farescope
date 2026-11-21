@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { lodgingCoverage, tripStops, tripTotal } from "@farescope/shared";
+import { lodgingCoverage, tripDates, tripStops, tripTotal } from "@farescope/shared";
 import { money, shortDate, travelerCount, tripPriceNote } from "../format.ts";
 import { useStore } from "../store.ts";
 import { TripComparison } from "./TripComparison.tsx";
@@ -25,13 +25,14 @@ export function TripsView() {
     {!trips.length && <p className="empty">Save an option from your search results, then plan its stays here.</p>}
     <ul className="trip-cards">{trips.map(trip => {
       const stops = tripStops(trip);
-      const coverage = lodgingCoverage(trip.fare, stops);
+      const coverage = lodgingCoverage(trip.fare, stops, trip.legs);
+      const dates = tripDates(trip);
       return <li key={trip.id} className={`card ${compare.includes(trip.id) ? "sel" : ""}`}>
         <label className="cmp"><input type="checkbox" checked={compare.includes(trip.id)} disabled={compare.length >= 3 && !compare.includes(trip.id)} onChange={() => toggle(trip.id)} /> Compare</label>
         <h3>{trip.name}</h3><div className="big">{money(tripTotal(trip))}</div>
         {tripPriceNote(trip) && <p className="stale small">{tripPriceNote(trip)}</p>}
-        <p className="muted small">{coverage.complete ? "Flight + planned accommodation" : "Known costs so far"} · {travelerCount(trip.adults)}</p>
-        <p className="muted small">{trip.fare.origin} → {trip.fare.destination} · {shortDate(trip.fare.departDate)}{trip.fare.returnDate && ` – ${shortDate(trip.fare.returnDate)}`}</p>
+        <p className="muted small">{coverage.complete ? `${trip.legs ? "Flights" : "Flight"} + planned accommodation` : trip.legs ? "Flights so far" : "Known costs so far"} · {travelerCount(trip.adults)}</p>
+        <p className="muted small">{trip.legs ? [trip.legs[0].from, ...trip.legs.map(leg => leg.to)].join(" → ") : `${trip.fare.origin} → ${trip.fare.destination}`} · {shortDate(dates.start)}{dates.end && ` – ${shortDate(dates.end)}`}</p>
         <p className="muted small">{stops.map(stop => stop.place).join(" → ") || "No stays planned"}</p>
         {trip.notes && <p className="trip-notes small">{trip.notes}</p>}
         <div className="trip-actions"><button className="secondary" onClick={() => open(trip)}>Edit itinerary</button>

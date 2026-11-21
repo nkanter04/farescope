@@ -1,6 +1,6 @@
 import { Hono, type Context } from "hono";
 import { z } from "zod";
-import { CABINS, FareSchema, nearestAirport, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { CABINS, FareSchema, nearestAirport, PlanRequestSchema, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
 import { QueryCache } from "./cache.ts";
 import { PriceHistory, WatchStore } from "./history.ts";
 import { QuotaGuard } from "./quota.ts";
@@ -13,6 +13,7 @@ import { TripStore } from "./trips.ts";
 import type { FlightProvider, StayProvider } from "./providers/types.ts";
 import { fareDetails } from "./search/details.ts";
 import { returnFlights } from "./search/returns.ts";
+import { planTrip } from "./search/plan.ts";
 import { runSearch } from "./search/run.ts";
 import { lookupStays } from "./search/stays.ts";
 import { buildPriceTrend } from "./search/trend.ts";
@@ -31,6 +32,8 @@ export interface ApiSettings {
   siteOrigins?: string[];
   perSearchBudget: number;
   freeCallCap: number;
+  /** Most live lookups one multi-stop plan may spend. */
+  perPlanBudget?: number;
 }
 
 export interface ApiDeps {
@@ -76,6 +79,11 @@ const TripInput = z.object({
     ownCost: z.number().nonnegative().optional(),
   }).refine(stop => stop.checkOut > stop.checkIn && (!stop.stay ||
     (stop.stay.checkIn === stop.checkIn && stop.stay.checkOut === stop.checkOut)))).max(30).optional(),
+  legs: z.array(z.object({
+    from: z.string().trim().min(1).max(160), to: z.string().trim().min(1).max(160),
+    fromAirport: z.string().regex(/^[A-Z]{3}$/).optional(), toAirport: z.string().regex(/^[A-Z]{3}$/).optional(),
+    date: z.string().date(), mode: z.enum(["fly", "ground"]), price: z.number().finite().nonnegative(),
+  })).min(1).max(12).optional(),
   notes: z.string().max(5000).optional(),
   search: SearchRequestSchema.optional(),
 });
@@ -391,6 +399,18 @@ export function createApi(deps: ApiDeps): Hono {
     const refused = await gate(c);
     if (refused) return refused;
     return c.json(await fareDetails(parsed.data, { provider: flights, cache, quota, clientId: clientKey(c), signInHint: signInHint(c) }));
+  });
+
+  /** Multi-stop planner: cheapest dates, nights and (optionally) order. One credit per flown leg, reserved up front. */
+  app.post("/api/plan", async (c) => {
+    const parsed = PlanRequestSchema.safeParse(await body(c));
+    if (!parsed.success) return c.json({ error: parsed.error.issues.map((i) => i.message).join("; ") }, 400);
+    const refused = await gate(c);
+    if (refused) return refused;
+    return c.json(await planTrip(parsed.data, {
+      provider: flights, cache, quota, clientId: clientKey(c), maxCredits: settings.perPlanBudget ?? 20,
+      signInHint: signInHint(c), signal: c.req.raw.signal,
+    }));
   });
 
   /** Return flight options for a chosen round-trip fare (1 quota unit unless cached). */

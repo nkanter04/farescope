@@ -1,6 +1,6 @@
 import { daysBetween } from "./dates.ts";
 import { AIRPORT_BY_IATA } from "./airports.ts";
-import type { Fare, LodgingStop, TripPlan } from "./types.ts";
+import type { Fare, LodgingStop, TripLeg, TripPlan } from "./types.ts";
 
 export function tripStops(trip: Pick<TripPlan, "lodging" | "stay" | "fare">): LodgingStop[] {
   if (trip.lodging) return trip.lodging;
@@ -13,11 +13,25 @@ export function lodgingCost(stop: LodgingStop): number | undefined {
   return stop.stay?.total ?? stop.ownCost;
 }
 
-export function tripTotal(trip: Pick<TripPlan, "fare" | "lodging" | "stay">): number {
-  return trip.fare.price + tripStops(trip).reduce((sum, stop) => sum + (lodgingCost(stop) ?? 0), 0);
+/** Airfare (plus user-entered ground travel for multi-stop trips). */
+export function tripTravelCost(trip: Pick<TripPlan, "fare" | "legs">): number {
+  return trip.legs?.length ? trip.legs.reduce((sum, leg) => sum + leg.price, 0) : trip.fare.price;
 }
 
-export function lodgingCoverage(fare: Fare, stops: LodgingStop[]) {
+export function tripTotal(trip: Pick<TripPlan, "fare" | "lodging" | "stay" | "legs">): number {
+  return tripTravelCost(trip) + tripStops(trip).reduce((sum, stop) => sum + (lodgingCost(stop) ?? 0), 0);
+}
+
+/** First and last travel dates: the legs of a multi-stop trip, else the flight's dates. */
+export function tripDates(trip: Pick<TripPlan, "fare" | "legs">): { start: string; end?: string } {
+  return trip.legs?.length
+    ? { start: trip.legs[0].date, end: trip.legs.length > 1 ? trip.legs.at(-1)!.date : undefined }
+    : { start: trip.fare.departDate, end: trip.fare.returnDate };
+}
+
+/** Nights planned, gaps and conflicts. A multi-stop trip runs from its first leg to its last. */
+export function lodgingCoverage(fare: Fare, stops: LodgingStop[], legs?: TripLeg[]) {
+  if (legs?.length) fare = { ...fare, outbound: [], departDate: legs[0].date, returnDate: legs.length > 1 ? legs.at(-1)!.date : undefined };
   const arrival = fare.outbound.at(-1)?.arrive.slice(0, 10) || fare.departDate;
   const sorted = [...stops].sort((a, b) => a.checkIn.localeCompare(b.checkIn));
   let end = arrival;
@@ -42,7 +56,7 @@ export function comparableTrips(trips: TripPlan[]): boolean {
   const stayProviders = new Set(trips.flatMap(trip => tripStops(trip).flatMap(stop => stop.stay ? [stop.stay.provider] : [])));
   return trips.length >= 2 && first.adults !== undefined && stayProviders.size <= 1 && trips.every(trip =>
     trip.adults === first.adults && trip.fare.provider === first.fare.provider && !trip.fare.stale &&
-    lodgingCoverage(trip.fare, tripStops(trip)).complete &&
+    lodgingCoverage(trip.fare, tripStops(trip), trip.legs).complete &&
     tripStops(trip).every(stop => !stop.stay || (!stop.stay.stale &&
       (stop.stay.provider === "mock" || stop.stay.totalBasis === "quoted"))));
 }

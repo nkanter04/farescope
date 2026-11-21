@@ -3,7 +3,7 @@ import { lodgingCoverage, tripStops, tripTotal, type TripPlan } from "@farescope
 import { readShareLink } from "../share.ts";
 import { money, travelerCount, tripPriceNote } from "../format.ts";
 import { TripComparison } from "./TripComparison.tsx";
-import { TripTimeline } from "./TripTimeline.tsx";
+import { TripLegs, TripTimeline } from "./TripTimeline.tsx";
 
 export function SharedTrips({ hash }: { hash: string }) {
   const [trips, setTrips] = useState<TripPlan[]>([]);
@@ -20,11 +20,13 @@ export function SharedTrips({ hash }: { hash: string }) {
     {!error && !trips.length && <p role="status">Loading itinerary…</p>}
     {trips.length > 1 && <TripComparison trips={trips} />}
     {trips.map(trip => <article className="card" key={trip.id}><h2>{trip.name}</h2><div className="big">{money(tripTotal(trip))}</div>
-      <p>{lodgingCoverage(trip.fare, tripStops(trip)).complete ? "Flight + planned accommodation" : "Known costs so far"} · {travelerCount(trip.adults)}</p>
+      <p>{lodgingCoverage(trip.fare, tripStops(trip), trip.legs).complete ? `${trip.legs ? "Flights" : "Flight"} + planned accommodation` : "Known costs so far"} · {travelerCount(trip.adults)}</p>
       {tripPriceNote(trip) && <p className="stale small">{tripPriceNote(trip)}</p>}
       {trip.fare.provider === "mock" && <p className="notice info">Demo itinerary · simulated prices and flight times.</p>}
-      <p>{trip.fare.origin} → {trip.fare.destination}</p>
-      <TripTimeline fare={trip.fare} stops={tripStops(trip)} />
+      {trip.legs ? <TripLegs legs={trip.legs} stops={tripStops(trip)} adults={trip.adults ?? 1} /> : <>
+        <p>{trip.fare.origin} → {trip.fare.destination}</p>
+        <TripTimeline fare={trip.fare} stops={tripStops(trip)} />
+      </>}
       {trip.notes && <p className="trip-notes">{trip.notes}</p>}
     </article>)}
   </main>;

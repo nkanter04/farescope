@@ -1,6 +1,6 @@
 import { SITE_ROOT } from "../site.ts";
 import { useState } from "react";
-import { addDays, AIRPORT_BY_IATA, carrierFrom, codeFromFlightNumber, COUNTRIES, lodgingCoverage, tripTotal } from "@farescope/shared";
+import { addDays, AIRPORT_BY_IATA, carrierFrom, codeFromFlightNumber, COUNTRIES, lodgingCoverage, tripTotal, tripTravelCost } from "@farescope/shared";
 import { AirlineLogo, FareAirlines } from "./AirlineLogo.tsx";
 import { cityOf, fareEnds, duration, money, shortDate, stopsLabel, travelerCount, tripPriceNote } from "../format.ts";
 import type { Fare } from "@farescope/shared";
@@ -9,7 +9,7 @@ import { LodgingEditor } from "./LodgingEditor.tsx";
 import { PriceInsight } from "./PriceInsight.tsx";
 import { BookLinks } from "./BookLinks.tsx";
 import { guideForAirport } from "../urlSearch.ts";
-import { TripTimeline } from "./TripTimeline.tsx";
+import { TripLegs, TripTimeline } from "./TripTimeline.tsx";
 import { NightPlanner } from "./NightPlanner.tsx";
 import { ReturnFlights } from "./ReturnFlights.tsx";
 
@@ -18,13 +18,15 @@ export function FarePanel() {
   const setDraft = useStore(state => state.setDraft);
   const selectFare = useStore(state => state.selectFare);
   const save = useStore(state => state.saveCurrentTrip);
+  const setView = useStore(state => state.setView);
   const [status, setStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [planning, setPlanning] = useState(false);
   if (!draft) return null;
   const { fare } = draft;
   const stops = draft.lodging ?? [];
-  const coverage = lodgingCoverage(fare, stops);
+  const legs = draft.legs;
+  const coverage = lodgingCoverage(fare, stops, legs);
   const valid = draft.name.trim() && stops.every(stop => stop.place.trim() && stop.checkIn && stop.checkOut > stop.checkIn);
   const addStop = () => {
     setStatus("");
@@ -35,7 +37,12 @@ export function FarePanel() {
     setDraft({ lodging: [...stops, { id: crypto.randomUUID(), place, checkIn,
       checkOut: fare.returnDate && checkIn < fare.returnDate ? addDays(checkIn, 1) : "" }] });
   };
+  const travel = tripTravelCost(draft);
   return <section className="fare-panel">
+    {legs ? <>
+      <button className="link" onClick={() => setView("trips")}>← My trips</button>
+      <TripLegs legs={legs} stops={stops} adults={draft.adults ?? 1} />
+    </> : <>
     <button className="link" onClick={() => void selectFare(null)}>← Back to results</button>
     <div className="card flight-summary">
       <div className="fare-main"><strong>{cityOf(fare.origin)} → {cityOf(fare.destination)}</strong><strong className="price">{money(fare.price)}</strong></div>
@@ -54,6 +61,7 @@ export function FarePanel() {
       return guide ? <a className="guide-link" href={`${SITE_ROOT}guides/${guide.slug}/`}>When to visit {guide.name}: weather, crowds and best months →</a> : null;
     })()}
     <PriceInsight fare={fare} cabin={draft.search?.cabin ?? "economy"} adults={draft.adults ?? draft.search?.adults ?? 1} />
+    </>}
     <div className="row">
       <label className="field">Trip name<input maxLength={120} value={draft.name} onChange={event => { setDraft({ name: event.target.value }); setStatus(""); }} /></label>
       {!draft.adults && <label className="field">Adults<input type="number" min={1} max={9} placeholder="Unknown" onChange={event => setDraft({ adults: Math.max(1, Math.min(9, Number(event.target.value))) })} /></label>}
@@ -71,7 +79,7 @@ export function FarePanel() {
     {coverage.conflict && <p className="notice warn">Some stays overlap or fall outside your flight dates. Check the dates before booking.</p>}
     {coverage.gaps > 0 && <p className="notice info">{coverage.gaps} {coverage.gaps === 1 ? "night" : "nights"} still to plan. Add accommodation or record a stay you’ve arranged yourself.</p>}
     {coverage.unpriced > 0 && <p className="muted small">{coverage.unpriced} {coverage.unpriced === 1 ? "stay has" : "stays have"} no cost yet.</p>}
-    {!!stops.length && <TripTimeline fare={fare} stops={stops} />}
+    {!!stops.length && !legs && <TripTimeline fare={fare} stops={stops} />}
     {(() => {
       const airport = AIRPORT_BY_IATA[fare.destination];
       const city = airport?.city ?? fare.destination;
@@ -86,10 +94,10 @@ export function FarePanel() {
     <label className="field">Trip notes<textarea rows={3} maxLength={5000} value={draft.notes ?? ""} placeholder="Train plans, places to visit, or questions for your travel companion"
       onChange={event => { setDraft({ notes: event.target.value }); setStatus(""); }} /></label>
     <div className="trip-total">
-      <div><div className="muted small">{coverage.complete ? "Flight + planned accommodation" : "Known costs so far"} · {travelerCount(draft.adults)}</div>
+      <div><div className="muted small">{coverage.complete ? `${legs ? "Flights" : "Flight"} + planned accommodation` : "Known costs so far"} · {travelerCount(draft.adults)}</div>
         <div className="big">{money(tripTotal(draft))}</div>
         {tripPriceNote(draft) && <div className="stale small">{tripPriceNote(draft)}</div>}
-        <div className="muted small">Airfare {money(fare.price)} + accommodation {money(tripTotal(draft) - fare.price)}</div>
+        <div className="muted small">{legs?.some(leg => leg.mode === "ground") ? "Travel" : "Airfare"} {money(travel)} + accommodation {money(tripTotal(draft) - travel)}</div>
       </div>
       <button className="primary" disabled={!valid || saving || planning} onClick={async () => {
         setSaving(true);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { comparableTrips, lodgingCoverage, tripStops, tripTotal } from "./trips.ts";
-import type { Fare, LodgingStop, Stay, TripPlan } from "./types.ts";
+import { comparableTrips, lodgingCoverage, tripDates, tripStops, tripTotal, tripTravelCost } from "./trips.ts";
+import { TripShareSchema } from "./sharing.ts";
+import type { Fare, LodgingStop, Stay, TripLeg, TripPlan } from "./types.ts";
 
 const fare: Fare = { id: "flight", provider: "mock", origin: "AUS", destination: "HND", departDate: "2027-04-01", returnDate: "2027-04-08",
   outbound: [{ from: "AUS", to: "HND", depart: "2027-04-01 12:00", arrive: "2027-04-02 15:00", airline: "Demo", flightNumber: "1", durationMin: 1000 }],
@@ -39,5 +40,34 @@ describe("flexible itinerary costs and coverage", () => {
     expect(comparableTrips([trip, { ...trip, fare: { ...fare, stale: true } }])).toBe(false);
     expect(comparableTrips([trip, { ...trip, lodging: lodging.map(stop => stop.stay ? { ...stop, stay: { ...stay, provider: "serpapi", totalBasis: "nightly-estimate" } } : stop) }])).toBe(false);
     expect(lodgingCoverage({ ...fare, returnDate: undefined }, lodging).complete).toBe(false);
+  });
+});
+
+describe("multi-stop trips from the planner", () => {
+  const legs: TripLeg[] = [
+    { from: "Austin", to: "Tokyo", fromAirport: "AUS", toAirport: "NRT", date: "2027-04-01", mode: "fly", price: 600 },
+    { from: "Tokyo", to: "Osaka", date: "2027-04-04", mode: "ground", price: 100 },
+    { from: "Osaka", to: "Austin", fromAirport: "KIX", toAirport: "AUS", date: "2027-04-07", mode: "fly", price: 700 },
+  ];
+  const first: Fare = { ...fare, returnDate: undefined, outbound: [], price: 600 };
+  const stops: LodgingStop[] = [
+    { id: "a", place: "Tokyo", checkIn: "2027-04-01", checkOut: "2027-04-04", ownCost: 300 },
+    { id: "b", place: "Osaka", checkIn: "2027-04-04", checkOut: "2027-04-07", ownCost: 200 },
+  ];
+  const multi: TripPlan = { id: "m", name: "Japan", adults: 1, fare: first, legs, lodging: stops, total: 0, createdAt: "2026-11-20" };
+
+  it("adds every leg (flights and your own travel) plus stays", () => {
+    expect(tripTravelCost(multi)).toBe(1400);
+    expect(tripTotal(multi)).toBe(1900);
+    expect(tripDates(multi)).toEqual({ start: "2027-04-01", end: "2027-04-07" });
+  });
+  it("checks nights from the first leg to the last", () => {
+    expect(lodgingCoverage(first, stops, legs)).toMatchObject({ complete: true, nights: 6, gaps: 0, conflict: false });
+    expect(lodgingCoverage(first, [stops[0]], legs)).toMatchObject({ complete: false, gaps: 3 });
+    expect(lodgingCoverage(first, [{ ...stops[1], checkOut: "2027-04-08" }], legs).conflict).toBe(true);
+  });
+  it("keeps legs in share links", () => {
+    const shared = TripShareSchema.parse({ version: 1, trips: [{ ...multi, fare: { ...first, outbound: [] } }] });
+    expect(shared.trips[0].legs).toHaveLength(3);
   });
 });

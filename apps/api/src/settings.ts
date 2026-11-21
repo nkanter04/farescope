@@ -29,6 +29,8 @@ export function settingsFromEnv(env: Env) {
     monthlyBudget: num(env.MONTHLY_QUERY_BUDGET, 100),
     dailyClientBudget: num(env.DAILY_CLIENT_BUDGET, 10),
     perSearchBudget: num(env.PER_SEARCH_BUDGET, 6),
+    /** Most live lookups one multi-stop plan may spend (one per flown leg; more with "Try other orders"). */
+    perPlanBudget: num(env.PER_PLAN_BUDGET, 20),
     freeCallCap: num(env.FREE_CALL_CAP, 800),
     /** Cloudflare Turnstile secret: when set, routes that can spend live quota need a bot-check pass. */
     turnstileSecret: env.TURNSTILE_SECRET_KEY ?? "",
