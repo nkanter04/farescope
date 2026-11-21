@@ -76,8 +76,8 @@ let controller: AbortController | null = null;
 export const useStore = create<State>((set, get) => ({
   view: "search",
   request: {
-    origins: ["AUS"],
-    destinations: ["country:JP"],
+    origins: [],
+    destinations: [],
     departFrom: addDays(today, 60),
     departTo: addDays(today, 150),
     tripType: "roundtrip",

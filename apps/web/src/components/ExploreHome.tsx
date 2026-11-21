@@ -5,6 +5,7 @@ import { DEMO, streamSearch } from "../api.ts";
 import { cheapestByCity, exploreMonths, exploreRequest, MONTH_INDEX, type ExploreDeal, type ExploreMonth } from "../explore/explore.ts";
 import { money, shortDate, travelerCount } from "../format.ts";
 import { useStore } from "../store.ts";
+import { PlaceInput } from "./PlaceInput.tsx";
 import { guideForAirport } from "../urlSearch.ts";
 
 interface MonthResult { status: "loading" | "done" | "error"; fares: Fare[]; message?: string }
@@ -18,7 +19,7 @@ const LABEL_CLASS: Record<string, string> = {
 
 /** Home page before any search: the cheapest places to fly from your origin, month by month. */
 export function ExploreHome() {
-  const origin = useStore((s) => s.request.origins[0] ?? "AUS");
+  const origin = useStore((s) => s.request.origins[0] ?? "");
   const adults = useStore((s) => s.request.adults);
   const quota = useStore((s) => s.quota);
   const months = useMemo(() => exploreMonths(todayISO(), 6), []);
@@ -64,7 +65,7 @@ export function ExploreHome() {
     if (!month) return;
     const cached = resultCache.get(cacheKey);
     setResult(cached);
-    if (!cached && !live) run(month);
+    if (!cached && !live && origin) run(month);
     return () => controller.current?.abort();
   }, [cacheKey, live]);
 
@@ -77,6 +78,18 @@ export function ExploreHome() {
 
   const deals = useMemo(() => cheapestByCity(result?.fares ?? [], 12, scope === "abroad" ? homeCountry : undefined), [result, scope, homeCountry]);
   if (!month) return null;
+  if (!origin) return (
+    <section className="explore" aria-labelledby="explore-title">
+      <header className="explore-head">
+        <h1 id="explore-title">Where are you flying from?</h1>
+        <p className="muted">Pick your home airport or city to see the cheapest places to go each month, or search any trip on the left.</p>
+      </header>
+      <div className="explore-origin">
+        <PlaceInput label="Your airport or city" tokens={[]} placeholder="e.g. Chicago, LHR, Texas"
+          onChange={(t) => t.length && useStore.getState().setRequest({ origins: [t.at(-1)!] })} />
+      </div>
+    </section>
+  );
   return (
     <section className="explore" aria-labelledby="explore-title">
       <header className="explore-head">

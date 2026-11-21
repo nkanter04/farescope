@@ -66,7 +66,7 @@ export function toRequest(s: Pick<PlannerState, "home" | "stops" | "end" | "endP
 
 export const usePlanner = create<PlannerState>((set, get) => ({
   home: "",
-  stops: [newStop("city:Tokyo|JP", 3, 5), newStop("city:Osaka|JP", 2, 3), newStop("city:Seoul|KR", 2, 4)],
+  stops: [newStop()],
   end: "home",
   endPlace: "",
   endMode: "fly",
