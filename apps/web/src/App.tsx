@@ -84,7 +84,7 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <a className="brand" href="./" onClick={(e) => { e.preventDefault(); useStore.getState().goHome(); }} aria-label="Tripica home: explore cheap places">
+        <a className="brand" href={SITE_ROOT} aria-label="Tripica homepage">
           <Logo size={32} />
           Tripica
         </a>
@@ -95,7 +95,8 @@ export function App() {
         )}
         <a className="guides-link" href={`${SITE_ROOT}guides/`}>When to visit</a>
         <nav className="tabs">
-          <button className={view === "search" ? "on" : ""} onClick={() => setView("search")}>
+          <button className={view === "search" ? "on" : ""} title={view === "search" ? "Start a new search" : undefined}
+            onClick={() => (view === "search" ? useStore.getState().goHome() : setView("search"))}>
             Search
           </button>
           <button className={view === "plan" ? "on" : ""} onClick={() => setView("plan")}>
