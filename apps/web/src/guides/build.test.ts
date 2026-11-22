@@ -116,3 +116,14 @@ describe("static guide pages", () => {
     }
   });
 });
+
+describe("homepage", () => {
+  it("animates with a bundled script and shows no prices", () => {
+    const html = page("index.html");
+    expect(html).toMatch(/<script defer="" src="home\.js\?v=[0-9a-f]{8}"><\/script>/);
+    expect(readFileSync(join(out, "home.js"), "utf8").length).toBeGreaterThan(10_000);
+    expect(html).toContain('id="home-scenes"');
+    expect(html).toContain("Illustration");
+    expect(html).not.toMatch(/\$\d/);
+  });
+});

@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripica · Route map</title>
+<meta name="description" content="Draft homepage 4: editorial route map.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f7f9fc;
+    --paper: #ffffff;
+    --line: #e3e8ef;
+    --line-strong: #cfd7e3;
+    --dot: #bccad9;
+    --text: #0f1b2d;
+    --text-2: #33435a;
+    --muted: #5a6a80;
+    --accent: #1570e8;
+    --accent-hover: #0f5fcc;
+    --accent-soft: #e8f1fe;
+    --sun: #ffc94d;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 400 16px/1.5 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 720px) { .wrap { padding: 0 40px; } }
+
+  /* Header */
+  header { padding: 20px 0; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 1.12rem; letter-spacing: -0.02em; }
+  .brand svg { width: 32px; height: 32px; border-radius: 9px; box-shadow: 0 2px 6px rgba(21,112,232,.3); }
+  nav { display: flex; align-items: center; gap: 22px; font-size: .92rem; }
+  nav a { text-decoration: none; color: var(--text-2); }
+  nav a:hover { color: var(--accent); }
+  nav .hide-sm { display: none; }
+  @media (min-width: 640px) { nav .hide-sm { display: inline; } }
+  .nav-app { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--text) !important; font-weight: 600; }
+
+  /* Hero text */
+  .hero { padding: 40px 0 8px; }
+  @media (min-width: 900px) { .hero { padding: 72px 0 12px; } }
+  .kicker { font-size: .78rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin: 0 0 18px; }
+  h1 {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(2.7rem, 8.2vw, 6.4rem); line-height: .98; letter-spacing: -0.02em;
+    margin: 0; max-width: 13ch;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .hero-row { display: grid; gap: 24px; margin-top: 26px; align-items: end; }
+  @media (min-width: 900px) { .hero-row { grid-template-columns: minmax(0, 1fr) auto; } }
+  .lede { margin: 0; max-width: 36ch; font-size: 1.12rem; color: var(--text-2); }
+  .ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+    padding: 15px 24px; border-radius: 999px; box-shadow: 0 6px 18px rgba(21,112,232,.28);
+    transition: background .2s var(--ease), transform .2s var(--ease);
+  }
+  .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn span { transition: transform .2s var(--ease); }
+  .btn:hover span { transform: translateX(3px); }
+  .link { font-weight: 500; color: var(--text-2); text-decoration: none; border-bottom: 1px solid var(--line-strong); padding-bottom: 2px; }
+  .link:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Map */
+  .map-sec { margin-top: 36px; }
+  @media (min-width: 900px) { .map-sec { margin-top: 48px; } }
+  .map-frame { position: relative; width: 100%; max-width: 1600px; margin: 0 auto; overflow-x: clip; overflow-y: visible; }
+  .map { position: relative; width: 100%; }
+  .map svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .query {
+    position: absolute; left: 16px; top: -6px; z-index: 3;
+    display: inline-flex; flex-wrap: wrap; gap: 4px 10px; align-items: center;
+    background: rgba(255,255,255,.88); backdrop-filter: blur(6px);
+    border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+    font-size: .8rem; color: var(--text-2); box-shadow: 0 2px 10px rgba(16,32,64,.06);
+  }
+  .query b { color: var(--text); font-weight: 600; }
+  .query i { font-style: normal; color: var(--line-strong); }
+  @media (max-width: 639px) {
+    .query { position: static; margin: 0 16px 40px; border-radius: 14px; }
+  }
+  @media (min-width: 720px) { .query { left: 40px; } }
+
+  .tags { position: absolute; inset: 0; pointer-events: none; }
+  .tag {
+    position: absolute; transform: translate(-50%, calc(-100% - 12px));
+    white-space: nowrap; font-size: .8rem; font-weight: 500; color: var(--text);
+    background: var(--paper); border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 11px; box-shadow: 0 3px 10px rgba(16,32,64,.08);
+    opacity: 0; transition: opacity .45s var(--ease), transform .45s var(--ease);
+  }
+  .tag .when { color: var(--muted); }
+  .tag.on { opacity: 1; transform: translate(-50%, calc(-100% - 16px)); }
+  .tag.past { opacity: .5; transform: translate(-50%, calc(-100% - 12px)) scale(.92); }
+  .tag.home { background: var(--text); color: #fff; border-color: var(--text); opacity: 1; transform: translate(-50%, 12px); }
+  .tag.best {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    font-size: .92rem; padding: 6px 14px; box-shadow: 0 8px 22px rgba(21,112,232,.35);
+  }
+  .tag.best .when { color: rgba(255,255,255,.82); }
+  .tag.best::before {
+    content: "Best time to go"; position: absolute; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+    font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--accent); font-weight: 400;
+  }
+  @media (max-width: 639px) {
+    .tag { font-size: .7rem; padding: 3px 8px; }
+    .tag.past { opacity: 0; }
+    .tag.best { font-size: .78rem; padding: 4px 10px; }
+    .tag.best::before { font-size: .9rem; }
+  }
+
+  .caption {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+    border-top: 1px solid var(--line); margin-top: 14px; padding-top: 10px;
+    font-size: .8rem; color: var(--muted);
+  }
+  .caption em { font-family: var(--serif); font-size: 1rem; color: var(--text-2); }
+  .replay { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; font-weight: 500; }
+
+  /* Steps */
+  .steps { padding: 88px 0 24px; }
+  .steps ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 28px; counter-reset: s; }
+  @media (min-width: 820px) { .steps ol { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; } }
+  .steps li { counter-increment: s; position: relative; }
+  @media (min-width: 820px) {
+    .steps li { padding: 0 32px; border-left: 1px solid var(--line); }
+    .steps li:first-child { padding-left: 0; border-left: 0; }
+  }
+  .steps li::before {
+    content: "0" counter(s); display: block; font-size: .78rem; font-weight: 600; letter-spacing: .12em; color: var(--accent); margin-bottom: 10px;
+  }
+  .steps h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.9rem, 3.4vw, 2.5rem); line-height: 1.05; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .steps h3 .arrow { color: var(--line-strong); font-family: var(--sans); font-size: .6em; margin-left: 6px; vertical-align: middle; }
+  .steps p { margin: 0; color: var(--muted); max-width: 30ch; }
+
+  /* Planner band */
+  .band { margin: 72px 0 0; }
+  .band-in {
+    display: grid; gap: 24px; align-items: center;
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 28px 22px;
+  }
+  @media (min-width: 820px) { .band-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); padding: 40px 48px; } }
+  .band h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.9rem, 3.6vw, 2.7rem); line-height: 1.05; margin: 0 0 10px; }
+  .band p { margin: 0 0 18px; color: var(--muted); }
+  .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: .88rem; }
+  .chain span { padding: 7px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--text); font-weight: 500; white-space: nowrap; }
+  .chain span small { color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .chain i { font-style: normal; color: var(--line-strong); }
+  .chain .home { background: var(--text); color: #fff; }
+
+  /* Guides */
+  .guides { padding: 88px 0 24px; }
+  .sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 22px; }
+  .sec-head h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.9rem, 3.6vw, 2.7rem); margin: 0; line-height: 1.05; }
+  .cards { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 900px) { .cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .card {
+    display: flex; flex-direction: column; justify-content: space-between; gap: 30px; min-height: 150px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+    text-decoration: none; transition: border-color .2s var(--ease), transform .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(16,32,64,.08); }
+  .card small { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .card strong { display: block; font-family: var(--serif); font-weight: 400; font-size: 1.8rem; line-height: 1; margin-top: 4px; }
+  .card .go { font-size: .85rem; color: var(--accent); font-weight: 500; }
+
+  /* Closing */
+  .closing { text-align: center; padding: 104px 0 96px; }
+  .closing h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.2rem, 5.5vw, 4rem); line-height: 1; margin: 0 0 26px; }
+  .closing h2 em { color: var(--accent); }
+  footer { border-top: 1px solid var(--line); padding: 26px 0 40px; font-size: .85rem; color: var(--muted); }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  footer nav { gap: 18px; font-size: .85rem; }
+
+  /* Map strokes */
+  .land { fill: none; stroke: var(--dot); stroke-linecap: round; }
+  .route { fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: 2 5; stroke-linecap: round; transition: opacity .6s var(--ease), stroke .6s var(--ease); }
+  .route.past { opacity: .32; stroke: #7f9cc4; }
+  .route.best { stroke-width: 2.6; stroke-dasharray: none; opacity: 1; stroke: var(--accent); }
+  .pin { fill: var(--paper); stroke: var(--accent); stroke-width: 2; opacity: 0; transition: opacity .3s; }
+  .pin.on { opacity: 1; }
+  .pin.past { opacity: .5; stroke: #7f9cc4; }
+  .pin.best { fill: var(--accent); stroke: #fff; stroke-width: 2.5; opacity: 1; }
+  .halo { fill: var(--accent); opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .halo.on { animation: halo 2.4s var(--ease) infinite; }
+  @keyframes halo { 0% { opacity: .35; transform: scale(.4); } 100% { opacity: 0; transform: scale(2.6); } }
+  .home-dot { fill: var(--text); stroke: #fff; stroke-width: 2.5; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+    .replay { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="Tripica home">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" rx="16" fill="#1570E8"/>
+        <path d="M14 40a18 18 0 0 1 36 0z" fill="#FFC94D"/>
+        <path d="M10 40h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M18 47h28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/>
+        <path d="M32 14v5M19 19l3 3.5M45 19l-3 3.5" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+      Tripica
+    </a>
+    <nav aria-label="Main">
+      <a class="hide-sm" href="guides/">When to visit</a>
+      <a class="hide-sm" href="app/">Plan a trip</a>
+      <a class="nav-app" href="app/">Open app</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <p class="kicker">Every place · every date · at once</p>
+      <h1>Search the whole map. <em>Take the best trip.</em></h1>
+      <div class="hero-row">
+        <p class="lede">Name a region, a season and a range of nights. Tripica finds when and where it costs least.</p>
+        <div class="ctas">
+          <a class="btn" href="app/">Start searching <span aria-hidden="true">→</span></a>
+          <a class="link" href="guides/">When to visit guides</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="map-sec" aria-label="Illustration: one search from Austin to many destinations">
+    <div class="map-frame">
+      <div class="query" aria-hidden="true">
+        <b>Austin</b><i>→</i><b>Anywhere</b><i>·</i>any day, Jan–Dec<i>·</i>7–12 nights
+      </div>
+      <div class="map" id="map">
+        <svg id="svg" role="img" aria-label="Dashed routes drawn from Austin to cities worldwide, settling on Lisbon in late May as the best match"></svg>
+        <div class="tags" id="tags" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="caption">
+        <span><em>Fig. 1</em> &nbsp;One search, every route. Illustration, not real results.</span>
+        <button class="replay" id="replay" type="button">Replay</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="steps" aria-label="How it works">
+    <div class="wrap">
+      <ol>
+        <li>
+          <h3>Go wide <span class="arrow" aria-hidden="true">→</span></h3>
+          <p>A country, a region or anywhere. Any month, any trip length.</p>
+        </li>
+        <li>
+          <h3>See every date <span class="arrow" aria-hidden="true">→</span></h3>
+          <p>Every combination checked at once, on a calendar and a map.</p>
+        </li>
+        <li>
+          <h3>Book the best</h3>
+          <p>Pick the cheapest day and book with the airline or hotel.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="plan-h">
+    <div class="wrap">
+      <div class="band-in">
+        <div>
+          <h2 id="plan-h">Several cities? One answer.</h2>
+          <p>Set the nights you want in each. Tripica picks the start date, order and nights.</p>
+          <a class="link" href="app/">Plan a multi-stop trip →</a>
+        </div>
+        <div class="chain" aria-label="Example: Austin, Lisbon 3–5 nights, Porto 2–3 nights, Madrid 3–4 nights, home">
+          <span class="home">Austin</span><i>→</i>
+          <span>Lisbon<small>3–5 nights</small></span><i>→</i>
+          <span>Porto<small>2–3</small></span><i>→</i>
+          <span>Madrid<small>3–4</small></span><i>→</i>
+          <span class="home">Home</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="guides" aria-labelledby="guides-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="guides-h">When to visit</h2>
+        <a class="link" href="guides/">All guides</a>
+      </div>
+      <div class="cards">
+        <a class="card" href="guides/lisbon/"><div><small>Portugal</small><strong>Lisbon</strong></div><span class="go">Weather &amp; seasons →</span></a>
+        <a class="card" href="guides/kyoto/"><div><small>Japan</small><strong>Kyoto</strong></div><span class="go">Weather &amp; seasons →</span></a>
+        <a class="card" href="guides/reykjavik/"><div><small>Iceland</small><strong>Reykjavik</strong></div><span class="go">Weather &amp; seasons →</span></a>
+        <a class="card" href="guides/mexico-city/"><div><small>Mexico</small><strong>Mexico City</strong></div><span class="go">Weather &amp; seasons →</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2>Where to? <em>Whenever.</em></h2>
+      <a class="btn" href="app/">Start searching <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© Tripica</span>
+    <nav aria-label="Footer">
+      <a href="guides/">Guides</a>
+      <a href="privacy/">Privacy</a>
+      <a href="terms/">Terms</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+(() => {
+  const W = 1200;
+  const HOME = { name: "Austin", ll: [-97.74, 30.27] };
+  // Illustrative only: months are examples, not search results.
+  const DEST = [
+    { name: "Kyoto", when: "early April", ll: [135.77, 35.01] },
+    { name: "Cusco", when: "June", ll: [-71.97, -13.53] },
+    { name: "Reykjavik", when: "September", ll: [-21.9, 64.15] },
+    { name: "Cape Town", when: "November", ll: [18.42, -33.92] },
+    { name: "Honolulu", when: "February", ll: [-157.86, 21.3] },
+    { name: "Buenos Aires", when: "October", ll: [-58.38, -34.6] },
+    { name: "Bangkok", when: "January", ll: [100.5, 13.75] },
+    { name: "Lisbon", when: "late May", ll: [-9.14, 38.72], best: true },
+  ];
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const projection = d3.geoNaturalEarth1().rotate([-8, 0]);
+  projection.fitWidth(W, { type: "Sphere" });
+  // Crop to 78N..57S (drop most of Antarctica and the empty Arctic).
+  const yTop = projection([8, 78])[1];
+  const yBot = projection([8, -57])[1];
+  const H = Math.round(yBot - yTop);
+  projection.translate([projection.translate()[0], projection.translate()[1] - yTop]);
+
+  const svg = d3.select("#svg").attr("viewBox", `0 0 ${W} ${H}`).attr("preserveAspectRatio", "xMidYMid meet");
+  document.getElementById("map").style.aspectRatio = `${W} / ${H}`;
+  const tagsEl = document.getElementById("tags");
+
+  const gLand = svg.append("g");
+  const gRoutes = svg.append("g");
+  const gPins = svg.append("g");
+
+  const pct = ([x, y]) => ({ left: (x / W * 100) + "%", top: (y / H * 100) + "%" });
+
+  function curve(a, b) {
+    const [x1, y1] = a, [x2, y2] = b;
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy);
+    let nx = -dy / d, ny = dx / d;
+    if (ny > 0) { nx = -nx; ny = -ny; } // bulge upward
+    const k = Math.min(0.32 * d, 170);
+    const c = [mx + nx * k, my + ny * k];
+    const pts = [];
+    for (let i = 0; i <= 80; i++) {
+      const t = i / 80, u = 1 - t;
+      pts.push([u * u * x1 + 2 * u * t * c[0] + t * t * x2, u * u * y1 + 2 * u * t * c[1] + t * t * y2]);
+    }
+    return pts;
+  }
+  const line = (pts) => "M" + pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join("L");
+
+  function drawLand(land) {
+    // Rasterize land, then sample a dot grid.
+    const scale = 1;
+    const cv = document.createElement("canvas");
+    cv.width = W * scale; cv.height = H * scale;
+    const ctx = cv.getContext("2d");
+    ctx.scale(scale, scale);
+    ctx.beginPath(); d3.geoPath(projection, ctx)(land); ctx.fillStyle = "#000"; ctx.fill();
+    const data = ctx.getImageData(0, 0, cv.width, cv.height).data;
+    const step = 7.2;
+    let d = "";
+    for (let y = step / 2; y < H; y += step) {
+      const row = Math.round((y - step / 2) / step);
+      const off = row % 2 ? step / 2 : 0;
+      for (let x = step / 2 + off; x < W; x += step) {
+        const i = (Math.floor(y) * cv.width + Math.floor(x)) * 4 + 3;
+        if (data[i] > 128) d += `M${x.toFixed(1)} ${y.toFixed(1)}h0`;
+      }
+    }
+    gLand.append("path").attr("class", "land").attr("d", d).attr("stroke-width", 2.9);
+  }
+
+  const home = projection(HOME.ll);
+  const routes = DEST.map((dst) => {
+    const p = projection(dst.ll);
+    const pts = curve(home, p);
+    const path = gRoutes.append("path").attr("class", "route").attr("d", "");
+    const halo = gPins.append("circle").attr("class", "halo").attr("cx", p[0]).attr("cy", p[1]).attr("r", 9);
+    const pin = gPins.append("circle").attr("class", "pin").attr("cx", p[0]).attr("cy", p[1]).attr("r", 4.5);
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.innerHTML = `${dst.name} <span class="when">· ${dst.when}</span>`;
+    Object.assign(tag.style, pct(p));
+    tagsEl.appendChild(tag);
+    return { ...dst, p, pts, path, pin, halo, tag };
+  });
+  gPins.append("circle").attr("class", "home-dot").attr("cx", home[0]).attr("cy", home[1]).attr("r", 6);
+  const homeTag = document.createElement("span");
+  homeTag.className = "tag home";
+  homeTag.textContent = HOME.name;
+  Object.assign(homeTag.style, pct(home));
+  tagsEl.appendChild(homeTag);
+
+  let run = 0;
+  const wait = (ms, id) => new Promise((res) => setTimeout(() => res(id === run), ms));
+  function grow(r, ms, id) {
+    return new Promise((res) => {
+      const t0 = performance.now();
+      const tick = (t) => {
+        if (id !== run) return res(false);
+        const k = Math.min(1, (t - t0) / ms);
+        const e = 1 - Math.pow(1 - k, 3);
+        const n = Math.max(2, Math.round(e * (r.pts.length - 1)) + 1);
+        r.path.attr("d", line(r.pts.slice(0, n)));
+        if (k < 1) requestAnimationFrame(tick); else res(true);
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+
+  function reset() {
+    routes.forEach((r) => {
+      r.path.attr("d", "").attr("class", "route");
+      r.pin.attr("class", "pin");
+      r.halo.attr("class", "halo");
+      r.tag.className = "tag";
+    });
+  }
+
+  function settle() {
+    routes.forEach((r) => {
+      r.path.attr("d", line(r.pts)).attr("class", r.best ? "route best" : "route past");
+      r.pin.attr("class", r.best ? "pin best" : "pin past");
+      r.halo.attr("class", r.best ? "halo on" : "halo");
+      r.tag.className = r.best ? "tag on best" : "tag past";
+    });
+    // Bring best route to the front.
+    const best = routes.find((r) => r.best);
+    best.path.raise();
+  }
+
+  async function play() {
+    const id = ++run;
+    reset();
+    if (!(await wait(500, id))) return;
+    for (let i = 0; i < routes.length; i++) {
+      const r = routes[i];
+      if (i > 0) {
+        const prev = routes[i - 1];
+        prev.path.attr("class", "route past");
+        prev.pin.attr("class", "pin past");
+        prev.tag.className = "tag past";
+      }
+      if (!(await grow(r, r.best ? 1100 : 850, id))) return;
+      r.pin.attr("class", "pin on");
+      r.tag.className = "tag on";
+      if (!(await wait(r.best ? 700 : 650, id))) return;
+    }
+    settle();
+  }
+
+  document.getElementById("replay").addEventListener("click", () => { if (!reduce) play(); });
+
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/land-110m.json")
+    .then((r) => r.json())
+    .then((topo) => {
+      drawLand(topojson.feature(topo, topo.objects.land));
+    })
+    .catch(() => {
+      gLand.append("path").attr("d", d3.geoPath(projection)(d3.geoGraticule10())).attr("fill", "none").attr("stroke", "#dfe5ee");
+    })
+    .finally(() => {
+      if (reduce) { settle(); return; }
+      // Start when the map is on screen.
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { io.disconnect(); play(); }
+      }, { threshold: 0.25 });
+      io.observe(document.getElementById("map"));
+    });
+})();
+</script>
+</body>
+</html>

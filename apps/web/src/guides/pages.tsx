@@ -44,6 +44,8 @@ export interface SiteConfig {
   live?: boolean;
   /** The live site, linked from the demo. */
   liveUrl?: string;
+  /** The homepage animation script ("home.js?v=…"), bundled by the build. */
+  homeScript?: string;
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();

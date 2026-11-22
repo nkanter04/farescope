@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripica Postcards</title>
+<meta name="description" content="Draft homepage, bold and playful: a cycling flexible search phrase with a shuffling postcard deck.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --panel: #ffffff;
+  --line: #e3e8ef;
+  --text: #0f1b2d;
+  --text-2: #33435a;
+  --muted: #5a6a80;
+  --accent: #1570e8;
+  --accent-hover: #0f5fcc;
+  --accent-soft: #e8f1fe;
+  --sun: #ffc94d;
+  --warm: #ff7a45;
+  --warm-soft: #fff0e8;
+  --mint: #0b7d55;
+  --mint-soft: #e5f6ee;
+  --pink: #e0457b;
+  --pink-soft: #fde9f1;
+  --radius: 16px;
+  --shadow-md: 0 2px 4px rgba(16,32,64,.05), 0 8px 20px rgba(16,32,64,.08);
+  --shadow-lg: 0 4px 10px rgba(16,32,64,.06), 0 18px 40px rgba(16,32,64,.14);
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --bounce: cubic-bezier(.34,1.4,.5,1);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Header ---------- */
+.top {
+  max-width: 1240px; margin: 0 auto; padding: 18px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.2rem; letter-spacing: -.02em; text-decoration: none; }
+.nav { display: flex; gap: 6px; align-items: center; }
+.nav a { text-decoration: none; font-weight: 600; font-size: .95rem; padding: 8px 12px; border-radius: 999px; color: var(--text-2); }
+.nav a:hover { background: var(--panel); }
+.nav .nav-app { background: var(--text); color: #fff; }
+.nav .nav-app:hover { background: var(--accent); }
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative; overflow: clip;
+  max-width: 1240px; margin: 0 auto; padding: 32px 24px 72px;
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: center;
+}
+.hero::before { /* sunny blob */
+  content: ""; position: absolute; z-index: -1; right: -120px; top: -80px; width: 560px; height: 560px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #ffe6a3 0%, rgba(255,201,77,.35) 45%, rgba(255,201,77,0) 70%);
+}
+.hero::after {
+  content: ""; position: absolute; z-index: -1; left: -160px; bottom: -120px; width: 480px; height: 480px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(21,112,232,.14) 0%, rgba(21,112,232,0) 65%);
+}
+.hero-text { position: relative; z-index: 2; container-type: inline-size; min-width: 0; }
+.kicker {
+  display: inline-flex; align-items: center; gap: 8px; margin: 0 0 18px;
+  font-weight: 700; font-size: .9rem; color: var(--accent); background: var(--accent-soft);
+  padding: 6px 12px 6px 8px; border-radius: 999px; transform: rotate(-1.5deg);
+}
+.kicker b { background: var(--accent); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: .78rem; }
+
+.phrase {
+  margin: 0; font-weight: 900; letter-spacing: -.045em; line-height: 1.02;
+  font-size: clamp(2rem, 10.9cqi, 5rem);
+}
+.phrase .line { display: block; white-space: nowrap; }
+.slot {
+  --c: var(--warm); --soft: var(--warm-soft);
+  display: inline-block; position: relative; vertical-align: baseline;
+  font: inherit; letter-spacing: inherit; color: var(--c); background: var(--soft);
+  border: 0; border-bottom: .07em dashed var(--c); border-radius: .2em .2em .08em .08em;
+  padding: 0 .16em .02em; margin: .05em 0; cursor: pointer;
+  transition: background-color .3s, transform .2s var(--bounce);
+}
+.slot:hover { transform: rotate(-1.5deg) scale(1.03); }
+.slot.when { --c: var(--accent); --soft: var(--accent-soft); }
+.slot.len  { --c: var(--mint); --soft: var(--mint-soft); }
+.slot .w { display: inline-block; }
+.slot .w.in { animation: flip-in .45s var(--bounce); }
+.slot::after { /* blinking caret on the active slot */
+  content: ""; position: absolute; right: .06em; top: .14em; bottom: .14em; width: .045em;
+  background: var(--c); opacity: 0; border-radius: 2px;
+}
+.slot.typing::after { animation: caret .9s steps(1) 2; }
+@keyframes flip-in { from { transform: translateY(.45em) rotate(4deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.sub { margin: 22px 0 0; font-size: 1.15rem; color: var(--text-2); max-width: 30em; }
+.ctas { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin-top: 28px; }
+.cta {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: var(--accent); color: #fff; font-weight: 800; font-size: 1.1rem;
+  padding: 16px 26px; border-radius: 999px;
+  box-shadow: 0 5px 0 #0b4ea8, 0 14px 28px rgba(21,112,232,.3);
+  transition: transform .15s var(--ease), box-shadow .15s var(--ease), background-color .15s;
+}
+.cta:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 7px 0 #0b4ea8, 0 18px 30px rgba(21,112,232,.32); }
+.cta:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b4ea8, 0 8px 16px rgba(21,112,232,.25); }
+.ghost { font-weight: 700; color: var(--text); text-decoration: none; border-bottom: 3px solid var(--sun); padding-bottom: 2px; }
+.ghost:hover { border-color: var(--warm); }
+.shuffle {
+  margin-top: 22px; display: inline-flex; align-items: center; gap: 8px;
+  font: inherit; font-weight: 700; font-size: .9rem; color: var(--muted);
+  background: none; border: 2px dashed var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+}
+.shuffle:hover { color: var(--text); border-color: var(--muted); }
+
+/* ---------- Postcard deck ---------- */
+.deck-wrap { position: relative; display: flex; justify-content: center; }
+.deck { position: relative; width: min(100%, 470px); aspect-ratio: 1 / 1; }
+.card {
+  position: absolute; left: 7%; top: 18%; width: 86%; aspect-ratio: 3 / 2;
+  background: #fffdf8; border-radius: 14px; padding: 10px;
+  box-shadow: var(--shadow-lg);
+  transition: transform .7s var(--bounce), opacity .5s var(--ease);
+  will-change: transform;
+}
+.card[data-pos="0"] { transform: rotate(-4deg); z-index: 5; }
+.card[data-pos="1"] { transform: translate(7%, -9%) rotate(5deg); z-index: 4; }
+.card[data-pos="2"] { transform: translate(-8%, -16%) rotate(-11deg); z-index: 3; }
+.card[data-pos="3"] { transform: translate(10%, -22%) rotate(12deg) scale(.96); z-index: 2; }
+.card[data-pos="4"] { transform: translate(0, -26%) rotate(-2deg) scale(.92); z-index: 1; opacity: .85; }
+.card.toss { transform: translate(85%, 18%) rotate(24deg) !important; z-index: 6 !important; transition-duration: .38s; transition-timing-function: var(--ease); }
+.scene {
+  position: relative; height: 100%; border-radius: 8px; overflow: hidden;
+  background: linear-gradient(180deg, var(--sky1), var(--sky2));
+}
+.scene .sunball { position: absolute; width: 30%; aspect-ratio: 1; border-radius: 50%; right: 12%; top: 12%; background: var(--sunc, #fff3c4); box-shadow: 0 0 0 10px rgba(255,255,255,.18), 0 0 0 22px rgba(255,255,255,.1); }
+.scene svg.land { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 55%; }
+.scene .emoji { position: absolute; left: 50%; bottom: 10%; font-size: clamp(2.6rem, 9vw, 4.4rem); line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.18)); }
+.greet { position: absolute; left: 6%; top: 7%; color: #fff; text-shadow: 0 2px 0 rgba(15,27,45,.25); }
+.greet small { display: block; font-family: "Caveat", cursive; font-size: clamp(1rem, 3.6vw, 1.35rem); line-height: 1; }
+.greet strong { display: block; font-weight: 900; letter-spacing: -.03em; line-height: .95; font-size: clamp(1.5rem, 6.4vw, 2.5rem); text-transform: uppercase; }
+.stamp {
+  position: absolute; right: 5%; bottom: 8%; width: 17%; aspect-ratio: 4 / 5;
+  background: #fffdf8; display: grid; place-items: center; font-size: clamp(1rem, 4vw, 1.6rem);
+  outline: 2px dashed rgba(15,27,45,.25); outline-offset: -5px; transform: rotate(6deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,.15);
+}
+.postmark { position: absolute; right: 16%; bottom: 20%; width: 18%; aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(15,27,45,.28); transform: rotate(-12deg); }
+.postmark::before, .postmark::after { content: ""; position: absolute; left: 105%; width: 60%; height: 2px; background: rgba(15,27,45,.22); top: 38%; border-radius: 2px; }
+.postmark::after { top: 60%; }
+.tag {
+  position: absolute; z-index: 2; top: -14px; right: -10px;
+  background: var(--sun); color: var(--text); font-weight: 900; font-size: clamp(.82rem, 2.8vw, 1rem); letter-spacing: -.01em;
+  padding: 7px 14px; border-radius: 999px; transform: rotate(7deg);
+  box-shadow: 0 3px 0 #d9a21f, 0 8px 16px rgba(16,32,64,.18); white-space: nowrap;
+}
+.card:not([data-pos="0"]) .tag { opacity: 0; transform: rotate(7deg) scale(.6); }
+.tag { transition: opacity .3s .25s, transform .45s .25s var(--bounce); }
+.tag::before { content: "★ "; color: var(--warm); }
+
+.doodle { position: absolute; font-family: "Caveat", cursive; font-weight: 700; color: var(--muted); font-size: 1.35rem; line-height: 1.1; }
+.doodle.d1 { left: -6px; bottom: 2%; transform: rotate(-6deg); }
+.doodle svg { display: block; margin: 2px 0 0 40px; }
+
+/* ---------- Feature stickers ---------- */
+.features { max-width: 1240px; margin: 0 auto; padding: 8px 24px 72px; }
+.features h2 { margin: 0 0 28px; font-size: clamp(1.7rem, 4.5vw, 2.6rem); font-weight: 900; letter-spacing: -.035em; line-height: 1.05; }
+.features h2 span { background: linear-gradient(transparent 62%, #ffe08a 62%); }
+.stickers { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.sticker {
+  --c: var(--accent); --soft: var(--accent-soft);
+  position: relative; background: var(--panel); border-radius: 22px; padding: 22px 20px 22px;
+  border: 3px solid var(--text); box-shadow: 6px 6px 0 var(--c);
+  transition: transform .25s var(--bounce), box-shadow .25s var(--ease);
+}
+.sticker:nth-child(1) { transform: rotate(-2deg); }
+.sticker:nth-child(2) { --c: var(--warm); --soft: var(--warm-soft); transform: rotate(1.5deg); }
+.sticker:nth-child(3) { --c: var(--mint); --soft: var(--mint-soft); transform: rotate(-1deg); }
+.sticker:nth-child(4) { --c: var(--pink); --soft: var(--pink-soft); transform: rotate(2deg); }
+.sticker:hover { transform: rotate(0) translateY(-4px); box-shadow: 9px 9px 0 var(--c); }
+.sticker .ico { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--soft); font-size: 1.8rem; margin-bottom: 14px; }
+.sticker h3 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 900; letter-spacing: -.02em; }
+.sticker p { margin: 0; color: var(--text-2); }
+.mini { display: flex; gap: 4px; margin-top: 14px; }
+.mini i { flex: 1; height: 22px; border-radius: 6px; background: var(--soft); }
+.mini i.hot { background: var(--c); }
+.route { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-weight: 800; font-size: .8rem; color: var(--c); }
+.route b { width: 12px; height: 12px; border-radius: 50%; background: var(--c); flex: none; }
+.route span { flex: 1; border-top: 3px dotted var(--c); }
+
+/* ---------- Final band ---------- */
+.band { max-width: 1240px; margin: 0 auto 56px; padding: 0 24px; }
+.band-in {
+  position: relative; overflow: hidden; border-radius: 28px; padding: 44px 36px;
+  background: linear-gradient(120deg, #1570e8 0%, #3d8bff 55%, #7aa9ff 100%); color: #fff;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 22px;
+}
+.band-in::after { content: ""; position: absolute; right: -60px; top: -90px; width: 260px; height: 260px; border-radius: 50%; background: var(--sun); opacity: .9; }
+.band h2 { position: relative; z-index: 1; margin: 0; font-size: clamp(1.8rem, 5vw, 3rem); font-weight: 900; letter-spacing: -.04em; line-height: 1; }
+.band .ctas { position: relative; z-index: 1; margin: 0; }
+.band .cta { background: #fff; color: var(--accent); box-shadow: 0 5px 0 #0b4ea8, 0 14px 28px rgba(0,0,0,.18); }
+.band .cta:hover { background: #fff8e2; }
+.band .ghost { color: #fff; }
+
+footer { max-width: 1240px; margin: 0 auto; padding: 0 24px 40px; color: var(--muted); font-size: .9rem; display: flex; flex-wrap: wrap; gap: 8px 20px; justify-content: space-between; }
+footer a { color: var(--muted); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+  .stickers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 16px; }
+  .deck { width: min(100%, 400px); }
+  .doodle.d1 { display: none; }
+}
+@media (max-width: 560px) {
+  .top { padding: 14px 16px; }
+  .nav .nav-guides { display: none; }
+  .hero { padding: 12px 16px 48px; }
+  .features, .band { padding-left: 16px; padding-right: 16px; }
+  footer { padding: 0 16px 32px; }
+  .stickers { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .sticker { margin: 0 6px; }
+  .band-in { padding: 34px 22px; }
+  .cta { padding: 15px 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="./" aria-label="Tripica home">
+    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect width="64" height="64" rx="16" fill="#1570E8"/>
+      <path d="M14 40a18 18 0 0 1 36 0z" fill="#FFC94D"/>
+      <path d="M10 40h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M18 47h28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/>
+      <path d="M32 14v5M19 19l3 3.5M45 19l-3 3.5" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>Tripica
+  </a>
+  <nav class="nav" aria-label="Main">
+    <a class="nav-guides" href="guides/">When to visit</a>
+    <a class="nav-app" href="app/">Open app</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-text">
+      <p class="kicker"><b>NEW</b> Plan multi-stop trips too</p>
+      <h1 id="hero-title" class="phrase">
+        <span class="sr-only">Somewhere warm in March for a week. Tripica finds when and where it costs least.</span>
+        <span aria-hidden="true">
+          <span class="line">Somewhere <button class="slot mood" tabindex="-1" type="button"><span class="w">warm</span></button></span>
+          <span class="line">in <button class="slot when" tabindex="-1" type="button"><span class="w">March</span></button></span>
+          <span class="line">for <button class="slot len" tabindex="-1" type="button"><span class="w">a week</span></button></span>
+        </span>
+      </h1>
+      <p class="sub">Keep it loose. We check every date, length and place at once.</p>
+      <div class="ctas">
+        <a class="cta" href="app/">Start searching <span aria-hidden="true">→</span></a>
+        <a class="ghost" href="guides/">When to visit</a>
+      </div>
+      <button class="shuffle" type="button" id="shuffle" aria-label="Show another example trip"><span aria-hidden="true">🔀</span> <span id="shuffle-label">Shuffle</span></button>
+    </div>
+
+    <div class="deck-wrap" aria-hidden="true">
+      <div class="deck" id="deck"></div>
+      <div class="doodle d1">best months,<br>not guesses
+        <svg width="60" height="30" viewBox="0 0 60 30" fill="none"><path d="M2 4c14 20 34 22 52 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><path d="M46 10l9 6-10 4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" aria-labelledby="f-title">
+    <h2 id="f-title">One loose search. <span>Every option.</span></h2>
+    <ul class="stickers">
+      <li class="sticker">
+        <div class="ico" aria-hidden="true">📅</div>
+        <h3>Every date at once</h3>
+        <p>Months of departures and trip lengths, compared.</p>
+        <div class="mini" aria-hidden="true"><i></i><i></i><i class="hot"></i><i></i><i></i><i></i><i></i></div>
+      </li>
+      <li class="sticker">
+        <div class="ico" aria-hidden="true">🧭</div>
+        <h3>Many stops</h3>
+        <p>Pick cities. We pick the order, nights and start day.</p>
+        <div class="route" aria-hidden="true"><b></b><span></span><b></b><span></span><b></b><span></span><b></b></div>
+      </li>
+      <li class="sticker">
+        <div class="ico" aria-hidden="true">⚖️</div>
+        <h3>Save &amp; compare</h3>
+        <p>Flights plus stays, side by side by total cost.</p>
+      </li>
+      <li class="sticker">
+        <div class="ico" aria-hidden="true">🌤️</div>
+        <h3>Best months</h3>
+        <p>Weather and crowds for every month, per destination.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="band" aria-labelledby="b-title">
+    <div class="band-in">
+      <h2 id="b-title">Where to next?</h2>
+      <div class="ctas">
+        <a class="cta" href="app/">Start searching <span aria-hidden="true">→</span></a>
+        <a class="ghost" href="guides/">When to visit</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Postcards are illustrations. No prices shown here.</span>
+  <span><a href="privacy/">Privacy</a> · <a href="terms/">Terms</a></span>
+</footer>
+
+<script>
+(() => {
+  const LAND = {
+    beach: '<svg class="land" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 60 Q40 48 80 60 T160 60 T240 60 T300 58 V120 H0z" fill="#2bb5c9"/><path d="M0 76 Q40 66 80 76 T160 76 T240 76 T300 74 V120 H0z" fill="#1a93b5"/><path d="M0 98 Q90 82 180 96 T300 92 V120 H0z" fill="#ffe0a8"/></svg>',
+    snow: '<svg class="land" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 120 L60 30 L95 70 L150 10 L210 78 L245 44 L300 100 V120z" fill="#6f8fc4"/><path d="M60 30 L75 52 L65 50 L55 58z M150 10 L170 36 L155 32 L140 40z M245 44 L258 62 L248 58 L238 62z" fill="#fff"/><path d="M0 104 Q80 88 160 102 T300 98 V120 H0z" fill="#f4f9ff"/></svg>',
+    hills: '<svg class="land" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 70 Q60 40 120 66 T240 58 T300 64 V120 H0z" fill="#e8835a"/><path d="M0 90 Q70 70 150 88 T300 84 V120 H0z" fill="#c95a3b"/><g fill="#fff6e6"><rect x="40" y="62" width="14" height="16"/><rect x="62" y="56" width="12" height="20"/><rect x="200" y="58" width="14" height="18"/><rect x="222" y="62" width="12" height="14"/></g></svg>',
+    city: '<svg class="land" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 120 V70 h30 v-14 h22 v24 h20 v-36 h26 v40 h24 v-22 h30 v30 h22 v-44 h28 v40 h24 v-18 h20 v20 h24 v50z" fill="#7a3d8f" opacity=".85"/><path d="M0 100 Q100 88 200 100 T300 96 V120 H0z" fill="#4a2466"/></svg>',
+    temple: '<svg class="land" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M0 80 Q80 56 160 74 T300 66 V120 H0z" fill="#8a5a44"/><path d="M0 98 Q100 84 200 96 T300 92 V120 H0z" fill="#5d3a2e"/><g fill="#d6402f"><circle cx="40" cy="70" r="12"/><circle cx="62" cy="62" r="14"/><circle cx="240" cy="64" r="13"/><circle cx="262" cy="72" r="11"/></g></svg>'
+  };
+
+  // Each scene: the three phrase words plus the matching postcard.
+  const SCENES = [
+    { mood: "warm",  when: "March",     len: "a week",         city: "Cancún",      note: "Greetings from", tag: "Best in March",    emoji: "🌴", stamp: "🐢", land: "beach",  sky1: "#ffb36b", sky2: "#ffe7a6", sun: "#fff6d0" },
+    { mood: "snowy", when: "spring",    len: "4–6 nights",     city: "Banff",       note: "Fresh powder in", tag: "Best in March",    emoji: "⛷️", stamp: "🦌", land: "snow",   sky1: "#9ccaff", sky2: "#e9f4ff", sun: "#ffffff" },
+    { mood: "new",   when: "any month", len: "a long weekend", city: "Mexico City", note: "Hola from",       tag: "Best in April",    emoji: "🌮", stamp: "🌵", land: "city",   sky1: "#ff8fb8", sky2: "#ffd38a", sun: "#fff1c7" },
+    { mood: "warm",  when: "spring",    len: "a long weekend", city: "Lisbon",      note: "Olá from",        tag: "Best in May",      emoji: "🚋", stamp: "🐟", land: "hills",  sky1: "#7cc8ff", sky2: "#fff0c4", sun: "#fff8dc" },
+    { mood: "new",   when: "any month", len: "4–6 nights",     city: "Kyoto",       note: "Konnichiwa from", tag: "Best in November", emoji: "⛩️", stamp: "🍁", land: "temple", sky1: "#ff9f80", sky2: "#ffe2c2", sun: "#fff3d6" }
+  ];
+
+  const deck = document.getElementById("deck");
+  const cards = SCENES.map((s) => {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML =
+      `<span class="tag">${s.tag}</span>` +
+      `<div class="scene" style="--sky1:${s.sky1};--sky2:${s.sky2};--sunc:${s.sun}">` +
+        `<div class="sunball"></div>${LAND[s.land]}` +
+        `<div class="emoji" style="transform:translateX(-50%)">${s.emoji}</div>` +
+        `<div class="greet"><small>${s.note}</small><strong>${s.city}</strong></div>` +
+        `<div class="postmark"></div><div class="stamp">${s.stamp}</div>` +
+      `</div>`;
+    deck.appendChild(el);
+    return el;
+  });
+
+  const slots = {
+    mood: document.querySelector(".slot.mood"),
+    when: document.querySelector(".slot.when"),
+    len:  document.querySelector(".slot.len")
+  };
+  const srText = document.querySelector("#hero-title .sr-only");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let index = 0, timer = null;
+
+  function layout() {
+    cards.forEach((c, i) => { c.dataset.pos = String((i - index + cards.length) % cards.length); });
+  }
+
+  function setWord(key, word, delay) {
+    const slot = slots[key];
+    const w = slot.querySelector(".w");
+    if (w.textContent === word) return;
+    setTimeout(() => {
+      w.textContent = word;
+      w.classList.remove("in"); void w.offsetWidth; w.classList.add("in");
+      slot.classList.remove("typing"); void slot.offsetWidth; slot.classList.add("typing");
+    }, reduce.matches ? 0 : delay);
+  }
+
+  function go(next) {
+    const leaving = cards[index];
+    index = (next + SCENES.length) % SCENES.length;
+    const s = SCENES[index];
+    setWord("mood", s.mood, 0);
+    setWord("when", s.when, 120);
+    setWord("len", s.len, 240);
+    srText.textContent = `Somewhere ${s.mood} in ${s.when} for ${s.len}. Tripica finds when and where it costs least.`;
+    if (reduce.matches) { layout(); return; }
+    leaving.classList.add("toss");
+    setTimeout(() => { leaving.classList.remove("toss"); layout(); }, 380);
+  }
+
+  function start() { stop(); if (!reduce.matches) timer = setInterval(() => go(index + 1), 3200); }
+  function stop() { if (timer) clearInterval(timer); timer = null; }
+
+  layout();
+  Object.values(slots).forEach((el) => el.addEventListener("click", () => { go(index + 1); start(); }));
+  document.getElementById("shuffle").addEventListener("click", () => { go(index + 1); start(); });
+  deck.addEventListener("click", () => { go(index + 1); start(); });
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  reduce.addEventListener("change", start);
+  start();
+})();
+</script>
+</body>
+</html>

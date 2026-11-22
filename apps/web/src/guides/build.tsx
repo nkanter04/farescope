@@ -9,6 +9,7 @@
  *   SITE_URL=https://tripica.example npm run guides:build
  */
 import { createHash } from "node:crypto";
+import { buildSync } from "esbuild";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import type { ReactElement } from "react";
@@ -56,8 +57,15 @@ export function buildAll(siteIn: SiteConfig, outDir = out): string[] {
   };
   const guides = loadGuides();
   const paths: string[] = ["", "guides/"];
-  // The homepage. The app itself is built by Vite into <out>/app/.
-  write(`${outDir}/index.html`, renderPage(<LandingPage site={site} />));
+  // The homepage and its animation script. The app itself is built by Vite into <out>/app/.
+  mkdirSync(outDir, { recursive: true });
+  const home = buildSync({
+    entryPoints: [fileURLToPath(new URL("./home.ts", import.meta.url))],
+    bundle: true, minify: true, format: "iife", target: "es2020", write: false, legalComments: "none",
+  }).outputFiles[0].contents;
+  writeFileSync(`${outDir}/home.js`, home);
+  const homeScript = `home.js?v=${createHash("sha1").update(home).digest("hex").slice(0, 8)}`;
+  write(`${outDir}/index.html`, renderPage(<LandingPage site={{ ...site, homeScript }} />));
   // Static pages at the root link the icons and measurement script from the root too.
   const publicDir = fileURLToPath(new URL("../../public/", import.meta.url));
   for (const f of ["favicon.svg", "logo.svg", "measurement.js"]) copyFileSync(`${publicDir}${f}`, `${outDir}/${f}`);

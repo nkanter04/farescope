@@ -54,3 +54,7 @@ Country, region and "Anywhere" searches expand to major airports, falling back t
 Travel regions come from OurAirports continents, with per-country corrections in `airports.ts`. Saudi Arabia, Jordan, Oman, Kuwait, Bahrain, Iraq, Iran, Lebanon, Syria, Yemen and Palestine are mapped to the Middle East. Greenland, Bermuda and Saint Pierre and Miquelon go to North America, and Cyprus to Europe.
 
 Live search uses itineraries returned by the flight provider. The demo graph is used only by the mock provider.
+
+## Homepage globe
+
+The homepage globe's land dots, [land-dots.json](apps/web/src/guides/land-dots.json), are sampled from [Natural Earth](https://www.naturalearthdata.com/) 1:110m land polygons (public domain), read from the [world-atlas](https://github.com/topojson/world-atlas) package. Regenerate with `npx tsx scripts/land-dots.ts`.

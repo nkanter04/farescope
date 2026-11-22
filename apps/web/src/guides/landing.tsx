@@ -1,12 +1,16 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource react */
+import type { CSSProperties } from "react";
 import { MONTH_NAMES } from "@farescope/shared";
+import { cellLabel, cheapestCell, gridCells, gridMonths, shade } from "./home-grid.ts";
+import { homeScenes, type HomeScene } from "./home-scenes.ts";
 
 /**
  * The marketing homepage ("/"), rendered at build time like the guides. The app itself lives at
  * /app/. Keep claims true for both builds: `live` is the Cloudflare build with real prices; the
- * GitHub Pages demo uses simulated prices and says so. No prices appear here (the calendar is an
- * unpriced illustration), so nothing can be mistaken for a quote.
+ * GitHub Pages demo uses simulated prices and says so. No prices appear here: the globe, grid and
+ * counter are illustrations (labelled as such). Their trip counts are computed from the real place
+ * data in home-scenes.ts. home.ts (bundled to /home.js) animates the static markup rendered here.
  */
 export interface LandingSite {
   today: string;
@@ -14,6 +18,8 @@ export interface LandingSite {
   live?: boolean;
   /** Where the live site is, for the demo's "use real prices" link. */
   liveUrl?: string;
+  /** The bundled animation script ("home.js?v=…"); without it the page stays static. */
+  homeScript?: string;
 }
 
 /** YYYY-MM of the next occurrence of month m (1..12) at least `ahead` months from today. */
@@ -30,58 +36,105 @@ const search = (to: string, month?: string) => {
   return `app/?${q}`;
 };
 
-/** Unpriced calendar illustration: tints only (cheaper = greener), not real fares. */
-function CalendarArt() {
-  // A fixed pattern, so the build is deterministic.
-  const levels = [3, 2, 2, 1, 0, 1, 2, 3, 4, 3, 1, 0, 0, 1, 2, 2, 3, 4, 4, 3, 2, 1, 1, 0, 1, 2, 3, 3];
+const fmt = (n: number) => n.toLocaleString("en-US");
+
+/** Hero globe: a canvas the script draws on, with a caption naming the example search. */
+function GlobeArt({ scenes }: { scenes: HomeScene[] }) {
   return (
-    <figure className="l-art" aria-label="Illustration of Tripica's price calendar">
-      <div className="l-art-search">
-        <span><small>From</small>Austin</span>
-        <span><small>To</small>Anywhere in Japan</span>
-        <span><small>Leaving</small>Any day, Jan–Apr</span>
-        <span><small>Stay</small>7–12 nights</span>
-      </div>
-      <div className="l-art-cal">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <b key={`h${i}`}>{d}</b>)}
-        {levels.map((l, i) => <i key={i} className={`t${l}`}>{i + 1}</i>)}
-      </div>
-      <figcaption>
-        <span className="l-swatch t0" /> cheaper <span className="l-swatch t4" /> pricier · Illustration
+    <figure className="h-globe-wrap">
+      <canvas className="h-globe" data-globe aria-label="Illustration: flights fanning out from one city to many destinations, with the cheaper routes highlighted" role="img" />
+      <figcaption className="h-caption">
+        <span className="h-caption-text"><strong data-route>{scenes[0].route}</strong> <span data-when>{scenes[0].when}</span></span>
+        <span className="h-key"><span className="h-line cheap" /> cheaper <span className="h-line" /> other options · Illustration</span>
+        <span className="h-dots" role="group" aria-label="Example searches">
+          {scenes.map((s, i) => <button key={s.route} type="button" data-scene={i} aria-pressed={i === 0} aria-label={s.route} />)}
+        </span>
       </figcaption>
     </figure>
   );
 }
 
+/** "The search, happening": the example search's grid of every day × trip length, rendered finished. */
+function SweepArt({ scene }: { scene: HomeScene }) {
+  const cells = gridCells(scene, 1);
+  const best = cheapestCell(cells);
+  const nights = scene.maxNights - scene.minNights + 1;
+  const days = cells.length / nights;
+  const [fromName, toName] = scene.route.split(" → ");
+  const [when, stay] = scene.when.split(" · ");
+  return (
+    <div className="h-sweep" data-sweep>
+      <div className="h-searchbar" aria-label="Example search">
+        <span><small>From</small><b data-field-from>{fromName}</b></span>
+        <span><small>To</small><b data-field-to>{toName}</b></span>
+        <span><small>Leaving</small><b data-field-when>{when}</b></span>
+        <span><small>Stay</small><b data-field-stay>{stay}</b></span>
+      </div>
+      <div className="h-sweep-body">
+        <div className="h-grid-wrap">
+          <div className="h-grid-head">
+            <span>Every departure day <span className="g-muted">×</span> every trip length</span>
+            <span className="h-key"><span className="h-sw c0" /> cheaper <span className="h-sw c4" /> pricier · Illustration</span>
+          </div>
+          <div className="h-grid done" data-grid>
+            {gridMonths(scene).map((m) => (
+              <div className="h-month" key={m.label}>
+                <span className="h-month-name">{m.label}</span>
+                <div className="h-cells" style={{ "--cols": m.days, "--rows": nights } as CSSProperties}>
+                  {Array.from({ length: nights }, (_, n) => Array.from({ length: m.days }, (_, d) => {
+                    const c = cells[n * days + m.offset + d];
+                    return <i key={`${n}-${d}`} className={`c${shade(c.level)} on${c === best ? " best" : ""}`} />;
+                  }))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="h-pin show" data-pin>Cheapest: {cellLabel(scene, best)}</p>
+        </div>
+        <div className="h-compare">
+          <div className="h-compare-one">
+            <span className="h-one-dot" aria-hidden="true" />
+            <strong>1</strong>
+            <span>trip a regular flight search checks</span>
+          </div>
+          <div className="h-compare-many">
+            <canvas className="h-field" data-field aria-hidden="true" />
+            <strong data-count>{fmt(scene.trips)}{scene.capped ? "+" : ""}</strong>
+            <span>trips this one search compares</span>
+            <small className="g-muted" data-formula>{fmt(scene.airports)} airport {scene.airports === 1 ? "pair" : "pairs"} × every day × {nights} trip lengths</small>
+            <small className="g-muted" data-field-note />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const FEATURES: { icon: string; title: string; text: string }[] = [
-  { icon: "🗺️", title: "Search places, not just airports", text: "A city, a US state, a whole country, a region or anywhere. Tripica checks every airport that counts." },
-  { icon: "📅", title: "Every date at once", text: "Give it a window and a range of trip lengths. A price calendar shows the cheapest day to leave for each." },
-  { icon: "🌍", title: "Globe and map views", text: "See where your money goes furthest, with the cheapest fares to each destination on a 3D globe." },
-  { icon: "🧭", title: "Explore by month", text: "Not sure where to go? Pick a month and see the cheapest places to fly from your home airport." },
-  { icon: "☀️", title: "When to visit", text: "Weather, holidays and crowd seasons for popular destinations, so a cheap month is also a good one." },
-  { icon: "🧳", title: "Plan the whole trip", text: "List several cities and how many nights in each. Tripica finds the cheapest start date, nights and order, then you add stays, compare trips and share plans." },
+  { icon: "🗺️", title: "Places, not airports", text: "A city, a country, a region or anywhere." },
+  { icon: "📅", title: "Every date at once", text: "A window of days and a range of nights." },
+  { icon: "🧳", title: "Multi-stop trips", text: "Several cities; the cheapest dates and order." },
+  { icon: "☀️", title: "When to visit", text: "Weather, holidays and crowds by month." },
 ];
 
 export function LandingContent({ site }: { site: LandingSite }) {
+  const scenes = homeScenes(site.today);
   const examples = [
-    { label: "Anywhere in Japan in March", href: search("country:JP", upcoming(3, site.today)) },
+    { label: "Japan in March", href: search("country:JP", upcoming(3, site.today)) },
     { label: "Europe this summer", href: search("region:Europe", upcoming(6, site.today)) },
     { label: "Caribbean in February", href: search("region:Central America & Caribbean", upcoming(2, site.today)) },
     { label: `Hawaii in ${MONTH_NAMES[9]}`, href: search("state:US-HI", upcoming(10, site.today)) },
   ];
   return (
     <div className="l-page">
-      <section className="l-hero">
+      <section className="l-hero h-hero">
         <div className="l-hero-text">
           <p className="l-kicker">Flexible trip search</p>
-          <h1>Find the cheapest time to take the whole trip.</h1>
-          <p className="g-lead">
-            Search whole countries, months and trip lengths at once. Tripica checks every date for you and shows when and where your trip
-            costs least, then helps you plan the stays.
-          </p>
+          <h1>Anywhere. Any day. <span className="h-accent">Cheapest first.</span></h1>
+          <p className="g-lead">One search checks every place, date and trip length, then shows where and when your trip costs least.</p>
           <div className="l-ctas">
             <a className="g-cta l-cta-big" href="app/">Start searching</a>
-            <a className="l-cta-ghost" href="guides/">When to visit guides</a>
+            <a className="l-cta-ghost" href="guides/">When to visit</a>
           </div>
           <p className="l-try">Try: {examples.map((e, i) => (
             <span key={e.href}>{i > 0 && " · "}<a href={e.href}>{e.label}</a></span>
@@ -90,12 +143,17 @@ export function LandingContent({ site }: { site: LandingSite }) {
             ? <p className="g-muted">Live prices from Google Flights. Free during early access.</p>
             : <p className="g-muted">This demo uses simulated prices.{site.liveUrl && <> <a href={site.liveUrl}>Use Tripica with real prices →</a></>}</p>}
         </div>
-        <CalendarArt />
+        <GlobeArt scenes={scenes} />
+      </section>
+
+      <section className="l-section" aria-labelledby="h-every">
+        <h2 id="h-every">You give a range. We check every trip in it.</h2>
+        <SweepArt scene={scenes[0]} />
       </section>
 
       <section className="l-section" aria-labelledby="l-features">
-        <h2 id="l-features">One search, every option</h2>
-        <ul className="l-features">
+        <h2 id="l-features" className="g-visually-hidden">Features</h2>
+        <ul className="l-features h-features">
           {FEATURES.map((f) => (
             <li key={f.title}>
               <span className="l-icon" aria-hidden="true">{f.icon}</span>
@@ -106,22 +164,11 @@ export function LandingContent({ site }: { site: LandingSite }) {
         </ul>
       </section>
 
-      <section className="l-section" aria-labelledby="l-how">
-        <h2 id="l-how">How it works</h2>
-        <ol className="l-steps">
-          <li><strong>Describe the trip loosely.</strong> “Austin to anywhere in Japan, leaving any day from January to April, for 7 to 12 nights.”</li>
-          <li><strong>See every option.</strong> Prices fill a calendar, a list and a globe as they arrive, cheapest first.</li>
-          <li><strong>Pick, plan and book.</strong> Open a flight to see the details, add stays and book directly with the airline, hotel or travel site.</li>
-        </ol>
-      </section>
-
-      <section className="l-section l-note" aria-labelledby="l-pricing">
-        <h2 id="l-pricing">Free during early access</h2>
-        <p>
-          Tripica is free while it's new. Live price searches are limited per visitor each day so the service stays fast for everyone, and
-          results you've already seen are always free to revisit. Tripica doesn't sell tickets: you book with the provider you choose, and
-          some booking links earn Tripica a commission at no extra cost to you.
-        </p>
+      <section className="l-section l-note h-note" aria-labelledby="l-pricing">
+        <div>
+          <h2 id="l-pricing">Free during early access</h2>
+          <p>You book directly with the airline or travel site. Some links earn us a commission at no cost to you.</p>
+        </div>
         <a className="g-cta" href="app/">Open Tripica</a>
       </section>
 
@@ -138,6 +185,9 @@ export function LandingContent({ site }: { site: LandingSite }) {
         <details><summary>Do I need an account?</summary>
           <p>No. Your saved trips and price watches are linked to this browser. See the <a href="privacy/">privacy policy</a> for details.</p></details>
       </section>
+
+      <script type="application/json" id="home-scenes" dangerouslySetInnerHTML={{ __html: JSON.stringify(scenes).replace(/</g, "\\u003c") }} />
+      {site.homeScript && <script defer src={site.homeScript} />}
     </div>
   );
 }

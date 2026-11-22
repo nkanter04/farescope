@@ -21,9 +21,15 @@
     "deploy:cf": "npm run build:cf && wrangler deploy"
   },
   "devDependencies": {
+    "@types/d3-geo": "^3.1.1",
     "@types/node": "^26.6.6",
+    "@types/topojson-client": "^3.1.5",
+    "d3-geo": "^3.1.2",
+    "esbuild": "^0.28.2",
+    "topojson-client": "^3.1.0",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "world-atlas": "^2.0.2"
   }
 }

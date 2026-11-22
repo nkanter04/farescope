@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripica · Plan the whole trip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f7fb; --panel: #fff; --panel-2: #f2f5f9; --panel-3: #e9eef5;
+  --line: #e3e8ef; --line-strong: #cfd7e3;
+  --text: #0f1b2d; --text-2: #33435a; --muted: #5a6a80;
+  --accent: #1570e8; --accent-hover: #0f5fcc; --accent-soft: #e8f1fe; --accent-ring: rgba(21,112,232,.28);
+  --good: #0b7d55; --good-2: #13a06f; --good-soft: #e5f6ee;
+  --c-tyo: #1570e8; --c-osa: #0e9f8a; --c-sel: #7a5af5;
+  --radius: 16px; --radius-md: 12px; --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(16,32,64,.05), 0 2px 6px rgba(16,32,64,.05);
+  --shadow-md: 0 2px 4px rgba(16,32,64,.05), 0 8px 20px rgba(16,32,64,.08);
+  --shadow-lg: 0 4px 10px rgba(16,32,64,.06), 0 18px 40px rgba(16,32,64,.12);
+  --ease: cubic-bezier(.2,.7,.2,1);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px; line-height: 1.5; font-feature-settings: "cv11","ss01";
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+a { color: var(--accent); text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Header ---------- */
+.top { max-width: 1180px; margin: 0 auto; padding: 18px 24px; display: flex; align-items: center; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; letter-spacing: -.02em; color: var(--text); }
+.brand svg { border-radius: 10px; box-shadow: 0 2px 6px rgba(21,112,232,.3); }
+.top nav { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.top nav a { color: var(--text-2); font-weight: 600; padding: 8px 12px; border-radius: 10px; }
+.top nav a:hover { background: var(--panel-3); }
+.top nav a.pill { background: var(--panel); box-shadow: var(--shadow-sm); color: var(--text); }
+
+/* ---------- Hero ---------- */
+.hero { max-width: 1180px; margin: 0 auto; padding: 36px 24px 0; text-align: center; }
+.kicker { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: .8rem; letter-spacing: .02em;
+  color: var(--accent); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; margin: 0 0 18px; }
+.kicker i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+h1 { font-size: clamp(2.3rem, 5.6vw, 4.1rem); line-height: 1.04; letter-spacing: -.045em; font-weight: 800; margin: 0 auto; max-width: 14ch; }
+h1 em { font-style: normal; color: var(--good); }
+.lead { font-size: clamp(1.02rem, 1.6vw, 1.2rem); color: var(--text-2); max-width: 36ch; margin: 18px auto 0; }
+.ctas { display: flex; gap: 12px; justify-content: center; margin-top: 26px; flex-wrap: wrap; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 700; font-size: 1rem;
+  transition: transform .15s var(--ease), box-shadow .15s var(--ease), background .15s; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(21,112,232,.35); }
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-ghost { background: var(--panel); color: var(--text); box-shadow: var(--shadow-sm); }
+.btn-ghost:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.or { margin: 16px 0 0; font-size: .88rem; color: var(--muted); }
+.or a { font-weight: 600; }
+
+/* ---------- Planner demo ---------- */
+.demo { max-width: 1080px; margin: 40px auto 0; background: var(--panel); border-radius: 22px; box-shadow: var(--shadow-lg);
+  padding: 22px 26px 24px; text-align: left; position: relative; }
+.demo-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--panel-2); border-radius: 999px; padding: 6px 12px;
+  font-size: .84rem; font-weight: 600; color: var(--text-2); }
+.chip small { color: var(--muted); font-weight: 500; }
+.demo-head .spacer { flex: 1; }
+.switch { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 2px; font-weight: 600; font-size: .88rem; color: var(--text-2); }
+.switch .sw { width: 38px; height: 22px; border-radius: 999px; background: var(--line-strong); position: relative; transition: background .2s; flex: 0 0 auto; }
+.switch .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform .2s var(--ease); }
+.switch[aria-checked="true"] .sw { background: var(--accent); }
+.switch[aria-checked="true"] .sw::after { transform: translateX(16px); }
+.replay { border: 0; background: var(--panel-2); width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--text-2); }
+.replay:hover { background: var(--panel-3); }
+
+/* Route: horizontal on desktop */
+.route { display: flex; align-items: flex-start; margin: 26px 0 8px; position: relative; }
+.node { height: 44px; display: grid; place-items: center; }
+.dot { width: 16px; height: 16px; border-radius: 50%; background: var(--panel); border: 3px solid var(--line-strong); transition: border-color .3s, background .3s; position: relative; z-index: 1; }
+.home { flex: 0 0 74px; text-align: center; }
+.home .dot { width: 30px; height: 30px; display: grid; place-items: center; border: 0; background: var(--text); color: #fff; }
+.home .dot svg { width: 15px; height: 15px; }
+.home b { display: block; font-size: .9rem; margin-top: 4px; }
+.home small { color: var(--muted); font-size: .76rem; }
+.leg { flex: 1 1 0; min-width: 40px; position: relative; height: 44px; display: grid; place-items: center; }
+.leg::before { content: ""; position: absolute; left: -6px; right: -6px; top: 21px; border-top: 2px dashed var(--line-strong); }
+.leg.own::before { border-top-style: dotted; border-top-width: 3px; top: 20px; }
+.leg-tag { position: relative; z-index: 1; background: var(--panel); border-radius: 999px; padding: 3px 9px; font-size: .74rem; font-weight: 700;
+  color: var(--muted); display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 0 0 1px var(--line); white-space: nowrap; transition: opacity .25s; }
+.leg-tag svg { width: 13px; height: 13px; }
+.leg.own .leg-tag { color: var(--text-2); background: var(--panel-2); }
+.stop { flex: 0 0 176px; will-change: transform; }
+.stop .card { margin-top: 8px; background: var(--panel); border-radius: var(--radius-md); box-shadow: 0 0 0 1px var(--line), var(--shadow-sm);
+  padding: 12px 14px 14px; transition: box-shadow .3s; }
+.stop .name { font-weight: 800; font-size: 1.05rem; letter-spacing: -.015em; display: flex; align-items: baseline; gap: 6px; }
+.stop .name small { font-weight: 500; color: var(--muted); font-size: .78rem; }
+.stop .name .ck { margin-left: auto; width: 18px; height: 18px; border-radius: 50%; background: var(--good); color: #fff; display: grid; place-items: center;
+  transform: scale(0); transition: transform .3s var(--ease); align-self: center; }
+.stop .name .ck svg { width: 11px; height: 11px; }
+.nights { font-size: .84rem; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.nights b { color: var(--text); font-size: 1rem; font-weight: 800; transition: color .3s; }
+.nights .rng { float: right; font-size: .76rem; }
+.track { position: relative; height: 22px; margin-top: 8px; }
+.track .rail { position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 4px; background: var(--panel-3); }
+.track .tick { position: absolute; top: 7px; width: 2px; height: 8px; margin-left: -1px; border-radius: 2px; background: var(--line-strong); }
+.track .fill { position: absolute; left: 0; top: 9px; height: 4px; border-radius: 4px; background: var(--sc, var(--accent)); opacity: .55; transition: width .13s linear, background .3s, opacity .3s; }
+.track .knob { position: absolute; top: 2px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: #fff;
+  border: 3px solid var(--sc, var(--accent)); box-shadow: 0 1px 3px rgba(16,32,64,.25); transition: left .13s linear, border-color .3s, transform .3s var(--ease); }
+.stop .dot { border-color: var(--sc); }
+.stop[data-id="tyo"] { --sc: var(--c-tyo); }
+.stop[data-id="osa"] { --sc: var(--c-osa); }
+.stop[data-id="sel"] { --sc: var(--c-sel); }
+
+/* Locked = green */
+.demo.locked .stop .card { box-shadow: 0 0 0 2px var(--good), var(--shadow-sm); }
+.demo.locked .stop .ck { transform: scale(1); }
+.demo.locked .stop .nights b { color: var(--good); }
+.demo.locked .track .fill { background: var(--good); opacity: 1; }
+.demo.locked .track .knob { border-color: var(--good); transform: scale(1.12); }
+.demo.locked .stop .dot { border-color: var(--good); background: var(--good); }
+.demo.locked .leg::before { border-top-color: #9fd4bd; }
+
+/* Bottom: timeline + total */
+.bottom { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 22px; margin-top: 22px; align-items: stretch; }
+.panel { background: var(--panel-2); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+.panel-label { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: .78rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .05em; }
+.panel-label span:last-child { text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--text-2); font-size: .86rem; font-variant-numeric: tabular-nums; transition: color .3s; }
+.demo.locked .panel-label .when { color: var(--good); }
+.tl { position: relative; height: 40px; margin-top: 12px; }
+.tl .days { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(35, 1fr); gap: 2px; }
+.tl .days i { background: var(--panel); border-radius: 3px; }
+.tl .days i.win { background: #dde9fb; }
+.tl .seg { position: absolute; top: 6px; height: 28px; border-radius: 6px; background: var(--c); opacity: .3; display: grid; place-items: center;
+  color: #fff; font-size: .7rem; font-weight: 800; overflow: hidden; white-space: nowrap;
+  transition: left .13s linear, width .13s linear, opacity .3s, background .3s; }
+.demo.locked .tl .seg { opacity: 1; background: var(--good); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+.demo.locked .tl .seg:nth-child(odd) { background: var(--good-2); }
+.tl .back { position: absolute; top: 12px; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--text); transition: left .13s linear; display: grid; place-items: center; color: #fff; }
+.tl .back svg { width: 9px; height: 9px; }
+.tl-axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 6px; }
+.tl-key { display: flex; gap: 14px; margin-top: 10px; font-size: .76rem; color: var(--muted); flex-wrap: wrap; }
+.tl-key span { display: inline-flex; gap: 6px; align-items: center; }
+.tl-key i { width: 10px; height: 10px; border-radius: 3px; background: #dde9fb; display: inline-block; }
+
+.total { display: flex; flex-direction: column; }
+.total-num { font-size: 2.3rem; font-weight: 800; letter-spacing: -.035em; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 6px; transition: color .3s; }
+.demo.locked .total-num { color: var(--good); }
+.total-num.snap { animation: snap .45s var(--ease); }
+@keyframes snap { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.meter { position: relative; height: 10px; border-radius: 10px; background: var(--panel); margin-top: 12px; overflow: visible; }
+.meter .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 10px; background: var(--accent); opacity: .5; transition: width .13s linear, background .3s, opacity .3s; }
+.demo.locked .meter .bar { background: var(--good); opacity: 1; }
+.meter .best { position: absolute; top: -4px; width: 2px; height: 18px; background: var(--text); border-radius: 2px; transition: left .2s var(--ease); }
+.status { margin-top: auto; padding-top: 12px; font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; min-height: 2.6em; }
+.status .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line-strong); border-top-color: var(--accent); animation: spin .8s linear infinite; flex: 0 0 auto; }
+.demo.locked .status .spin { animation: none; border-color: var(--good); background: var(--good); }
+@keyframes spin { to { transform: rotate(360deg); } }
+.illus { display: inline-block; font-size: .68rem; font-weight: 700; color: var(--muted); background: var(--panel); border: 1px dashed var(--line-strong);
+  border-radius: 6px; padding: 1px 6px; text-transform: uppercase; letter-spacing: .05em; }
+.total-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.save-pill { background: var(--good); color: #fff; font-weight: 800; font-size: .76rem; border-radius: 999px; padding: 3px 9px;
+  opacity: 0; transform: translateY(4px); transition: opacity .3s, transform .3s var(--ease); }
+.save-pill.show { opacity: 1; transform: none; }
+.total.panel { position: relative; }
+.caption { text-align: center; color: var(--muted); font-size: .8rem; margin: 14px 0 0; }
+
+/* ---------- Features ---------- */
+.features { max-width: 1080px; margin: 64px auto 0; padding: 0 24px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; list-style: none; }
+.features li { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 18px 18px 16px; }
+.features .ic { width: 38px; height: 38px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.features .ic svg { width: 20px; height: 20px; }
+.features h3 { margin: 12px 0 4px; font-size: .98rem; letter-spacing: -.01em; }
+.features p { margin: 0; color: var(--muted); font-size: .88rem; }
+.features a { font-weight: 600; font-size: .86rem; display: inline-block; margin-top: 8px; }
+
+footer { max-width: 1080px; margin: 64px auto 0; padding: 22px 24px 40px; display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: .84rem; border-top: 1px solid var(--line); }
+footer a { color: var(--muted); }
+footer span { margin-left: auto; }
+
+/* ---------- Tablet ---------- */
+@media (max-width: 980px) {
+  .stop { flex-basis: 150px; }
+  .home { flex-basis: 60px; }
+  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- Phone: vertical route ---------- */
+@media (max-width: 760px) {
+  .top { padding: 14px 16px; }
+  .top nav a.hide-sm { display: none; }
+  .hero { padding: 22px 16px 0; }
+  .ctas .btn { flex: 1 1 140px; justify-content: center; }
+  .demo { margin: 30px 0 0; padding: 16px; border-radius: 18px; }
+  .demo-head .chip.opt { display: none; }
+  .route { flex-direction: column; align-items: stretch; margin: 18px 0 4px; }
+  .route::before { content: ""; position: absolute; left: 17px; top: 20px; bottom: 20px; border-left: 2px dashed var(--line-strong); }
+  .demo.locked .route::before { border-left-color: #9fd4bd; }
+  .home, .stop { flex: 0 0 auto; display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: 12px; align-items: center; text-align: left; }
+  .home .node, .stop .node { height: auto; }
+  .home { padding: 2px 0; }
+  .home b { display: inline; margin: 0 6px 0 0; }
+  .stop .card { margin-top: 0; padding: 10px 12px 10px; }
+  .stop .card-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 12px; align-items: center; }
+  .stop .track { margin-top: 0; }
+  .leg { flex: 0 0 auto; height: 30px; min-width: 0; justify-items: start; padding-left: 48px; }
+  .leg::before { display: none; }
+  .bottom { grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 16px; }
+  .total-num { font-size: 2rem; }
+  .tl .seg { font-size: 0; }
+  .features { grid-template-columns: minmax(0, 1fr); padding: 0 16px; margin-top: 44px; gap: 12px; }
+  .features li { display: grid; grid-template-columns: 38px minmax(0, 1fr); column-gap: 14px; padding: 14px 16px; }
+  .features h3 { margin: 0 0 2px; }
+  .features li > :not(.ic) { grid-column: 2; }
+  .features .ic { grid-row: span 3; }
+  footer { padding: 20px 16px 32px; margin-top: 44px; }
+  footer span { margin-left: 0; width: 100%; }
+}
+@media (min-width: 761px) { .card-row { display: block; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="./" aria-label="Tripica home">
+    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="16" fill="#1570E8"/>
+      <path d="M14 40a18 18 0 0 1 36 0z" fill="#FFC94D"/>
+      <path d="M10 40h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M18 47h28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/>
+      <path d="M32 14v5M19 19l3 3.5M45 19l-3 3.5" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    Tripica
+  </a>
+  <nav>
+    <a class="hide-sm" href="guides/">When to visit</a>
+    <a class="pill" href="app/">Open app</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="kicker"><i></i>New: multi-stop planner</p>
+    <h1>The whole trip, <em>solved.</em></h1>
+    <p class="lead">List your stops and a range of nights. Tripica finds the cheapest dates, nights and order.</p>
+    <div class="ctas">
+      <a class="btn btn-primary" href="app/">Plan a trip</a>
+      <a class="btn btn-ghost" href="app/?to=anywhere">Search flights</a>
+    </div>
+    <p class="or">Or one trip: <a href="app/?to=country%3AJP">Austin → anywhere in Japan, Jan–Apr, 7–12 nights</a></p>
+
+    <!-- Animated planner illustration -->
+    <figure class="demo" id="demo" aria-label="Illustration: Tripica tries every start date and number of nights, then locks in the cheapest" style="margin-left:auto;margin-right:auto">
+      <div class="demo-head">
+        <span class="chip">Leave <small>any day, Mar 1–20</small></span>
+        <span class="chip opt">Flights <small>+ your own way</small></span>
+        <span class="spacer"></span>
+        <button class="switch" id="reorder" role="switch" aria-checked="false"><span class="sw"></span>Try other orders</button>
+        <button class="replay" id="replay" aria-label="Replay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+      </div>
+
+      <div class="route" id="route"></div>
+
+      <div class="bottom">
+        <div class="panel">
+          <div class="panel-label"><span>Start date</span><span class="when" id="when">–</span></div>
+          <div class="tl" id="tl"><div class="days" id="days"></div></div>
+          <div class="tl-axis"><span>Mar 1</span><span>Mar 15</span><span>Apr 1</span></div>
+          <div class="tl-key"><span><i></i>Start window</span><span id="nightsum"></span></div>
+        </div>
+        <div class="panel total">
+          <div class="panel-label"><span>Trip total</span><span class="illus">Illustration</span></div>
+          <div class="total-row"><div class="total-num" id="total">–</div><span class="save-pill" id="save">Lower, new order</span></div>
+          <div class="meter"><span class="bar" id="bar"></span><span class="best" id="best" title="Lowest so far"></span></div>
+          <div class="status" aria-live="polite"><span class="spin"></span><span id="status">Starting…</span></div>
+        </div>
+      </div>
+    </figure>
+    <p class="caption">Illustration only. Not real prices.</p>
+  </section>
+
+  <ul class="features">
+    <li>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+      <h3>Places, not airports</h3>
+      <p>A city, a country, a region or anywhere.</p>
+    </li>
+    <li>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M8 15h2M14 15h2"/></svg></span>
+      <h3>Every date at once</h3>
+      <p>A price calendar shows the cheapest day to leave.</p>
+    </li>
+    <li>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-6h6v6"/></svg></span>
+      <h3>Add stays, compare</h3>
+      <p>Save trips and compare them by total cost.</p>
+    </li>
+    <li>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+      <h3>When to visit</h3>
+      <p>Weather, holidays and crowds, month by month.</p>
+      <a href="guides/">Browse guides →</a>
+    </li>
+  </ul>
+</main>
+
+<footer>
+  <a href="guides/">Guides</a><a href="privacy/">Privacy</a><a href="terms/">Terms</a>
+  <span>Tripica finds the dates. You book with the provider.</span>
+</footer>
+
+<script>
+(() => {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const DAYS = 35, WINDOW = 20;
+  const STOPS = {
+    tyo: { name: "Tokyo", sub: "Japan", min: 3, max: 5, c: "var(--c-tyo)" },
+    osa: { name: "Osaka", sub: "Japan", min: 2, max: 3, c: "var(--c-osa)" },
+    sel: { name: "Seoul", sub: "Korea", min: 2, max: 4, c: "var(--c-sel)" },
+  };
+  const ORDERS = { a: ["tyo", "osa", "sel"], b: ["tyo", "sel", "osa"] };
+  // Illustrative "cheapest" answers, not real prices.
+  const BEST = {
+    a: { start: 9, n: { tyo: 4, osa: 2, sel: 3 }, total: 1480 },
+    b: { start: 12, n: { tyo: 3, sel: 4, osa: 2 }, total: 1390 },
+  };
+  const OWN = new Set(["osa|tyo"]); // Tokyo <-> Osaka: "my own way" (train)
+  const SCALE = [1000, 2600];
+
+  const $ = (id) => document.getElementById(id);
+  const demo = $("demo"), route = $("route"), days = $("days"), tl = $("tl");
+  const fmt = (v) => "$" + Math.round(v).toLocaleString("en-US");
+  const dateLabel = (d) => (d <= 31 ? "Mar " + d : "Apr " + (d - 31));
+
+  const ICON = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10l8-6 8 6v10z"/></svg>',
+    plane: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>',
+    train: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l1.5-4M15 21l-1.5-4"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>',
+  };
+
+  // ---- Build DOM ----
+  const homeEl = (label) => {
+    const el = document.createElement("div");
+    el.className = "home";
+    el.innerHTML = `<div class="node"><span class="dot">${ICON.home}</span></div><div><b>${label}</b><small>Austin</small></div>`;
+    return el;
+  };
+  const legEl = () => { const el = document.createElement("div"); el.className = "leg"; el.innerHTML = '<span class="leg-tag"></span>'; return el; };
+  const stopEls = {};
+  for (const [id, s] of Object.entries(STOPS)) {
+    const el = document.createElement("div");
+    el.className = "stop"; el.dataset.id = id;
+    let ticks = "";
+    for (let n = s.min; n <= s.max; n++) ticks += `<i class="tick" style="left:${((n - s.min) / (s.max - s.min)) * 100}%"></i>`;
+    el.innerHTML = `<div class="node"><span class="dot"></span></div>
+      <div class="card"><div class="card-row">
+        <div><div class="name">${s.name}<small>${s.sub}</small><span class="ck">${ICON.check}</span></div>
+        <div class="nights"><b class="n">${s.min}</b> nights <span class="rng">${s.min}–${s.max}</span></div></div>
+        <div class="track"><span class="rail"></span>${ticks}<span class="fill"></span><span class="knob"></span></div>
+      </div></div>`;
+    stopEls[id] = el;
+  }
+  const homeA = homeEl("Home"), homeB = homeEl("Home");
+  const legs = [legEl(), legEl(), legEl(), legEl()];
+
+  for (let d = 1; d <= DAYS; d++) { const i = document.createElement("i"); if (d <= WINDOW) i.className = "win"; days.appendChild(i); }
+  const segs = {};
+  for (const id of Object.keys(STOPS)) {
+    const s = document.createElement("span"); s.className = "seg"; s.style.setProperty("--c", STOPS[id].c);
+    s.textContent = STOPS[id].name; tl.appendChild(s); segs[id] = s;
+  }
+  const back = document.createElement("span"); back.className = "back"; back.innerHTML = ICON.home; back.title = "Home"; tl.appendChild(back);
+
+  // ---- State ----
+  let order = "a", state = { start: 1, n: { tyo: 3, osa: 2, sel: 2 }, total: 2200 }, bestSoFar = Infinity, run = 0;
+
+  function layout(key, animate) {
+    const ids = ORDERS[key];
+    const before = {};
+    if (animate) for (const id of ids) before[id] = stopEls[id].getBoundingClientRect();
+    const seq = [homeA, legs[0], stopEls[ids[0]], legs[1], stopEls[ids[1]], legs[2], stopEls[ids[2]], legs[3], homeB];
+    for (const el of seq) route.appendChild(el);
+    const places = ["home", ...ids, "home"];
+    legs.forEach((leg, i) => {
+      const pair = [places[i], places[i + 1]].sort().join("|");
+      const own = OWN.has(pair);
+      leg.classList.toggle("own", own);
+      leg.querySelector(".leg-tag").innerHTML = own ? ICON.train + "Own way" : ICON.plane + "Fly";
+    });
+    if (animate) {
+      for (const id of ids) {
+        const a = before[id], b = stopEls[id].getBoundingClientRect();
+        const dx = a.left - b.left, dy = a.top - b.top;
+        if (!dx && !dy) continue;
+        const el = stopEls[id];
+        el.style.transition = "none";
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+        el.style.zIndex = "2";
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          el.style.transition = "transform .7s cubic-bezier(.2,.7,.2,1)";
+          el.style.transform = "";
+          setTimeout(() => { el.style.zIndex = ""; }, 720);
+        }));
+      }
+    }
+  }
+
+  function render() {
+    const ids = ORDERS[order];
+    let day = state.start, total = 0;
+    for (const id of ids) {
+      const s = STOPS[id], n = state.n[id], el = stopEls[id];
+      const pct = ((n - s.min) / (s.max - s.min)) * 100;
+      el.querySelector(".n").textContent = n;
+      el.querySelector(".knob").style.left = pct + "%";
+      el.querySelector(".fill").style.width = pct + "%";
+      const seg = segs[id];
+      seg.style.left = ((day - 1) / DAYS) * 100 + "%";
+      seg.style.width = `calc(${(n / DAYS) * 100}% - 2px)`;
+      day += n; total += n;
+    }
+    back.style.left = ((day - 1) / DAYS) * 100 + "%";
+    $("when").textContent = `${dateLabel(state.start)} → ${dateLabel(day)}`;
+    $("nightsum").textContent = `${total} nights in all`;
+    $("total").textContent = fmt(state.total);
+    const w = (v) => Math.max(4, Math.min(100, ((v - SCALE[0]) / (SCALE[1] - SCALE[0])) * 100));
+    $("bar").style.width = w(state.total) + "%";
+    $("best").style.left = (bestSoFar === Infinity ? w(state.total) : w(bestSoFar)) + "%";
+  }
+
+  const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const combos = (key) => key === "b" ? 2160 : 360; // 20 dates x 3x2x3 nights (x 6 orders)
+
+  function lock(key, myRun) {
+    if (myRun !== run) return;
+    const b = BEST[key];
+    state = { start: b.start, n: { ...b.n }, total: b.total };
+    bestSoFar = b.total;
+    demo.classList.add("locked");
+    render();
+    const t = $("total"); t.classList.remove("snap"); void t.offsetWidth; if (!reduce) t.classList.add("snap");
+    $("save").classList.toggle("show", key === "b");
+    $("status").textContent = key === "b"
+      ? `Cheapest of ${combos(key).toLocaleString("en-US")} combinations, new order`
+      : `Cheapest of ${combos(key).toLocaleString("en-US")} combinations`;
+  }
+
+  function search(key, ms, done) {
+    const myRun = ++run;
+    demo.classList.remove("locked");
+    $("save").classList.remove("show");
+    bestSoFar = Infinity;
+    if (reduce) { lock(key, myRun); done && done(); return; }
+    const target = BEST[key], total = combos(key), t0 = performance.now();
+    const tick = () => {
+      if (myRun !== run) return;
+      const p = Math.min(1, (performance.now() - t0) / ms);
+      if (p >= 1) { lock(key, myRun); done && setTimeout(() => myRun === run && done(), 2200); return; }
+      const n = {};
+      for (const id of ORDERS[key]) n[id] = rand(STOPS[id].min, STOPS[id].max);
+      const start = rand(1, WINDOW);
+      let off = Math.abs(start - target.start) * 28;
+      for (const id of ORDERS[key]) off += Math.abs(n[id] - target.n[id]) * 70;
+      const v = target.total + 60 + off * (0.6 + Math.random() * 0.6) + Math.random() * 220 * (1 - p);
+      state = { start, n, total: v };
+      bestSoFar = Math.min(bestSoFar, v);
+      render();
+      $("status").textContent = `Checking ${Math.round(total * p).toLocaleString("en-US")} of ${total.toLocaleString("en-US")} combinations…`;
+      setTimeout(tick, 140);
+    };
+    tick();
+  }
+
+  const sw = $("reorder");
+  let touched = false;
+  function setReorder(on, fromUser) {
+    if (fromUser) touched = true;
+    sw.setAttribute("aria-checked", String(on));
+    order = on ? "b" : "a";
+    layout(order, !reduce);
+    search(order, on ? 1800 : 900);
+  }
+  sw.addEventListener("click", () => setReorder(sw.getAttribute("aria-checked") !== "true", true));
+
+  function intro() {
+    touched = false;
+    sw.setAttribute("aria-checked", "false");
+    order = "a";
+    layout("a", false);
+    search("a", 3400, () => { if (!touched && !reduce) setReorder(true, false); });
+  }
+  $("replay").addEventListener("click", intro);
+
+  intro();
+})();
+</script>
+</body>
+</html>

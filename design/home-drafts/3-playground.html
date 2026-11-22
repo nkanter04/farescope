@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tripica · Turn the dials</title>
+<meta name="description" content="Tripica checks every date, trip length and airport at once to find the cheapest trip.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f7fb;
+  --panel: #ffffff;
+  --panel-2: #f2f5f9;
+  --panel-3: #e9eef5;
+  --line: #e3e8ef;
+  --line-strong: #cfd7e3;
+  --text: #0f1b2d;
+  --text-2: #33435a;
+  --muted: #5a6a80;
+  --accent: #1570e8;
+  --accent-hover: #0f5fcc;
+  --accent-soft: #e8f1fe;
+  --accent-ring: rgba(21, 112, 232, 0.28);
+  --good: #0b7d55;
+  --good-soft: #e5f6ee;
+  --sun: #ffc94d;
+  --radius: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(16,32,64,.05), 0 2px 6px rgba(16,32,64,.05);
+  --shadow-lg: 0 4px 10px rgba(16,32,64,.06), 0 18px 40px rgba(16,32,64,.12);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* Header */
+.top { display: flex; align-items: center; gap: 16px; max-width: 1200px; margin: 0 auto; padding: 18px 24px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.02em; color: var(--text); text-decoration: none; }
+.brand svg { border-radius: 10px; box-shadow: 0 2px 6px rgba(21,112,232,.3); }
+.top nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+.top nav a { color: var(--muted); font-weight: 600; font-size: .9rem; text-decoration: none; }
+.top nav a:hover { color: var(--text); }
+.top nav .open { color: var(--accent); }
+
+/* Hero */
+.hero { max-width: 1200px; margin: 0 auto; padding: 24px 24px 56px; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 40px; align-items: start; }
+h1 { font-size: clamp(2.1rem, 4.6vw, 3.6rem); line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; margin: 8px 0 28px; }
+h1 em { font-style: normal; color: var(--accent); }
+
+.dials { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 6px 22px; }
+.dial { padding: 18px 0; border-bottom: 1px solid var(--line); }
+.dial:last-child { border-bottom: 0; }
+.dial-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.dial-head label, .dial-head .lbl { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.dial-head output { font-weight: 700; font-size: 1rem; color: var(--text); font-variant-numeric: tabular-nums; }
+.ticks { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-top: 6px; }
+
+/* Range inputs */
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; }
+input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 99px; background: var(--panel-3); }
+input[type=range]::-moz-range-track { height: 6px; border-radius: 99px; background: var(--panel-3); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(21,112,232,.35); cursor: grab; }
+input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(21,112,232,.35); cursor: grab; }
+input[type=range]:focus-visible { outline: none; }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 5px var(--accent-ring); }
+input[type=range]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 5px var(--accent-ring); }
+#flex { --p: 50%; }
+#flex::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--accent) var(--p), var(--panel-3) var(--p)); }
+#flex::-moz-range-progress { height: 6px; border-radius: 99px; background: var(--accent); }
+
+/* Dual range */
+.dual { position: relative; height: 28px; }
+.dual .track { position: absolute; left: 0; right: 0; top: 11px; height: 6px; border-radius: 99px; background: var(--panel-3); }
+.dual .fill { position: absolute; top: 11px; height: 6px; border-radius: 99px; background: var(--accent); }
+.dual input { position: absolute; inset: 0; pointer-events: none; }
+.dual input::-webkit-slider-runnable-track { background: transparent; }
+.dual input::-moz-range-track { background: transparent; }
+.dual input::-webkit-slider-thumb { pointer-events: auto; position: relative; z-index: 2; }
+.dual input::-moz-range-thumb { pointer-events: auto; }
+
+/* Chips */
+.chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 4px; background: var(--panel-2); border-radius: 12px; }
+.chips button { border: 0; background: none; padding: 9px 4px; border-radius: 9px; font: inherit; font-weight: 600; font-size: .9rem; color: var(--muted); cursor: pointer; transition: background-color .15s var(--ease), color .15s var(--ease), box-shadow .15s var(--ease); }
+.chips button:hover { color: var(--text); }
+.chips button[aria-pressed=true] { background: var(--panel); color: var(--accent); box-shadow: var(--shadow-sm); }
+
+.cta-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 24px; }
+.cta { display: inline-block; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.05rem; padding: 14px 26px; border-radius: 12px; text-decoration: none; box-shadow: 0 4px 14px rgba(21,112,232,.3); transition: background-color .15s var(--ease), transform .15s var(--ease); }
+.cta:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.cta-row small { color: var(--muted); font-size: .85rem; }
+
+/* Result panel */
+.board { background: var(--panel); border-radius: 22px; box-shadow: var(--shadow-lg); padding: 28px; position: sticky; top: 20px; }
+.board .lbl { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.count { font-size: clamp(3.2rem, 8.5vw, 6.6rem); font-weight: 800; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; margin: 6px 0 4px; color: var(--text); }
+.formula { font-size: .92rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.formula b { color: var(--accent); font-weight: 700; }
+.field-wrap { margin: 20px 0 10px; border-radius: var(--radius-md); background: var(--panel-2); padding: 12px; }
+canvas { display: block; width: 100%; height: 240px; }
+.legend { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .78rem; color: var(--muted); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; }
+.legend .d-a { background: var(--accent); }
+.legend .d-g { background: var(--good); box-shadow: 0 0 0 3px var(--good-soft); }
+
+.versus { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; margin-top: 18px; }
+.vs { border-radius: var(--radius-md); padding: 12px 14px; background: var(--panel-2); }
+.vs .n { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.vs span { font-size: .8rem; color: var(--muted); }
+.vs.us { background: var(--accent-soft); }
+.vs.us .n { color: var(--accent); }
+
+/* Features */
+.features { max-width: 1200px; margin: 0 auto; padding: 8px 24px 64px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; list-style: none; }
+.features li { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow-sm); padding: 20px; }
+.features svg { width: 30px; height: 30px; color: var(--accent); }
+.features h3 { font-size: 1rem; margin: 12px 0 4px; letter-spacing: -0.01em; }
+.features p { margin: 0; color: var(--muted); font-size: .9rem; }
+.features a { font-weight: 600; text-decoration: none; }
+
+footer { max-width: 1200px; margin: 0 auto; padding: 24px; border-top: 1px solid var(--line); display: flex; gap: 18px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+footer a { color: var(--muted); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (max-width: 960px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .board { position: static; }
+  .features { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .top { padding: 14px 16px; }
+  .top nav a:not(.open) { display: none; }
+  .hero { padding: 8px 16px 40px; }
+  h1 { margin-bottom: 20px; }
+  .dials { padding: 2px 16px; }
+  .board { padding: 20px 16px; border-radius: 18px; }
+  canvas { height: 180px; }
+  .chips button { font-size: .82rem; }
+  .features { grid-template-columns: minmax(0, 1fr); padding: 0 16px 48px; }
+  footer { padding: 20px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="./">
+    <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+      <rect width="64" height="64" rx="16" fill="#1570E8"/>
+      <path d="M14 40a18 18 0 0 1 36 0z" fill="#FFC94D"/>
+      <path d="M10 40h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>
+      <path d="M18 47h28" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/>
+      <path d="M32 14v5M19 19l3 3.5M45 19l-3 3.5" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    Tripica
+  </a>
+  <nav>
+    <a href="guides/">When to visit</a>
+    <a class="open" href="app/">Open app</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="h">
+    <div>
+      <h1 id="h">Loosen your plans.<br><em>We check every trip.</em></h1>
+
+      <div class="dials" role="group" aria-label="Try the dials">
+        <div class="dial">
+          <div class="dial-head">
+            <label for="flex">Leaving</label>
+            <output id="flexOut" for="flex">Any day in 1 month</output>
+          </div>
+          <input id="flex" type="range" min="0" max="6" step="1" value="3" aria-describedby="flexOut">
+          <div class="ticks" aria-hidden="true"><span>Exact day</span><span>4 months</span></div>
+        </div>
+
+        <div class="dial">
+          <div class="dial-head">
+            <span class="lbl" id="nightsLbl">Trip length</span>
+            <output id="nightsOut">7–12 nights</output>
+          </div>
+          <div class="dual">
+            <div class="track"></div>
+            <div class="fill" id="nightsFill"></div>
+            <input id="nMin" type="range" min="2" max="21" value="7" aria-label="Fewest nights">
+            <input id="nMax" type="range" min="2" max="21" value="12" aria-label="Most nights">
+          </div>
+          <div class="ticks" aria-hidden="true"><span>2 nights</span><span>3 weeks</span></div>
+        </div>
+
+        <div class="dial">
+          <div class="dial-head">
+            <span class="lbl" id="whereLbl">Going to</span>
+            <output id="whereOut">2 airports</output>
+          </div>
+          <div class="chips" role="group" aria-labelledby="whereLbl">
+            <button type="button" data-ap="2" data-name="Tokyo" aria-pressed="false">Tokyo</button>
+            <button type="button" data-ap="9" data-name="Japan" aria-pressed="true">Japan</button>
+            <button type="button" data-ap="64" data-name="Asia" aria-pressed="false">Asia</button>
+            <button type="button" data-ap="240" data-name="Anywhere" aria-pressed="false">Anywhere</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="cta" href="app/">Start searching</a>
+        <small>Free. No account needed.</small>
+      </div>
+    </div>
+
+    <aside class="board" aria-live="polite" aria-atomic="true">
+      <div class="lbl">Trips Tripica compares</div>
+      <div class="count" id="count">0</div>
+      <div class="formula" id="formula"></div>
+      <div class="field-wrap">
+        <canvas id="field" aria-hidden="true"></canvas>
+      </div>
+      <div class="legend">
+        <span><i class="d-a"></i><span id="scale">1 dot = 1 trip</span></span>
+        <span><i class="d-g"></i>The cheapest one, found for you</span>
+      </div>
+      <div class="versus">
+        <div class="vs"><div class="n">1</div><span>trip a normal flight search checks</span></div>
+        <div class="vs us"><div class="n" id="countSmall">0</div><span>trips Tripica checks at once</span></div>
+      </div>
+    </aside>
+  </section>
+
+  <ul class="features" aria-label="Features">
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+      <h3>Places, not airports</h3>
+      <p>A city, a country, a region or anywhere.</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="9" cy="15" r="1.2" fill="currentColor"/></svg>
+      <h3>Price calendar</h3>
+      <p>See the cheapest day to leave, at a glance.</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="18" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="19" cy="16" r="2"/><path d="M6.5 16.5 10.8 7.8M13.6 7.4l4.4 6.8"/></svg>
+      <h3>Multi-stop planner</h3>
+      <p>Several cities. Best start date, nights and order.</p>
+    </li>
+    <li>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <h3>When to visit</h3>
+      <p>Weather, holidays and crowds by month. <a href="guides/">Guides →</a></p>
+    </li>
+  </ul>
+</main>
+
+<footer>
+  <span>© Tripica</span>
+  <a href="guides/">Guides</a>
+  <a href="privacy/">Privacy</a>
+  <a href="terms/">Terms</a>
+</footer>
+
+<script>
+(() => {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const FLEX = [
+    { days: 1, label: "Exact day" },
+    { days: 7, label: "Within a week" },
+    { days: 14, label: "Any day in 2 weeks" },
+    { days: 30, label: "Any day in 1 month" },
+    { days: 61, label: "Any day in 2 months" },
+    { days: 91, label: "Any day in 3 months" },
+    { days: 120, label: "Any day in 4 months" },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const flex = $("flex"), nMin = $("nMin"), nMax = $("nMax");
+  const chips = [...document.querySelectorAll(".chips button")];
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+
+  let shown = 0, target = 0, anim = 0;
+
+  function state() {
+    const f = FLEX[+flex.value];
+    const lo = +nMin.value, hi = +nMax.value;
+    const chip = chips.find((c) => c.getAttribute("aria-pressed") === "true");
+    const ap = +chip.dataset.ap;
+    const nights = hi - lo + 1;
+    return { f, lo, hi, nights, ap, name: chip.dataset.name, total: f.days * nights * ap };
+  }
+
+  function update() {
+    const s = state();
+    flex.style.setProperty("--p", (+flex.value / 6) * 100 + "%");
+    $("flexOut").textContent = s.f.label;
+    $("nightsOut").textContent = s.lo === s.hi ? `${s.lo} nights` : `${s.lo}–${s.hi} nights`;
+    const span = 21 - 2;
+    $("nightsFill").style.left = `calc(${((s.lo - 2) / span) * 100}% )`;
+    $("nightsFill").style.right = `calc(${100 - ((s.hi - 2) / span) * 100}% )`;
+    $("whereOut").textContent = `${s.ap} airport${s.ap > 1 ? "s" : ""}`;
+    $("formula").innerHTML =
+      `<b>${s.f.days}</b> day${s.f.days > 1 ? "s" : ""} × <b>${s.nights}</b> trip length${s.nights > 1 ? "s" : ""} × <b>${s.ap}</b> airport${s.ap > 1 ? "s" : ""}`;
+    animateTo(s.total);
+  }
+
+  function animateTo(t) {
+    target = t;
+    cancelAnimationFrame(anim);
+    if (reduce) { shown = t; paint(); return; }
+    const from = shown, start = performance.now(), dur = 650;
+    const step = (now) => {
+      const k = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - k, 3);
+      // Interpolate in log space so jumps of 1000x still feel smooth.
+      const a = Math.log(Math.max(from, 1)), b = Math.log(Math.max(t, 1));
+      shown = Math.exp(a + (b - a) * e);
+      paint();
+      if (k < 1) anim = requestAnimationFrame(step);
+      else { shown = t; paint(); }
+    };
+    anim = requestAnimationFrame(step);
+  }
+
+  // Dot field
+  const cv = $("field"), ctx = cv.getContext("2d");
+  let cells = [], cap = 0, cheapIdx = 0, W = 0, H = 0, gap = 0, r = 0;
+
+  function layout() {
+    const dpr = window.devicePixelRatio || 1;
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    gap = W < 420 ? 8 : 9;
+    const cols = Math.floor(W / gap), rows = Math.floor(H / gap);
+    const ox = (W - (cols - 1) * gap) / 2, oy = (H - (rows - 1) * gap) / 2;
+    r = gap * 0.32;
+    cells = [];
+    // Seeded jitter so the fill order is stable.
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const cx = W / 2, cy = H / 2;
+    for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+      const px = ox + x * gap, py = oy + y * gap;
+      const d = Math.hypot((px - cx) / W, (py - cy) / H);
+      cells.push({ x: px, y: py, o: d + rnd() * 0.12 });
+    }
+    cells.sort((a, b) => a.o - b.o);
+    cap = cells.length;
+    cheapIdx = Math.floor(cap * 0.37);
+    paint();
+  }
+
+  function paint() {
+    $("count").textContent = fmt(shown);
+    $("countSmall").textContent = fmt(shown);
+    // One dot per trip while it fits; past that the field fills on a log scale, so it keeps growing to the max setting.
+    const MAX = 120 * 20 * 240;
+    const fillFor = (n) => Math.max(1, Math.round(Math.min(n, cap * Math.log(Math.max(n, 1)) / Math.log(MAX))));
+    const filled = Math.min(cap, fillFor(shown));
+    const per = Math.max(1, Math.round(target / fillFor(target)));
+    $("scale").textContent = per === 1 ? "1 dot = 1 trip" : `1 dot ≈ ${fmt(per)} trips`;
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < cap; i++) {
+      const c = cells[i];
+      ctx.beginPath();
+      if (i < filled) {
+        ctx.fillStyle = "#1570e8";
+        ctx.globalAlpha = filled === 1 ? 1 : 0.55 + 0.45 * (1 - i / cap);
+        ctx.arc(c.x, c.y, filled === 1 ? r * 1.6 : r, 0, Math.PI * 2);
+      } else {
+        ctx.fillStyle = "#cfd7e3";
+        ctx.globalAlpha = 0.6;
+        ctx.arc(c.x, c.y, r * 0.55, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // Cheapest marker: the only option when there is one, otherwise one within the field.
+    const ci = filled === 1 ? 0 : Math.min(cheapIdx % filled, filled - 1);
+    const c = cells[ci];
+    if (c && filled > 1) {
+      ctx.beginPath(); ctx.fillStyle = "rgba(11,125,85,.18)"; ctx.arc(c.x, c.y, r * 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.fillStyle = "#0b7d55"; ctx.arc(c.x, c.y, r * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
+  flex.addEventListener("input", update);
+  nMin.addEventListener("input", () => { if (+nMin.value > +nMax.value) nMin.value = nMax.value; update(); });
+  nMax.addEventListener("input", () => { if (+nMax.value < +nMin.value) nMax.value = nMin.value; update(); });
+  // Keep the lower thumb grabbable when both thumbs meet at the right end.
+  nMin.addEventListener("pointerdown", () => { nMin.style.zIndex = 3; nMax.style.zIndex = 2; });
+  nMax.addEventListener("pointerdown", () => { nMax.style.zIndex = 3; nMin.style.zIndex = 2; });
+  chips.forEach((b) => b.addEventListener("click", () => {
+    chips.forEach((c) => c.setAttribute("aria-pressed", String(c === b)));
+    update();
+  }));
+
+  let rt;
+  addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(layout, 120); });
+  layout();
+  update();
+})();
+</script>
+</body>
+</html>

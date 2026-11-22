@@ -75,6 +75,18 @@
         "apps/web/dist"
       ],
       "port": 5184
+    },
+    {
+      "name": "home-drafts",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5186",
+        "--directory",
+        "design/home-drafts"
+      ],
+      "port": 5186
     }
   ]
 }
