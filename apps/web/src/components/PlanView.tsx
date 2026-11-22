@@ -217,6 +217,14 @@ function SaveButton({ option }: { option: ItineraryOption }) {
   </div>;
 }
 
+/** "06:31 → 03:00+1": local times, with how many days later it lands. */
+function flightTimes(f: Fare) {
+  const dep = f.outbound[0]?.depart ?? "";
+  const arr = f.outbound.at(-1)?.arrive ?? "";
+  const days = dep && arr ? Math.round((Date.parse(`${arr.slice(0, 10)}T00:00:00Z`) - Date.parse(`${dep.slice(0, 10)}T00:00:00Z`)) / 86_400_000) : 0;
+  return <>{dep.slice(11)} → {arr.slice(11)}{days > 0 && <sup>+{days}</sup>}</>;
+}
+
 /** Best total for each possible first-flight date, like the price calendar. */
 function StartStrip({ byStart, chosen }: { byStart: { date: string; total: number }[]; chosen: string }) {
   if (byStart.length < 2) return null;
@@ -295,9 +303,9 @@ function LegItem({ leg, airports }: { leg: ItineraryLeg; airports: Record<number
       : <ul className="plan-flights">
         {flights.fares.map((f) => <li key={f.id}>
           <FareAirlines fare={f} />
-          <span>{f.outbound[0]?.depart.slice(11)} → {f.outbound.at(-1)?.arrive.slice(11)} · {duration(f.durationMin)} · {stopsLabel(f.stops)}</span>
-          <strong>{money(f.price)}</strong>
-          {f.bookingUrl && <a href={f.bookingUrl} target="_blank" rel="noreferrer sponsored">Book ↗</a>}
+          <span className="pf-times">{flightTimes(f)} · {duration(f.durationMin)} · {stopsLabel(f.stops)}</span>
+          <strong className="pf-price">{money(f.price)}</strong>
+          {f.bookingUrl && <a className="book-btn" data-booking-kind="flight" href={f.bookingUrl} target="_blank" rel="noreferrer sponsored">Book ↗</a>}
         </li>)}
       </ul>)}
   </li>;
