@@ -11,6 +11,10 @@
  *   {checkIn} {checkOut}              YYYY-MM-DD      {adults}
  *   {city} {country}                  URL-encoded place names
  *
+ * Modifiers: {name?} is optional (empty when unknown, e.g. {returnDDMM?} for one-way trips), and
+ * {name:u} encodes the value once more, for a destination nested in a tracker's parameter
+ * (Travelpayouts: https://tp.media/r?…&u=https%3A%2F%2Fwww.klook.com%2F…%3Fquery%3D{city:u}).
+ *
  * Until a template is set, links fall back to plain (non-affiliate) public searches, so every
  * button works from day one and starts earning as soon as a template is added.
  */
@@ -62,10 +66,13 @@ export function fillTemplate(template: string, ctx: BookingContext): string | un
     country: ctx.country && encodeURIComponent(ctx.country),
   };
   let missing = false;
-  const url = template.replace(/\{(\w+)\}/g, (_, key: string) => {
+  const url = template.replace(/\{(\w+)(\?)?(:u)?\}/g, (_, key: string, optional?: string, nested?: string) => {
     const v = values[key];
-    if (v === undefined || v === "") missing = true;
-    return v ?? "";
+    if (v === undefined || v === "") {
+      if (!optional) missing = true;
+      return "";
+    }
+    return nested ? encodeURIComponent(v) : v;
   });
   return missing || !/^https:\/\//.test(url) ? undefined : url;
 }

@@ -13,7 +13,18 @@ describe("booking links", () => {
     );
   });
 
-  it("refuses templates it can't fill or that aren't https", () => {
+  it("supports optional values and destinations nested in a tracker link", () => {
+    const tpl = "https://tp.media/r?p=1&u=https%3A%2F%2Fa.example%2Fsearch%2F{origin}{departDDMM}{destination}{returnDDMM?}{adults?}";
+    expect(fillTemplate(tpl, { origin: "AUS", destination: "NRT", depart: "2027-04-03" })).toBe("https://tp.media/r?p=1&u=https%3A%2F%2Fa.example%2Fsearch%2FAUS0304NRT");
+    // City inside u=: encoded twice, so the tracker decodes it back to an encoded query value.
+    const city = "https://tp.media/r?p=2&u=https%3A%2F%2Fk.example%2Fsearch%3Fquery%3D{city:u}";
+    const filled = fillTemplate(city, { city: "New York" })!;
+    expect(filled).toBe("https://tp.media/r?p=2&u=https%3A%2F%2Fk.example%2Fsearch%3Fquery%3DNew%2520York");
+    expect(decodeURIComponent(filled.split("&u=")[1])).toBe("https://k.example/search?query=New%20York");
+    expect(fillTemplate(city, {})).toBeUndefined();
+  });
+
+    it("refuses templates it can't fill or that aren't https", () => {
     expect(fillTemplate("https://p.example/{origin}{destination}", { origin: "AUS" })).toBeUndefined();
     expect(fillTemplate("http://p.example/{origin}", ctx)).toBeUndefined();
   });
