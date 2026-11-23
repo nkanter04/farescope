@@ -5,6 +5,28 @@ import { ANY_AIRLINE, useStore } from "./store.ts";
 /** Date-grid prices were filtered by the provider and list no airlines, so they always pass. */
 export const passesAirlines = (f: Fare, airlines: readonly string[]) => !!f.priceOnly || fareMatchesAirlines(f, airlines);
 
+/** Whether a fare's flight times and stops are known (date-grid prices list none until opened). */
+const hasFlightDetails = (f: Fare) => !f.priceOnly && f.outbound.length > 0;
+
+/**
+ * Result order. "duration" and "stops" sort by the outbound flight; fares without flight details
+ * (date-grid prices) go after those with them, since their 0 minutes and 0 stops mean "unknown".
+ * Price breaks ties.
+ */
+export function compareFares(sort: "price" | "duration" | "stops") {
+  return (a: Fare, b: Fare): number => {
+    if (sort !== "price") {
+      const known = Number(hasFlightDetails(b)) - Number(hasFlightDetails(a));
+      if (known) return known;
+      if (hasFlightDetails(a)) {
+        const d = sort === "duration" ? a.durationMin - b.durationMin : a.stops - b.stops;
+        if (d) return d;
+      }
+    }
+    return a.price - b.price;
+  };
+}
+
 export interface DayCell {
   date: string;
   price: number;
@@ -47,7 +69,7 @@ export function useDerived() {
     const seen = new Set<string>();
     const list = shown
       .filter((f) => (!filterDest || f.destination === filterDest) && (!filterDate || f.departDate === filterDate))
-      .sort((a, b) => (sort === "duration" ? a.durationMin - b.durationMin : sort === "stops" ? a.stops - b.stops : 0) || a.price - b.price)
+      .sort(compareFares(sort))
       .filter((f) => {
         // collapse identical itineraries seen through overlapping queries
         const k = `${f.origin}${f.destination}${f.departDate}${f.returnDate}${f.price}${f.airlines.join()}`;
