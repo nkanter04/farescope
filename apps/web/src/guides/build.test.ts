@@ -75,6 +75,11 @@ describe("static guide pages", () => {
 
   it("loads the Travelpayouts Drive script on guide pages", () => {
     expect(page("guides/index.html")).toContain('src="https://emrldco.com/NjAzODE1.js?t=603815"');
+    // The live build uses its own project's Drive script.
+    const live = mkdtempSync(join(tmpdir(), "guides-live-"));
+    buildAll({ ...site, tpProject: "605452" }, live);
+    expect(readFileSync(join(live, "guides/index.html"), "utf8")).toContain('src="https://emrldco.com/NjA1NDUy.js?t=605452"');
+    rmSync(live, { recursive: true, force: true });
   });
 
   it("renders styled privacy and terms pages that state retention, with a contact only when configured", () => {

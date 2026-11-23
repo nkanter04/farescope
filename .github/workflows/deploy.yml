@@ -77,7 +77,9 @@ jobs:
           SITE_URL: ${{ vars.CF_SITE_URL }}
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
           VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS }}
+          # The live site has its own Travelpayouts project (605452), for its links and Drive script.
+          TP_PROJECT_ID: "605452"
+          VITE_PARTNER_LINKS: ${{ vars.VITE_PARTNER_LINKS_LIVE || vars.VITE_PARTNER_LINKS }}
       - run: npx wrangler deploy
         if: env.HAS_TOKEN == 'true'
         env:

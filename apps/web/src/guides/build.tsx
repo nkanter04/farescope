@@ -106,7 +106,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const contactEmail = rawEmail && /^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(rawEmail) ? rawEmail : undefined;
   const live = measure;
   const liveUrl = (process.env.LIVE_SITE_URL ?? "https://tripica.farescope.workers.dev").replace(/\/$/, "") + "/";
-  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken, contactEmail, live, liveUrl });
+  // Travelpayouts project for the Drive script: the live build sets TP_PROJECT_ID (see deploy.yml).
+  const tpProject = /^\d{4,9}$/.test(process.env.TP_PROJECT_ID ?? "") ? process.env.TP_PROJECT_ID : undefined;
+  const paths = buildAll({ siteUrl, today: todayISO(), measure, analyticsToken, contactEmail, live, liveUrl, tpProject });
   writeFileSync(MONTH_INDEX_PATH, monthIndexJson());
   console.log(`Wrote ${paths.length - 1} guide pages, sitemap.xml and robots.txt to ${out} (site ${siteUrl}).`);
 }

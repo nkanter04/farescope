@@ -20,7 +20,11 @@ import {
 } from "@farescope/shared";
 
 /** Travelpayouts Drive script, required on every page by the affiliate program. */
-export const TP_DRIVE_SRC = "https://emrldco.com/NjAzODE1.js?t=603815";
+/** Travelpayouts project: 603815 = the GitHub Pages demo, 605452 = the live site (set by TP_PROJECT_ID). */
+export const DEFAULT_TP_PROJECT = "603815";
+/** Drive's script is per project, and only runs on that project's registered domain. */
+export const driveSrc = (project = DEFAULT_TP_PROJECT) => `https://emrldco.com/${btoa(project)}.js?t=${project}`;
+export const TP_DRIVE_SRC = driveSrc();
 
 /**
  * Static "When to visit" pages, rendered at build time to plain HTML (no client JavaScript), so
@@ -46,6 +50,8 @@ export interface SiteConfig {
   liveUrl?: string;
   /** The homepage animation script ("home.js?v=…"), bundled by the build. */
   homeScript?: string;
+  /** Travelpayouts project ID for the Drive script (defaults to the demo's). */
+  tpProject?: string;
 }
 
 export const monthSlug = (m: number) => MONTH_NAMES[m - 1].toLowerCase();
@@ -76,8 +82,8 @@ function Layout(props: {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        {/* Travelpayouts Drive (affiliate link conversion; partner 603815) */}
-        <script async data-cmp-ab="2" src={TP_DRIVE_SRC} />
+        {/* Travelpayouts Drive (affiliate link conversion), for this build's project */}
+        <script async data-cmp-ab="2" src={driveSrc(props.site.tpProject)} />
         {props.site.measure && <script defer src={props.root + "measurement.js"} data-token={props.site.analyticsToken} />}
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{props.title}</title>
