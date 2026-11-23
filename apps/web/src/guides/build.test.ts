@@ -7,7 +7,8 @@ import { buildAll, MONTH_INDEX_PATH, monthIndexJson } from "./build.tsx";
 
 const out = mkdtempSync(join(tmpdir(), "guides-"));
 afterAll(() => rmSync(out, { recursive: true, force: true }));
-const site = { siteUrl: "https://example.test/fs", today: "2026-11-19" };
+// No partner links unless a test sets them (CI exports the real VITE_PARTNER_LINKS).
+const site = { siteUrl: "https://example.test/fs", today: "2026-11-19", partners: [] };
 const paths = buildAll(site, out);
 const page = (p: string) => readFileSync(join(out, p), "utf8");
 
