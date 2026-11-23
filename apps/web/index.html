@@ -6,7 +6,14 @@
     <meta name="description" content="Tripica finds the cheapest time to take the whole trip: flexible dates, whole regions, flights and stays." />
     <title>Tripica</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-    <link rel="apple-touch-icon" href="logo.svg" />
+    <!-- Installable app (manifest + service worker in public/; icons from scripts/app-icons.ts) -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Tripica" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <!-- Travelpayouts Drive (affiliate link conversion), for this build's project (vite.config.ts) -->
     <script async data-cmp-ab="2" src="%TP_DRIVE_SRC%"></script>
   </head>

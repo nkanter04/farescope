@@ -717,3 +717,5 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 .trip-legs li { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 .trip-legs li:last-child { border-bottom: 0; padding-bottom: 0; }
 .explore-origin { max-width: 420px; margin-top: 8px; }
+.launch-links .install-app { font-size: inherit; padding: 0; }
+.install-tip { color: var(--text-2); }

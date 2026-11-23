@@ -107,6 +107,8 @@ export const useStore = create<State>((set, get) => ({
   },
 
   async runSearch() {
+    // Both ends are needed (a link may name only a destination); the form asks for the rest.
+    if (!get().request.origins.length || !get().request.destinations.length) return;
     controller?.abort();
     controller = new AbortController();
     const signal = controller.signal;

@@ -15,6 +15,7 @@ import { useStore } from "./store.ts";
 import { useInsights } from "./insights.ts";
 import { readUrlSearch } from "./urlSearch.ts";
 import { Logo } from "./components/Logo.tsx";
+import { InstallApp } from "./components/InstallApp.tsx";
 import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
@@ -68,8 +69,15 @@ export function App() {
       return;
     }
     useStore.getState().setRequest(patch);
-    void useStore.getState().runSearch();
     window.history.replaceState(null, "", window.location.pathname + window.location.hash);
+    if (useStore.getState().request.origins.length) { void useStore.getState().runSearch(); return; }
+    // The link names only where to go: start from the visitor's nearest airport, else ask.
+    void fetchNearestAirport().then((airport) => {
+      const s = useStore.getState();
+      if (s.submitted || s.request.origins.length) return;
+      if (airport) { s.setRequest({ origins: [airport] }); void s.runSearch(); }
+      else setEditing(true);
+    });
   }, []);
   useEffect(() => { if (selected) { setPanel("List"); setEditing(false); } }, [selected]);
   useEffect(() => { if (submitted) { setPanel("List"); setEditing(false); } }, [submitted]);
@@ -118,7 +126,7 @@ export function App() {
         <AccountButtonSlot />
       </header>
       <ProReturnSlot />
-      <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/app/">Open Tripica for live prices</a> · </>}<a href={`${SITE_ROOT}privacy/`}>Privacy</a> · <a href={`${SITE_ROOT}terms/`}>Terms</a></div>
+      <div className="launch-links">{DEMO && <><a href="https://tripica.farescope.workers.dev/app/">Open Tripica for live prices</a> · </>}<a href={`${SITE_ROOT}privacy/`}>Privacy</a> · <a href={`${SITE_ROOT}terms/`}>Terms</a><InstallApp /></div>
 
       {view === "search" ? (
         <main className="layout">

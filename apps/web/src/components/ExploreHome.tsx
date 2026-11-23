@@ -86,7 +86,13 @@ export function ExploreHome() {
       </header>
       <div className="explore-origin">
         <PlaceInput label="Your airport or city" tokens={[]} placeholder="e.g. Chicago, LHR, Texas"
-          onChange={(t) => t.length && useStore.getState().setRequest({ origins: [t.at(-1)!] })} />
+          onChange={(t) => {
+            if (!t.length) return;
+            const store = useStore.getState();
+            store.setRequest({ origins: [t.at(-1)!] });
+            // A link already chose where to go (e.g. a guide's "Japan in March"): run that search.
+            if (store.request.destinations.length) void store.runSearch();
+          }} />
       </div>
     </section>
   );

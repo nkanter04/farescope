@@ -39,6 +39,9 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
           only to suggest your nearest airport as the starting point. It isn't stored.</li>
         <li><strong>A browser identifier.</strong> A random ID stored in your browser that links your saved trips, notes and price watches to this
           browser. It is not tied to your name or email.</li>
+        <li><strong>App files on your device.</strong> So Tripica opens quickly and can be installed like an app, your browser keeps a copy of
+          the app's own files (code, icons, map images). It holds no prices, searches or personal information, and clearing your browser
+          data removes it.</li>
         <li><strong>Your account, if you create one.</strong> Accounts are optional. Clerk, our sign-in provider, handles your email address,
           name and sign-in (including Google sign-in). Tripica stores only your account ID, with your trips, watches and search counts, so they
           follow you across devices. When you first sign in on a browser, its saved trips and watches move to your account.</li>
