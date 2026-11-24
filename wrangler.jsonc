@@ -1,7 +1,8 @@
 // Cloudflare deployment: the web app + guide pages as static assets, /api/* on a Worker that hands
 // requests to one SQLite-backed Durable Object. Deploy with `npm run deploy:cf` (after
 // `npx wrangler login`). Secrets are set with `npx wrangler secret put <NAME>`, never here:
-// SERPAPI_KEY, TURNSTILE_SECRET_KEY, TRAVELPAYOUTS_TOKEN (optional).
+// SERPAPI_KEY, TURNSTILE_SECRET_KEY, TRAVELPAYOUTS_TOKEN (optional), CLERK_SECRET_KEY,
+// ADMIN_USER_IDS (analytics dashboard owners), VAPID_PRIVATE_JWK (price-drop alert push key).
 // The account is picked by `wrangler login` locally and CLOUDFLARE_ACCOUNT_ID in CI.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -19,6 +20,8 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["TripicaStore"] }],
   "observability": { "enabled": true },
+  // Daily at 15:00 UTC: weekly price-drop alert checks (each watched flight at most once a week).
+  "triggers": { "crons": ["0 15 * * *"] },
   // Public settings. "Strict for now": SerpApi's free plan is 250 searches a month, so the site
   // may spend at most 200 (the rest is headroom for local testing); each visitor up to 12 live
   // calls a day (about 2-3 searches); one search up to 5 calls. Cached prices are always free.
@@ -31,6 +34,12 @@
     "ACCOUNT_MONTHLY_BUDGET": "50",
     // A multi-stop plan uses one credit per flown leg (up to 20 with "Try other orders").
     "PER_PLAN_BUDGET": "20",
-    "CLERK_AUTHORIZED_PARTIES": "https://tripica.farescope.workers.dev"
+    "CLERK_AUTHORIZED_PARTIES": "https://tripica.farescope.workers.dev",
+    // Price-drop alerts: up to 3 watched flights per account, re-checked weekly, from a separate
+    // budget of 30 live checks a month (still inside MONTHLY_QUERY_BUDGET).
+    "ALERT_MONTHLY_BUDGET": "30",
+    "ALERT_WATCHES": "3",
+    "VAPID_SUBJECT": "mailto:tripica.help@gmail.com",
+    "SITE_URL": "https://tripica.farescope.workers.dev"
   }
 }

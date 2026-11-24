@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { MONTH_NAMES } from "@farescope/shared";
 import { cellLabel, cheapestCell, gridCells, gridMonths, shade } from "./home-grid.ts";
 import { homeScenes, type HomeScene } from "./home-scenes.ts";
+import { ACCOUNT_BENEFITS } from "../accountBenefits.ts";
 
 /**
  * The marketing homepage ("/"), rendered at build time like the guides. The app itself lives at
@@ -163,6 +164,17 @@ export function LandingContent({ site }: { site: LandingSite }) {
           ))}
         </ul>
       </section>
+
+      {site.live && <section className="l-section h-account" aria-labelledby="h-account">
+        <div>
+          <h2 id="h-account">Get more with a free account</h2>
+          <ul>{ACCOUNT_BENEFITS.map((b) => <li key={b}>{b}</li>)}</ul>
+        </div>
+        <div className="h-account-cta">
+          <a className="g-cta l-cta-big" href="app/?signup">Create a free account</a>
+          <span className="g-muted">Free, no card. Or just start searching, no account needed.</span>
+        </div>
+      </section>}
 
       <section className="l-section l-note h-note" aria-labelledby="l-pricing">
         <div>

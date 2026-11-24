@@ -28,6 +28,16 @@ export function ProReturnSlot() {
   return C ? <C /> : null;
 }
 
+export function SignUpNudgeSlot({ place }: { place: "search" | "save" | "trips" }) {
+  const C = mod?.SignUpNudge;
+  return C ? <C place={place} /> : null;
+}
+
+export function AlertsSlot({ place }: { place: string }) {
+  const C = mod?.AlertsControl;
+  return C ? <C place={place} /> : null;
+}
+
 export function SignInPromptSlot() {
   const C = mod?.SignInPrompt;
   return C ? <C /> : null;

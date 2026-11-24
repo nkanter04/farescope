@@ -24,6 +24,8 @@ export const EVENT_NAMES = [
   "signin_open", // opened the sign-in / sign-up window
   "signed_in", // label: "new" (first time this account was seen) or "returning"
   "install_click",
+  "signup_nudge", // label: where a sign-up suggestion was shown (search, save, trips)
+  "alerts_on", // turned on price-drop alerts on a device
 ] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
@@ -152,6 +154,12 @@ export class Analytics {
     ).run(dayOf(now), metric, dim, value);
   }
 
+  /** Sum of a daily counter over the last `days` days. */
+  total(metric: string, days: number, now: Date): number {
+    const from = addDays(dayOf(now), -(days - 1));
+    return Number((this.db.prepare("SELECT COALESCE(SUM(value), 0) AS n FROM daily_stats WHERE day >= ? AND metric = ?").get(from, metric) as { n: number }).n);
+  }
+
   survey(userId: string, answers: z.infer<typeof SurveySchema>, now: Date): void {
     this.db.prepare("INSERT OR REPLACE INTO account_survey (user_id, heard, age, at) VALUES (?, ?, ?, ?)")
       .run(userId, answers.heard ?? null, answers.age ?? null, now.getTime());
@@ -222,7 +230,11 @@ export class Analytics {
       ],
       credits: statSum("credits"),
       limitHits: statSum("limit"),
-      actions: counts("SELECT name AS key, COUNT(*) AS n FROM events WHERE day >= ? AND name IN ('search_run','fare_open','trip_save','plan_run','booking_click','install_click') GROUP BY name ORDER BY n DESC", from),
+      actions: counts("SELECT name AS key, COUNT(*) AS n FROM events WHERE day >= ? AND name IN ('search_run','fare_open','trip_save','plan_run','booking_click','install_click','alerts_on') GROUP BY name ORDER BY n DESC", from),
+      nudges: {
+        shown: counts("SELECT label AS key, COUNT(DISTINCT session) AS n FROM events WHERE day >= ? AND name = 'signup_nudge' GROUP BY label ORDER BY n DESC", from),
+        opened: counts("SELECT label AS key, COUNT(DISTINCT session) AS n FROM events WHERE day >= ? AND name = 'signin_open' GROUP BY label ORDER BY n DESC", from),
+      },
       bookingClicks: counts("SELECT label AS key, COUNT(*) AS n FROM events WHERE day >= ? AND name = 'booking_click' GROUP BY label ORDER BY n DESC LIMIT 12", from),
       referrers: bySession("ref", " AND name = 'page_view' AND ref IS NOT NULL"),
       campaigns: bySession("utm_source", " AND name = 'page_view' AND utm_source IS NOT NULL"),
@@ -259,5 +271,9 @@ export interface DashboardStats {
   countries: Count[];
   devices: Count[];
   pages: Count[];
+  /** Sign-up suggestions shown, and sign-up windows opened, by place (visits). */
+  nudges: { shown: Count[]; opened: Count[] };
   survey: { answers: number; heard: Count[]; age: Count[] };
+  /** Devices with price-drop alerts on, and alerts sent in the range (added by the API route). */
+  alerts?: { devices: number; sent: number };
 }

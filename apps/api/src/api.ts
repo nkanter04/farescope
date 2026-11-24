@@ -2,6 +2,8 @@ import { Hono, type Context } from "hono";
 import { z } from "zod";
 import { CABINS, FareSchema, nearestAirport, PlanRequestSchema, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
 import { Analytics, EventBatchSchema, refHost, SurveySchema } from "./analytics.ts";
+import { PushStore, runAlerts } from "./alerts.ts";
+import { isPushEndpoint, parseVapid, vapidPublicKey } from "./push.ts";
 import { QueryCache } from "./cache.ts";
 import { PriceHistory, WatchStore } from "./history.ts";
 import { QuotaGuard } from "./quota.ts";
@@ -37,6 +39,12 @@ export interface ApiSettings {
   perPlanBudget?: number;
   /** Accounts (Clerk user IDs) that may open the analytics dashboard. */
   adminUserIds?: string[];
+  /** Price-drop alerts (Web Push). Off without a VAPID key. */
+  vapidPrivateJwk?: string;
+  vapidSubject?: string;
+  alertMonthlyBudget?: number;
+  alertWatches?: number;
+  siteUrl?: string;
 }
 
 export interface ApiDeps {
@@ -55,6 +63,11 @@ export interface ApiDeps {
   extend?: (app: Hono) => void;
   /** Sign-in check (Clerk): session token → user id, or undefined if invalid. Absent = no accounts. */
   verifyUser?: (token: string) => Promise<string | undefined>;
+  /**
+   * Allow POST /api/internal/alerts-run (with the x-tripica-cron header). The Cloudflare Worker
+   * strips that header from outside requests and sets it only from its scheduled job.
+   */
+  internalCron?: boolean;
   /** Tripica Pro via Stripe. Absent = no paid plan. Needs accounts. */
   billing?: BillingDeps;
   log?: (message: string, error?: unknown) => void;
@@ -115,7 +128,7 @@ export function createApi(deps: ApiDeps): Hono {
     // Analytics: credits spent by visitors vs accounts, and how often people hit a limit.
     observe: (clientId, units, decision) => {
       const now = new Date();
-      if (decision.ok) analytics.bump("credits", clientId.startsWith("user:") ? "account" : "visitor", units, now);
+      if (decision.ok) analytics.bump("credits", clientId.startsWith("user:") ? "account" : clientId.startsWith("shared:") ? clientId.slice(7) : "visitor", units, now);
       else analytics.bump("limit", decision.reason, 1, now);
     },
     monthlyBudget: settings.monthlyBudget,
@@ -158,7 +171,9 @@ export function createApi(deps: ApiDeps): Hono {
 
   const app = new Hono();
   // Retention: delete IP-keyed counters after 31 days (checked at most once a day).
-  const prune = dailyPruner(db, undefined, (now) => analytics.prune(now));
+  const push = new PushStore(db);
+  const vapid = parseVapid(settings.vapidPrivateJwk, settings.vapidSubject);
+  const prune = dailyPruner(db, undefined, (now) => { analytics.prune(now); push.prune(now); });
   app.use(async (_c, next) => {
     try { prune(); } catch (e) { deps.log?.("prune failed", e); }
     await next();
@@ -351,6 +366,52 @@ export function createApi(deps: ApiDeps): Hono {
     return c.body(null, 204);
   });
 
+  // ---- Price-drop alerts (Web Push) ----
+  /** The public key browsers subscribe with; 404 when alerts aren't set up. */
+  app.get("/api/push/key", (c) => (vapid ? c.json({ publicKey: vapidPublicKey(vapid), watches: settings.alertWatches ?? 3 }) : c.json({ error: "Alerts aren't set up." }, 404)));
+
+  const PushBody = z.object({ endpoint: z.string().max(1000) });
+  app.post("/api/push/subscribe", async (c) => {
+    const user = userOf(c);
+    if (!user) return c.json({ error: "Sign in to get price-drop alerts.", signIn: true }, 401);
+    const parsed = PushBody.safeParse(await body(c));
+    if (!parsed.success || !isPushEndpoint(parsed.data.endpoint)) return c.json({ error: "This browser's push address isn't supported." }, 400);
+    push.subscribe(`user:${user}`, parsed.data.endpoint, new Date());
+    return c.json({ ok: true });
+  });
+  app.post("/api/push/unsubscribe", async (c) => {
+    const parsed = PushBody.safeParse(await body(c));
+    if (!parsed.success) return c.json({ error: "Invalid request" }, 400);
+    const user = userOf(c);
+    push.unsubscribe(parsed.data.endpoint, user ? `user:${user}` : undefined);
+    return c.json({ ok: true });
+  });
+  /** Is this device's subscription on file for the signed-in account? */
+  app.post("/api/push/status", async (c) => {
+    const user = userOf(c);
+    const parsed = PushBody.safeParse(await body(c));
+    return c.json({ subscribed: !!user && parsed.success && push.isSubscribed(parsed.data.endpoint, `user:${user}`) });
+  });
+  /** The service worker picks up its notifications after an (empty) push. The endpoint is the key. */
+  app.post("/api/push/inbox", async (c) => {
+    const parsed = PushBody.safeParse(await body(c));
+    c.header("Cache-Control", "no-store");
+    return c.json({ messages: parsed.success ? push.takeMessages(parsed.data.endpoint, new Date()) : [] });
+  });
+  /** Daily from the Cloudflare cron: weekly re-checks of watched flights for accounts with alerts on. */
+  app.post("/api/internal/alerts-run", async (c) => {
+    if (!deps.internalCron || c.req.header("x-tripica-cron") !== "1") return c.json({ error: "Not found" }, 404);
+    const budget = settings.alertMonthlyBudget ?? 30;
+    const run = await runAlerts({
+      push, watches, provider: flights, cache, vapid, siteUrl: settings.siteUrl ?? new URL(c.req.url).origin,
+      maxWatches: settings.alertWatches ?? 3,
+      quota: { remaining: () => budget, tryConsume: (_id, units = 1) => quota.tryConsumeShared("alerts", budget, units) },
+    });
+    if (run.notified) analytics.bump("alerts_sent", "", run.notified, new Date());
+    deps.log?.(`alerts run: ${JSON.stringify(run)}`);
+    return c.json(run);
+  });
+
   /** Owner-only dashboard numbers. A signed-in non-owner gets their ID back, to add to ADMIN_USER_IDS. */
   app.get("/api/admin/stats", (c) => {
     const user = userOf(c);
@@ -358,7 +419,7 @@ export function createApi(deps: ApiDeps): Hono {
     if (!user) return c.json({ error: "Sign in to see analytics.", signIn: true }, 401);
     if (!settings.adminUserIds?.includes(user)) return c.json({ error: "This account can't see analytics.", userId: user }, 403);
     const days = [7, 30, 90, 365].includes(Number(c.req.query("days"))) ? Number(c.req.query("days")) : 30;
-    return c.json(analytics.stats(days, new Date()));
+    return c.json({ ...analytics.stats(days, new Date()), alerts: { devices: push.devices(), sent: analytics.total("alerts_sent", days, new Date()) } });
   });
 
   app.post("/api/search", async (c) => {

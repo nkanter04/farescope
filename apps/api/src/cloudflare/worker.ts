@@ -29,6 +29,11 @@ export interface Env {
   ACCOUNT_MONTHLY_BUDGET?: string;
   PER_PLAN_BUDGET?: string;
   ADMIN_USER_IDS?: string;
+  VAPID_PRIVATE_JWK?: string;
+  VAPID_SUBJECT?: string;
+  ALERT_MONTHLY_BUDGET?: string;
+  ALERT_WATCHES?: string;
+  SITE_URL?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_MONTHLY?: string;
@@ -58,6 +63,8 @@ export class TripicaStore extends DurableObject<Env> {
       stays,
       // Cloudflare sets the visitor's IP; it travels with the request into the Durable Object.
       clientIp: (c) => c.req.header("cf-connecting-ip") ?? "unknown",
+      // Only the Worker's scheduled job reaches the Durable Object with x-tripica-cron set.
+      internalCron: true,
       liveGate: gate?.check,
       verifyUser: clerkVerifier({
         secretKey: settings.clerkSecretKey,
@@ -89,6 +96,7 @@ export default {
       const headers = new Headers(request.headers);
       headers.delete("x-visitor-geo");
       headers.delete("x-visitor-country");
+      headers.delete("x-tripica-cron");
       const { latitude, longitude, country } = (request.cf ?? {}) as { latitude?: string; longitude?: string; country?: string };
       if (latitude && longitude) headers.set("x-visitor-geo", `${latitude},${longitude}`);
       // Analytics: the visitor's country (two letters), never stored with an IP address.
@@ -97,5 +105,10 @@ export default {
       return env.STORE.get(env.STORE.idFromName("main")).fetch(new Request(request, { headers }));
     }
     return env.ASSETS.fetch(request);
+  },
+  /** Daily: weekly price-drop alert checks (see wrangler.jsonc "triggers"). */
+  async scheduled(_event, env, ctx) {
+    const store = env.STORE.get(env.STORE.idFromName("main"));
+    ctx.waitUntil(store.fetch("https://tripica.internal/api/internal/alerts-run", { method: "POST", headers: { "x-tripica-cron": "1" } }).then(() => undefined));
   },
 } satisfies ExportedHandler<Env>;

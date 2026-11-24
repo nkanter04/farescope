@@ -10,6 +10,7 @@ import { useStore } from "../store.ts";
 import { FareAirlines } from "./AirlineLogo.tsx";
 import { BookLinks } from "./BookLinks.tsx";
 import { PlaceInput } from "./PlaceInput.tsx";
+import { SignUpNudgeSlot } from "../accountSlots.tsx";
 
 const placeName = (token: string) => resolvePlace(token)?.label ?? token;
 const credits = (n: number) => `${n} ${n === 1 ? "credit" : "credits"}`;
@@ -205,7 +206,7 @@ function SaveButton({ option }: { option: ItineraryOption }) {
   const openTrip = useStore((s) => s.openTrip);
   if (state.status === "saved" && state.trip) {
     const trip = state.trip;
-    return <p className="plan-saved" role="status">Saved to My trips. <button className="link" onClick={() => openTrip(trip)}>Add stays →</button></p>;
+    return <><p className="plan-saved" role="status">Saved to My trips. <button className="link" onClick={() => openTrip(trip)}>Add stays →</button></p><SignUpNudgeSlot place="save" /></>;
   }
   return <div className="plan-save">
     <button className="primary" disabled={state.status === "saving"} onClick={async () => {

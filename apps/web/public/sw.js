@@ -61,3 +61,36 @@ self.addEventListener("fetch", (event) => {
     return refresh;
   })());
 });
+
+// ---- Price-drop alerts (Web Push) ----
+// Pushes arrive empty; the alert text is fetched from Tripica with this device's push address.
+self.addEventListener("push", (event) => {
+  event.waitUntil((async () => {
+    let messages = [];
+    try {
+      const sub = await self.registration.pushManager.getSubscription();
+      if (sub) {
+        const res = await fetch(new URL("../api/push/inbox", scope).href, {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ endpoint: sub.endpoint }),
+        });
+        messages = (await res.json()).messages || [];
+      }
+    } catch { /* show the generic note below */ }
+    if (!messages.length) messages = [{ title: "Tripica", body: "A price you're watching changed. Open Tripica to see it.", url: new URL("./?view=trips", scope).href }];
+    await Promise.all(messages.map((m, i) => self.registration.showNotification(m.title, {
+      body: m.body, icon: new URL("./icons/icon-192.png", scope).href, badge: new URL("./icons/icon-192.png", scope).href,
+      tag: `tripica-alert-${Date.now()}-${i}`, data: { url: m.url },
+    })));
+  })());
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || new URL("./?view=trips", scope).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const open = windows.find((w) => w.url.startsWith(scope.href));
+    if (open) { await open.focus(); return open.navigate(url); }
+    return self.clients.openWindow(url);
+  })());
+});

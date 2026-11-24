@@ -12,6 +12,7 @@ import { guideForAirport } from "../urlSearch.ts";
 import { TripLegs, TripTimeline } from "./TripTimeline.tsx";
 import { NightPlanner } from "./NightPlanner.tsx";
 import { ReturnFlights } from "./ReturnFlights.tsx";
+import { SignUpNudgeSlot } from "../accountSlots.tsx";
 
 export function FarePanel() {
   const draft = useStore(state => state.draft);
@@ -108,6 +109,7 @@ export function FarePanel() {
       }}>{saving ? "Saving…" : draft.id ? "Save changes" : "Save trip"}</button>
     </div>
     {status && <p role="status" className="notice info">{status}</p>}
+    {status.startsWith("Saved") && <SignUpNudgeSlot place="save" />}
   </section>;
 }
 

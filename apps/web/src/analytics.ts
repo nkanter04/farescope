@@ -9,7 +9,7 @@ import { browserId, DEMO } from "./api.ts";
  */
 export type TrackName =
   | "page_view" | "search_run" | "fare_open" | "trip_save" | "plan_run" | "booking_click"
-  | "signin_prompt" | "signin_open" | "signed_in" | "install_click";
+  | "signin_prompt" | "signin_open" | "signed_in" | "install_click" | "signup_nudge" | "alerts_on";
 
 interface Event {
   name: TrackName | "engaged";

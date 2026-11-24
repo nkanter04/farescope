@@ -81,6 +81,24 @@ export class QuotaGuard {
     return Math.max(0, Math.min(s.monthlyBudget - s.monthlyUsed, s.clientBudget - s.clientUsed));
   }
 
+  /**
+   * A shared monthly allowance that belongs to no visitor or account (background price alerts).
+   * It still counts toward the site-wide monthly budget.
+   */
+  tryConsumeShared(name: string, budget: number, units = 1): QuotaDecision {
+    if (!Number.isSafeInteger(units) || units < 1) throw new Error("Invalid quota units");
+    const { month } = this.periods();
+    const decision = this.db.transaction((): QuotaDecision => {
+      if (this.read("global", month) + units > this.cfg.monthlyBudget) return { ok: false, reason: "monthly" };
+      if (this.read(`shared:${name}`, month) + units > budget) return { ok: false, reason: "monthly" };
+      this.bump("global", month, units);
+      this.bump(`shared:${name}`, month, units);
+      return { ok: true };
+    });
+    try { this.cfg.observe?.(`shared:${name}`, units, decision); } catch { /* analytics must never block */ }
+    return decision;
+  }
+
   /** Reserve the full cost of a provider request in both buckets. */
   tryConsume(clientId: string, units = 1): QuotaDecision {
     if (!Number.isSafeInteger(units) || units < 1) throw new Error("Invalid quota units");

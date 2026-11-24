@@ -20,7 +20,10 @@ const LABELS: Record<string, string> = {
   booking_click: "Booking clicks", install_click: "Install clicks", visitor: "Visitors (no account)", account: "Accounts",
   daily: "Visitor daily limit", monthly: "Site-wide monthly budget", google: "Google search", reddit: "Reddit", tiktok: "TikTok",
   instagram: "Instagram", youtube: "YouTube", friend: "A friend", other: "Somewhere else", skip: "Prefer not to say",
-  desktop: "Desktop", mobile: "Phone", tablet: "Tablet", "(none)": "Unknown",
+  desktop: "Desktop", mobile: "Phone", tablet: "Tablet", "(none)": "Unknown", alerts_on: "Alerts turned on",
+  search: "After a search", save: "After saving", trips: "My trips", limit: "At the search limit", header: "Header button",
+  homepage: "Homepage", "limit-signin": "At the limit (sign in)", "search-signin": "After a search (sign in)", "save-signin": "After saving (sign in)",
+  "trips-signin": "My trips (sign in)", "alerts-watch": "Alerts (flight)", "alerts-trips": "Alerts (My trips)", alerts: "Price alerts",
 };
 const label = (k: string) => LABELS[k] ?? k;
 /** "/app/#plan" → "App: Plan a trip", "/guides/kyoto/" → "Guide: kyoto". */
@@ -73,7 +76,8 @@ function Dashboard({ s }: { s: DashboardStats }) {
       <Tile label="Visits" value={fmt(t.sessions)} note={`${fmt(t.pageViews)} pages viewed`} />
       <Tile label="Time per visit" value={minutes(t.avgEngagedMs)} note={`median ${minutes(t.medianEngagedMs)}, while the page is visible`} />
       <Tile label="Sign-ups" value={fmt(t.signups)} note={`${fmt(t.accounts)} accounts in total`} />
-      <Tile label="Credits used" value={fmt(credits)} note={s.credits.map((c) => `${fmt(c.n)} ${c.key === "account" ? "by accounts" : "by visitors"}`).join(" · ") || "none yet"} />
+      <Tile label="Credits used" value={fmt(credits)} note={s.credits.map((c) => `${fmt(c.n)} ${c.key === "account" ? "by accounts" : c.key === "alerts" ? "by alerts" : "by visitors"}`).join(" · ") || "none yet"} />
+      {s.alerts && <Tile label="Price alerts" value={fmt(s.alerts.devices)} note={`devices with alerts on · ${fmt(s.alerts.sent)} alerts sent`} />}
     </div>
 
     <div className="admin-grid">
@@ -104,6 +108,8 @@ function Dashboard({ s }: { s: DashboardStats }) {
       <Panel title="What people do"><Ranked items={s.actions} /></Panel>
       <Panel title="Booking clicks by partner"><Ranked items={s.bookingClicks.map((b) => ({ ...b, key: b.key.replace(":", " · ") }))} /></Panel>
       <Panel title="Search limits reached"><Ranked items={s.limitHits} /></Panel>
+      <Panel title="Sign-up suggestions shown" note="Visits that saw a suggestion, by place."><Ranked items={s.nudges.shown} /></Panel>
+      <Panel title="Sign-up windows opened" note="Visits that opened sign-up, by the button they used."><Ranked items={s.nudges.opened} /></Panel>
       <Panel title="How they heard about Tripica" note={`From the optional sign-up question (${fmt(s.survey.answers)} answers, all time).`}><Ranked items={s.survey.heard} /></Panel>
       <Panel title="Age range" note="From the optional sign-up question, all time."><Ranked items={s.survey.age} /></Panel>
     </div>

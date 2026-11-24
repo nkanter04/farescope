@@ -5,6 +5,7 @@ import { useStore } from "../store.ts";
 import { TripComparison } from "./TripComparison.tsx";
 import { ShareButton } from "./ShareButton.tsx";
 import { WatchedFlights } from "./WatchedFlights.tsx";
+import { SignUpNudgeSlot } from "../accountSlots.tsx";
 
 export function TripsView() {
   const trips = useStore(s => s.trips);
@@ -23,6 +24,7 @@ export function TripsView() {
     <p className="muted">Saved for this browser. Choose up to three trips to compare.</p>
     {error && <p role="alert" className="notice error">{error}</p>}
     {!trips.length && <p className="empty">Save an option from your search results, then plan its stays here.</p>}
+    {trips.length > 0 && <SignUpNudgeSlot place="trips" />}
     <ul className="trip-cards">{trips.map(trip => {
       const stops = tripStops(trip);
       const coverage = lodgingCoverage(trip.fare, stops, trip.legs);

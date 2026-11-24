@@ -762,3 +762,19 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
   .admin-grid { grid-template-columns: minmax(0, 1fr); }
   .admin-ranked li, .admin-funnel li { grid-template-columns: minmax(0, 1fr) 80px auto; }
 }
+
+/* Sign-up pitch, nudges and price-drop alerts. */
+.account-pitch { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--radius-md, 12px); background: var(--accent-soft, #e8f1fe); margin-top: 8px; }
+.account-pitch ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; font-size: .88rem; color: var(--text-2, inherit); }
+.account-pitch-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.account-pitch.compact { padding: 10px 12px; }
+.account-pitch.compact strong { font-weight: 600; font-size: .9rem; }
+.small-btn { padding: 7px 12px; font-size: .86rem; }
+.signup-nudge { position: relative; margin: 0 0 12px; }
+.signup-nudge .account-pitch { margin-top: 0; padding-right: 36px; }
+.nudge-close { position: absolute; top: 8px; right: 10px; font-size: .9rem; color: var(--muted); }
+.signup-nudge.compact { margin: 8px 0 0; }
+.alerts-control { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: .86rem; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.alerts-control > span { flex: 1 1 220px; color: var(--text-2, inherit); }
+.watch-alerts { flex-basis: 100%; }
+.watch-row { flex-wrap: wrap; }

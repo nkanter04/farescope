@@ -2,6 +2,7 @@ import { cityOf, money, shortDate, stopsLabel } from "../format.ts";
 import { useInsights } from "../insights.ts";
 import { useStore } from "../store.ts";
 import { FareAirlines } from "./AirlineLogo.tsx";
+import { AlertsSlot } from "../accountSlots.tsx";
 
 function checkedAgo(iso: string): string {
   const mins = Math.round((Date.now() - Date.parse(iso)) / 60_000);
@@ -21,7 +22,8 @@ export function WatchedFlights() {
   return (
     <section className="watched" aria-label="Watched flights">
       <h2>Watched flights</h2>
-      <p className="muted">Prices are re-checked when you open Tripica, at most every 6 hours per flight.</p>
+      <p className="muted">Prices are re-checked when you open Tripica, at most every 6 hours per flight. With alerts on, Tripica also checks your first watched flights once a week and notifies you when a price drops.</p>
+      <AlertsSlot place="trips" />
       <ul className="watch-list">
         {watches.map((w) => {
           const diff = w.lastPrice - w.priceAtWatch;

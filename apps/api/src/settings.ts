@@ -39,6 +39,15 @@ export function settingsFromEnv(env: Env) {
     clerkJwtKey: env.CLERK_JWT_KEY ?? "",
     /** Site origins allowed to use sign-in tokens, comma-separated. */
     clerkAuthorizedParties: (env.CLERK_AUTHORIZED_PARTIES ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    /** Web Push (price-drop alerts): VAPID P-256 private key as a JWK (secret), and a contact. */
+    vapidPrivateJwk: env.VAPID_PRIVATE_JWK ?? "",
+    vapidSubject: env.VAPID_SUBJECT ?? "mailto:tripica.help@gmail.com",
+    /** Live checks per month for weekly price-drop alerts (all accounts together). */
+    alertMonthlyBudget: num(env.ALERT_MONTHLY_BUDGET, 30),
+    /** Watched flights per account that get alerts. */
+    alertWatches: num(env.ALERT_WATCHES, 3),
+    /** Public site address, for links in notifications. */
+    siteUrl: env.SITE_URL ?? "https://tripica.farescope.workers.dev",
     /** Clerk user IDs allowed to open the analytics dashboard, comma-separated. */
     adminUserIds: (env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
     /** Live lookups per signed-in account per month (a search uses up to PER_SEARCH_BUDGET). */

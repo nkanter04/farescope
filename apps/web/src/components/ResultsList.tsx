@@ -3,7 +3,7 @@ import { CHECK_EVENT } from "../human.ts";
 import type { Fare } from "@farescope/shared";
 import { AirlineFilter } from "./AirlineFilter.tsx";
 import { FareAirlines } from "./AirlineLogo.tsx";
-import { ProPromptSlot, SignInPromptSlot } from "../accountSlots.tsx";
+import { ProPromptSlot, SignInPromptSlot, SignUpNudgeSlot } from "../accountSlots.tsx";
 import { useDerived } from "../derived.ts";
 import { cityOf, fareEnds, duration, money, relativeAge, shortDate, stopsLabel } from "../format.ts";
 import { ANY_AIRLINE, useStore } from "../store.ts";
@@ -94,6 +94,7 @@ export function ResultsList() {
           void runSearch();
         }}>{submitted.maxStops === 0 ? "Search with up to 1 stop" : "Search with any number of stops"}</button>}
       </div>}
+      {status === "done" && list.length > 0 && <SignUpNudgeSlot place="search" />}
       <ol className="fare-list">
         {list.map((f) => (
           <li key={f.id}>
@@ -137,5 +138,6 @@ function SaveResult({ fare }: { fare: Fare }) {
     setStatus("Saving…");
     try { await save(fare); setStatus("Saved"); } catch { setStatus("Could not save. Try again."); }
   }}>{status === "Saved" ? "Saved to My trips" : status === "Saving…" ? status : "Save flight"}</button>
-    {status.startsWith("Could") && <span role="alert">{status}</span>}</div>;
+    {status.startsWith("Could") && <span role="alert">{status}</span>}
+    {status === "Saved" && <SignUpNudgeSlot place="save" />}</div>;
 }

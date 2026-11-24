@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Cabin, Fare, PriceTrend } from "@farescope/shared";
 import { money, shortDate } from "../format.ts";
 import { useInsights, watchKey } from "../insights.ts";
+import { AlertsSlot } from "../accountSlots.tsx";
 import { useStore } from "../store.ts";
 import { PriceTrendChart } from "./PriceTrendChart.tsx";
 
@@ -53,7 +54,7 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
   const watchSwitch = (
     <div className="watch-row">
       <div>
-        <span id={`watch-${fare.id}`}>Watch this outbound itinerary while Tripica is open</span>
+        <span id={`watch-${fare.id}`}>Watch this flight's price</span>
         {watch && (
           <div className="muted small">
             Watching since {money(watch.priceAtWatch)}
@@ -83,6 +84,7 @@ export function PriceInsight({ fare, cabin, adults }: { fare: Fare; cabin: Cabin
       >
         <span className="knob" aria-hidden>{watch ? "✓" : "✕"}</span>
       </button>
+      {watch && <div className="watch-alerts"><AlertsSlot place="watch" /></div>}
     </div>
   );
 

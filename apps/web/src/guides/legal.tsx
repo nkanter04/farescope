@@ -52,6 +52,10 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
           booking link. Each record carries a random ID for your browser tab's visit and a one-way scrambled form of your browser identifier, plus
           your country and device type (phone, tablet or computer). It never includes your IP address, name or email. We use it only to see how
           Tripica is used and improve it, never for advertising, and we don't share it.</li>
+        <li><strong>Price-drop alerts, if you turn them on.</strong> Your browser gives Tripica a push address for that device, stored with
+          your account ID. Once a week Tripica re-checks the first few flights you watch and, when a price drops, sends a notification through
+          your browser's push service (Google, Apple, Mozilla or Microsoft). Turning alerts off, or blocking notifications, deletes or stops
+          using that address.</li>
         <li><strong>Sign-up questions, if you answer them.</strong> After creating an account you may tell us how you heard about Tripica and your
           age range. Both are optional and stored with your account ID.</li>
       </ul>

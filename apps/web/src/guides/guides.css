@@ -206,6 +206,11 @@ h2 { font-size: 1.3rem; letter-spacing: -0.01em; margin: 36px 0 12px; }
 .h-note { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .h-note p { margin: 0; }
 .l-features.h-features { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.h-account { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px 32px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: 24px 26px; }
+.h-account h2 { margin: 0 0 10px; }
+.h-account ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 6px; color: var(--text-2); }
+.h-account-cta { display: grid; gap: 8px; justify-items: start; }
+@media (max-width: 760px) { .h-account { grid-template-columns: minmax(0, 1fr); padding: 20px; } }
 
 @media (max-width: 960px) {
   .h-sweep-body { grid-template-columns: minmax(0, 1fr); }

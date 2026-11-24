@@ -35,6 +35,9 @@ export function buildApp(cfg: Config, overrides: AppOverrides = {}) {
     flights: overrides.flights ?? providers.flights,
     stays: overrides.stays ?? providers.stays,
     clientIp: nodeIp,
+    // Local only: lets you trigger the weekly alert check with
+    //   curl -X POST -H "x-tripica-cron: 1" localhost:8787/api/internal/alerts-run
+    internalCron: true,
     verifyUser: overrides.verifyUser ??
       clerkVerifier({ secretKey: cfg.clerkSecretKey, jwtKey: cfg.clerkJwtKey, authorizedParties: cfg.clerkAuthorizedParties }),
     billing: billingFor(cfg, overrides.stripeFetch),

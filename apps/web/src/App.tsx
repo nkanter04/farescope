@@ -60,7 +60,15 @@ export function App() {
   useEffect(() => {
     if (urlSearchHandled) return;
     urlSearchHandled = true;
-    if (new URLSearchParams(window.location.search).has("admin")) { setView("admin"); return; }
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("admin")) { setView("admin"); return; }
+    const startView = params.get("view");
+    if (startView === "trips" || startView === "plan") {
+      setView(startView);
+      params.delete("view");
+      window.history.replaceState(null, "", window.location.pathname + (params.size ? `?${params}` : "") + window.location.hash);
+      if (!params.has("to")) return;
+    }
     const patch = readUrlSearch(window.location.search, todayISO());
     if (!patch) {
       // No search in the link: start from the visitor's nearest airport, unless they already chose one.

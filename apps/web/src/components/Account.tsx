@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ClerkProvider, Show, SignInButton, UserButton, useAuth } from "@clerk/react";
+import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton, useAuth, useClerk } from "@clerk/react";
 import { claimAccount, submitSurvey } from "../api.ts";
 import { track } from "../analytics.ts";
 import { ACCOUNTS, CLERK_KEY, setTokenGetter } from "../auth.ts";
+import { ACCOUNT_BENEFITS } from "../accountBenefits.ts";
+import { alertConfig, alertState, disableAlerts, enableAlerts, type AlertState } from "../push.ts";
 import { useInsights } from "../insights.ts";
 import { useStore } from "../store.ts";
 import { ProControls, ProPrompt, ProReturn } from "./Pro.tsx";
@@ -28,6 +30,15 @@ function AccountBridge() {
   const { isLoaded, isSignedIn, userId, getToken } = useAuth();
   const lastUser = useRef<string | null | undefined>(undefined);
   const [survey, setSurvey] = useState(false);
+  const clerk = useClerk();
+  useEffect(() => {
+    if (!isLoaded || isSignedIn || !new URLSearchParams(window.location.search).has("signup")) return;
+    track("signin_open", "homepage");
+    clerk.openSignUp({});
+    const url = new URL(window.location.href);
+    url.searchParams.delete("signup");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, [isLoaded, isSignedIn, clerk]);
   useEffect(() => {
     setTokenGetter(isSignedIn ? () => getToken() : undefined);
   }, [isSignedIn, getToken]);
@@ -105,9 +116,94 @@ export function SignInPrompt() {
   if (!ACCOUNTS) return null;
   return (
     <Show when="signed-out">
-      <SignInButton mode="modal">
-        <button className="link" onClick={() => track("signin_open", "limit")}>Sign in for more live searches</button>
-      </SignInButton>
+      <AccountPitch place="limit" title="Keep searching with a free account" />
     </Show>
   );
+}
+
+/** "Create a free account" with what it gives (#3). Free, no card. */
+function AccountPitch({ place, title, compact }: { place: string; title: string; compact?: boolean }) {
+  return <div className={`account-pitch${compact ? " compact" : ""}`}>
+    <strong>{title}</strong>
+    {!compact && <ul>{ACCOUNT_BENEFITS.map((b) => <li key={b}>{b}</li>)}</ul>}
+    <div className="account-pitch-actions">
+      <SignUpButton mode="modal">
+        <button className="primary small-btn" onClick={() => track("signin_open", place)}>Create a free account</button>
+      </SignUpButton>
+      <SignInButton mode="modal">
+        <button className="link" onClick={() => track("signin_open", `${place}-signin`)}>I have one</button>
+      </SignInButton>
+      <span className="muted small">Free, no card.</span>
+    </div>
+  </div>;
+}
+
+const NUDGES: Record<string, { title: string; dismissible?: boolean; compact?: boolean }> = {
+  search: { title: "Found something good? Save it, see it on every device, and get price-drop alerts with a free account.", dismissible: true },
+  save: { title: "Saved on this browser only. A free account keeps it on all your devices.", compact: true },
+  trips: { title: "These trips are saved on this browser only. A free account keeps them on all your devices and can alert you when watched prices drop.", dismissible: true },
+};
+
+/** Sign-up nudge at a "win" moment (#2): after a good search, after saving, on My trips. */
+export function SignUpNudge({ place }: { place: keyof typeof NUDGES }) {
+  const n = NUDGES[place];
+  const key = `tripica.nudge.${place}`;
+  const [hidden, setHidden] = useState(() => { try { return !!localStorage.getItem(key); } catch { return false; } });
+  useEffect(() => { if (ACCOUNTS && !hidden) track("signup_nudge", place, `nudge-${place}`); }, [hidden, place]);
+  if (!ACCOUNTS || !n || hidden) return null;
+  return (
+    <Show when="signed-out">
+      <div className={`signup-nudge${n.compact ? " compact" : ""}`} role="note">
+        <AccountPitch place={place} title={n.title} compact />
+        {n.dismissible && <button className="link nudge-close" aria-label="Dismiss" onClick={() => {
+          try { localStorage.setItem(key, "1"); } catch { /* fine */ }
+          setHidden(true);
+        }}>✕</button>}
+      </div>
+    </Show>
+  );
+}
+
+/** Price-drop alerts for this device (#1): the switch when signed in, a sign-up nudge when not. */
+export function AlertsControl({ place }: { place: string }) {
+  const [state, setState] = useState<AlertState | "loading">("loading");
+  const [watches, setWatches] = useState(3);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const { isSignedIn } = useAuth();
+  useEffect(() => {
+    if (!isSignedIn) return;
+    let live = true;
+    void alertState().then((s) => { if (live) setState(s); });
+    void alertConfig().then((c) => { if (live && c) setWatches(c.watches); });
+    return () => { live = false; };
+  }, [isSignedIn]);
+  if (!ACCOUNTS) return null;
+  return <>
+    <Show when="signed-out">
+      <div className="alerts-control">
+        <span>Get a weekly alert when watched prices drop, even with Tripica closed.</span>
+        <SignUpButton mode="modal">
+          <button className="link" onClick={() => track("signin_open", `alerts-${place}`)}>Create a free account</button>
+        </SignUpButton>
+      </div>
+    </Show>
+    <Show when="signed-in">
+      {state !== "loading" && state !== "unavailable" && <div className="alerts-control">
+        {state === "on" && <><span>🔔 Price-drop alerts are on for this device (weekly, your first {watches} watched flights).</span>
+          <button className="link" disabled={busy} onClick={async () => { setBusy(true); await disableAlerts(); setState("off"); setBusy(false); }}>Turn off</button></>}
+        {state === "off" && <><span>Get a weekly notification when your first {watches} watched flights drop in price.</span>
+          <button className="secondary small-btn" disabled={busy} onClick={async () => {
+            setBusy(true); setError("");
+            const r = await enableAlerts();
+            if (r.ok) { setState("on"); track("alerts_on", place); } else setError(r.error);
+            setBusy(false);
+          }}>{busy ? "Turning on…" : "Turn on alerts"}</button></>}
+        {state === "needs-install" && <span>On iPhone, add Tripica to your Home Screen (Share → Add to Home Screen) and open it from there to get price-drop alerts.</span>}
+        {state === "blocked" && <span>Notifications are blocked for Tripica in this browser's settings. Allow them to get price-drop alerts.</span>}
+        {state === "unsupported" && <span>This browser can't show price-drop alerts. Try Chrome, Edge, Firefox or Safari.</span>}
+        {error && <span className="small bad-text">{error}</span>}
+      </div>}
+    </Show>
+  </>;
 }
