@@ -4,6 +4,7 @@ import { saveTrip } from "./api.ts";
 import { useStore } from "./store.ts";
 
 vi.mock("./api.ts", () => ({ saveTrip: vi.fn(), deleteTrip: vi.fn(), fetchQuota: vi.fn(), listTrips: vi.fn(), streamSearch: vi.fn() }));
+vi.mock("./analytics.ts", () => ({ track: vi.fn(), trackView: vi.fn() }));
 const fare: Fare = { id: "flight", provider: "mock", origin: "AUS", destination: "HND", departDate: "2027-04-01", returnDate: "2027-04-08",
   price: 900, currency: "USD", airlines: [], outbound: [], durationMin: 1000, stops: 1, fetchedAt: "2026-11-17", cached: false };
 beforeEach(() => { vi.resetAllMocks(); useStore.setState({ draft: { name: "Japan", fare, adults: 1, lodging: [] }, trips: [] }); });

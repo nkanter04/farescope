@@ -264,7 +264,7 @@ function PlanLinks({ name, country, site }: { name: string; country: string; sit
         {rows.map((r) => (
           <li key={r.kind}>
             <strong>{r.label}</strong>
-            {r.links.map((l) => <a data-booking-kind={r.kind} key={l.url} href={l.url} rel="noreferrer sponsored" target="_blank">{l.partner} ↗</a>)}
+            {r.links.map((l) => <a data-booking-kind={r.kind} data-partner={l.partner} key={l.url} href={l.url} rel="noreferrer sponsored" target="_blank">{l.partner} ↗</a>)}
           </li>
         ))}
       </ul>

@@ -28,6 +28,7 @@ export interface Env {
   CLERK_AUTHORIZED_PARTIES?: string;
   ACCOUNT_MONTHLY_BUDGET?: string;
   PER_PLAN_BUDGET?: string;
+  ADMIN_USER_IDS?: string;
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_MONTHLY?: string;
@@ -87,8 +88,11 @@ export default {
       // /api/locate; strip any client-sent copy.
       const headers = new Headers(request.headers);
       headers.delete("x-visitor-geo");
-      const { latitude, longitude } = (request.cf ?? {}) as { latitude?: string; longitude?: string };
+      headers.delete("x-visitor-country");
+      const { latitude, longitude, country } = (request.cf ?? {}) as { latitude?: string; longitude?: string; country?: string };
       if (latitude && longitude) headers.set("x-visitor-geo", `${latitude},${longitude}`);
+      // Analytics: the visitor's country (two letters), never stored with an IP address.
+      if (country) headers.set("x-visitor-country", country);
       // One global store keeps the shared cache and the monthly budget in one place.
       return env.STORE.get(env.STORE.idFromName("main")).fetch(new Request(request, { headers }));
     }

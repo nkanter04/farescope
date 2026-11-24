@@ -18,12 +18,13 @@ export function pruneOldData(db: SqlDb, now: Date): { counters: number; cache: n
 }
 
 /** Runs `pruneOldData` at most once a day per process (cheap check on each request). */
-export function dailyPruner(db: SqlDb, now: () => Date = () => new Date()) {
+export function dailyPruner(db: SqlDb, now: () => Date = () => new Date(), extra?: (now: Date) => void) {
   let lastDay = "";
   return () => {
     const day = now().toISOString().slice(0, 10);
     if (day === lastDay) return;
     lastDay = day;
     pruneOldData(db, now());
+    extra?.(now());
   };
 }

@@ -719,3 +719,46 @@ textarea { font: inherit; color: var(--text); background: var(--panel-2); border
 .explore-origin { max-width: 420px; margin-top: 8px; }
 .launch-links .install-app { font-size: inherit; padding: 0; }
 .install-tip { color: var(--text-2); }
+
+/* Optional sign-up questions (new accounts only). */
+.signup-survey { position: fixed; right: 20px; bottom: 20px; z-index: 60; width: min(420px, calc(100vw - 32px)); display: grid; gap: 8px; box-shadow: 0 12px 40px rgba(16, 32, 64, 0.18); }
+.signup-survey h2 { margin: 0; font-size: 1.1rem; }
+.signup-survey h3 { margin: 6px 0 0; font-size: .9rem; }
+.signup-survey p { margin: 0; }
+.survey-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.survey-chips button { border: 1px solid var(--line-strong); background: var(--panel); color: var(--text); border-radius: 999px; padding: 6px 12px; font-size: .85rem; cursor: pointer; }
+.survey-chips button.on { border-color: var(--accent); background: var(--accent-soft, #e8f1fe); color: var(--accent); font-weight: 600; }
+.survey-actions { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+@media (max-width: 480px) { .signup-survey { right: 16px; left: 16px; bottom: 16px; width: auto; } }
+
+/* Owner-only analytics dashboard (/app/?admin). */
+.admin { display: grid; gap: 16px; }
+.admin-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.admin-head h1 { margin: 0 0 4px; }
+.admin-head p { margin: 0; }
+.admin-range button { padding: 6px 12px; font-size: .85rem; white-space: nowrap; }
+.admin-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.admin-tile { display: grid; gap: 2px; }
+.admin-tile strong { font-size: 1.7rem; letter-spacing: -0.02em; }
+.admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.admin-panel { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.admin-panel h2 { font-size: 1rem; margin: 0; }
+.admin-panel > p { margin: 0; }
+.admin-empty { margin: 8px 0; }
+.admin-bars { margin: 0; display: grid; gap: 6px; }
+.admin-bars-plot { height: 140px; display: flex; align-items: flex-end; gap: 2px; border-bottom: 1px solid var(--line); }
+.admin-col { flex: 1; height: 100%; display: flex; align-items: flex-end; min-width: 0; cursor: default; }
+.admin-col:hover .admin-col-bar { background: var(--accent-hover, #0f5fcc); }
+.admin-col-bar { width: 100%; min-height: 0; background: var(--accent); border-radius: 3px 3px 0 0; }
+.admin-bars figcaption { display: flex; justify-content: space-between; gap: 8px; }
+.admin-ranked, .admin-funnel { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.admin-ranked li, .admin-funnel li { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .88rem; }
+.admin-ranked-label, .admin-funnel-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-bar-track { height: 10px; background: var(--panel-2); border-radius: 5px; overflow: hidden; }
+.admin-bar { display: block; height: 100%; background: var(--accent); border-radius: 5px; }
+.admin-num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.admin-blocked p { margin: 0 0 6px; }
+@media (max-width: 760px) {
+  .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-ranked li, .admin-funnel li { grid-template-columns: minmax(0, 1fr) 80px auto; }
+}

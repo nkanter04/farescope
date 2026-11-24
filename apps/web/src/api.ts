@@ -2,6 +2,11 @@ import { liveFetch } from "./human.ts";
 import { authHeader } from "./auth.ts";
 import type { Cabin, Fare, ItineraryResult, PlanRequest, ReturnOption, LodgingStop, PriceTrend, PriceWatch, QuotaStatus, SearchEvent, SearchRequest, Stay, TripPlan } from "@farescope/shared";
 
+/** This browser's anonymous ID (trips, watches; hashed by the server for analytics). */
+export function browserId(): string {
+  return clientId();
+}
+
 function clientId(): string {
   const make = () => (crypto.randomUUID ? crypto.randomUUID() : `c-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   try {
@@ -135,9 +140,29 @@ export async function checkWatches(): Promise<PriceWatch[]> {
 }
 
 /** After sign-in: move this browser's anonymous trips and watches to the account. */
-export async function claimAccount(): Promise<void> {
-  if (DEMO) return;
-  await fetch("/api/account/claim", { method: "POST", headers: await headers(), body: "{}" }).catch(() => undefined);
+/** First sign-in on this browser: move its trips and watches to the account. `newAccount` = just signed up. */
+export async function claimAccount(): Promise<{ newAccount: boolean }> {
+  if (DEMO) return { newAccount: false };
+  const r = await fetch("/api/account/claim", { method: "POST", headers: await headers(), body: "{}" }).catch(() => undefined);
+  const json = r?.ok ? ((await r.json().catch(() => ({}))) as { newAccount?: boolean }) : {};
+  return { newAccount: json.newAccount === true };
+}
+
+/** The optional sign-up questions. */
+export async function submitSurvey(answers: { heard?: string; age?: string }): Promise<boolean> {
+  if (DEMO) return true;
+  const r = await fetch("/api/account/survey", { method: "POST", headers: await headers(), body: JSON.stringify(answers) }).catch(() => undefined);
+  return !!r?.ok;
+}
+
+/** Owner-only analytics. `forbiddenUser` = signed in, but not allowed (the ID to add to ADMIN_USER_IDS). */
+export async function fetchAdminStats(days: number): Promise<{ stats?: import("../../api/src/analytics.ts").DashboardStats; error?: string; forbiddenUser?: string; signIn?: boolean }> {
+  if (DEMO) return { error: "Analytics only exist on the live site." };
+  const r = await fetch(`/api/admin/stats?days=${days}`, { headers: await headers() }).catch(() => undefined);
+  if (!r) return { error: "Couldn't reach the server." };
+  const json = (await r.json().catch(() => ({}))) as Record<string, unknown>;
+  if (r.ok) return { stats: json as unknown as import("../../api/src/analytics.ts").DashboardStats };
+  return { error: String(json.error ?? "Couldn't load analytics."), forbiddenUser: typeof json.userId === "string" ? json.userId : undefined, signIn: r.status === 401 };
 }
 
 // ---- Tripica Pro (Stripe) ----

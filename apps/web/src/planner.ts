@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { addDays, PlanRequestSchema, resolvePlace, todayISO, type Cabin, type Fare, type ItineraryOption, type PlanRequest, type TripPlan } from "@farescope/shared";
 import { DEMO, planTripApi, saveTrip, type PlanResponse } from "./api.ts";
 import { useStore } from "./store.ts";
+import { track } from "./analytics.ts";
 
 /**
  * The multi-stop planner's form and last result, kept in their own store so they survive switching
@@ -85,6 +86,7 @@ export const usePlanner = create<PlannerState>((set, get) => ({
     const parsed = toRequest(get());
     if (!parsed.success) return;
     set({ status: "planning", submitted: parsed.data, response: undefined });
+    track("plan_run", `${parsed.data.stops.length} stops${parsed.data.reorder ? ", reorder" : ""}`);
     const response = await planTripApi(parsed.data).catch((e: Error) => ({ airports: {}, creditsUsed: 0, notices: [], error: e.message }));
     set({ status: "done", response });
   },
@@ -116,6 +118,7 @@ export async function savePlannedTrip(option: ItineraryOption): Promise<TripPlan
   const { response, submitted } = usePlanner.getState();
   if (!response || !submitted) throw new Error("Plan a trip first.");
   const trip = await saveTrip(optionToTrip(option, response.airports, submitted));
+  track("trip_save", "plan");
   useStore.setState({ trips: [trip, ...useStore.getState().trips] });
   return trip;
 }

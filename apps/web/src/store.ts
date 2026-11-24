@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { addDays, todayISO, tripStops, AIRPORT_BY_IATA, type Fare, type QuotaStatus, type SearchEvent, type SearchRequest, type TripPlan } from "@farescope/shared";
+import { track, trackView } from "./analytics.ts";
 import { deleteTrip, fetchFareDetails, fetchQuota, listTrips, saveTrip, streamSearch } from "./api.ts";
 
 /** Shared empty airline filter (stable identity for React selectors). */
@@ -32,7 +33,7 @@ export interface Notice {
 }
 
 interface State {
-  view: "search" | "plan" | "trips";
+  view: "search" | "plan" | "trips" | "admin";
   request: SearchRequest;
   submitted?: SearchRequest;
   status: "idle" | "searching" | "done" | "error";
@@ -99,7 +100,7 @@ export const useStore = create<State>((set, get) => ({
   trips: [],
   compare: [],
 
-  setView: (view) => set({ view }),
+  setView: (view) => { trackView(view); set({ view }); },
   // Older saved searches predate the airline filter, so always keep it an array.
   setRequest: (patch) => {
     const request = { ...get().request, ...patch };
@@ -109,6 +110,7 @@ export const useStore = create<State>((set, get) => ({
   async runSearch() {
     // Both ends are needed (a link may name only a destination); the form asks for the rest.
     if (!get().request.origins.length || !get().request.destinations.length) return;
+    track("search_run", get().request.destinations.map((d) => d.includes(":") ? d.split(":")[0] : "airport").join(","));
     controller?.abort();
     controller = new AbortController();
     const signal = controller.signal;
@@ -201,6 +203,7 @@ export const useStore = create<State>((set, get) => ({
     }
     set({ selectedFare: fare, details: undefined });
     if (!fare || get().draft?.fare.id === fare.id) return;
+    track("fare_open");
     const search = get().submitted;
     const place = AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination;
     set({ draft: { name: `${place} · ${fare.departDate}`, fare, adults: search?.adults, search, notes: "",
@@ -215,6 +218,7 @@ export const useStore = create<State>((set, get) => ({
     const draft = get().draft;
     if (!draft) return false;
     const trip = await saveTrip(draft, draft.id);
+    if (!draft.id) track("trip_save", draft.legs ? "plan" : "flight");
     set({ trips: [trip, ...get().trips.filter(item => item.id !== trip.id)] });
     const current = get().draft;
     if (current?.fare === draft.fare && current.id === draft.id) set({ draft: { ...current, id: trip.id } });
@@ -225,6 +229,7 @@ export const useStore = create<State>((set, get) => ({
     const search = get().submitted;
     const trip = await saveTrip({ name: `${AIRPORT_BY_IATA[fare.destination]?.city ?? fare.destination} · ${fare.departDate}`,
       fare, adults: search?.adults, search });
+    track("trip_save", "result");
     set({ trips: [trip, ...get().trips] });
   },
 

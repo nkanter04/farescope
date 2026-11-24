@@ -3,6 +3,10 @@ import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { applyTheme } from "./theme.ts";
 import { loadAccounts } from "./accountSlots.tsx";
+import { startAnalytics } from "./analytics.ts";
+
+// First-party analytics: reads the landing URL's source tags before the app tidies the URL.
+startAnalytics();
 
 // Installable app: the service worker (public/sw.js) only runs in built sites, never in dev.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

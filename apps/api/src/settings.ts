@@ -39,6 +39,8 @@ export function settingsFromEnv(env: Env) {
     clerkJwtKey: env.CLERK_JWT_KEY ?? "",
     /** Site origins allowed to use sign-in tokens, comma-separated. */
     clerkAuthorizedParties: (env.CLERK_AUTHORIZED_PARTIES ?? "").split(",").map((s) => s.trim()).filter(Boolean),
+    /** Clerk user IDs allowed to open the analytics dashboard, comma-separated. */
+    adminUserIds: (env.ADMIN_USER_IDS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
     /** Live lookups per signed-in account per month (a search uses up to PER_SEARCH_BUDGET). */
     accountMonthlyBudget: num(env.ACCOUNT_MONTHLY_BUDGET, 50),
     /** Tripica Pro (Stripe). Billing turns on when the secret key, webhook secret and both price ids are set. */

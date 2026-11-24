@@ -52,7 +52,7 @@ describe("sign-in", () => {
     const fare = { id: "f1", price: 1000, origin: "AUS", destination: "HND" };
     await inject(a, { method: "POST", url: "/api/trips", headers: browserA, payload: { name: "Japan", fare } });
     const claim = await inject(a, { method: "POST", url: "/api/account/claim", headers: { ...browserA, ...auth } });
-    expect(claim.json()).toEqual({ trips: 1, watches: 0 });
+    expect(claim.json()).toEqual({ trips: 1, watches: 0, newAccount: true });
     // Signed in from another browser: the trip is there. Signed out on the first: it moved.
     expect((await inject(a, { url: "/api/trips", headers: { ...browserB, ...auth } })).json().trips).toHaveLength(1);
     expect((await inject(a, { url: "/api/trips", headers: browserA })).json().trips).toHaveLength(0);

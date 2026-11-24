@@ -47,13 +47,20 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
           follow you across devices. When you first sign in on a browser, its saved trips and watches move to your account.</li>
         <li><strong>Fare observations.</strong> Prices seen in searches (route, dates, price), without anything that identifies you. They improve
           price predictions.</li>
-        <li><strong>Booking-link clicks.</strong> A count by category (flight, stay, activity, car) and page type. No IP address or identifier is stored
-          with it.</li>
+        <li><strong>Usage analytics (Tripica's own, no cookies).</strong> Which pages you view, how long a page is visible, the site that linked
+          you here and any campaign tag in the link (like <code>utm_source</code>), and actions such as running a search, saving a trip or clicking a
+          booking link. Each record carries a random ID for your browser tab's visit and a one-way scrambled form of your browser identifier, plus
+          your country and device type (phone, tablet or computer). It never includes your IP address, name or email. We use it only to see how
+          Tripica is used and improve it, never for advertising, and we don't share it.</li>
+        <li><strong>Sign-up questions, if you answer them.</strong> After creating an account you may tell us how you heard about Tripica and your
+          age range. Both are optional and stored with your account ID.</li>
       </ul>
 
       <h2>How long it's kept</h2>
       <ul>
         <li>Search-limit counters tied to an IP address are deleted after 31 days.</li>
+        <li>Usage-analytics records are deleted after about 13 months (400 days). Daily totals (such as credits used per day) and sign-up
+          answers are kept.</li>
         <li>Saved trips, notes and price watches are kept until you delete them in My trips.</li>
         <li>Your account stays until you delete it from the account menu; to also delete the trips and watches linked to it, write to us.</li>
         <li>Cached prices expire within days; fare observations are kept to improve predictions.</li>
@@ -66,7 +73,7 @@ export function PrivacyContent({ site }: { site: LegalSite }) {
         <li><strong>Clerk</strong> provides accounts and sign-in, under its own privacy policy.</li>
         <li><strong>Stripe</strong> handles Tripica Pro payments. Your card details go to Stripe, never to Tripica; Tripica stores only your
           Stripe customer and subscription IDs and the subscription's status and dates.</li>
-        <li><strong>Cloudflare</strong> hosts the site and runs the robot check (Turnstile). See the{" "}
+        <li><strong>Cloudflare</strong> hosts the site, runs the robot check (Turnstile) and tells Tripica which country a visit comes from (for usage analytics). See the{" "}
           <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Cloudflare Turnstile Privacy Addendum</a>. When enabled, Cloudflare Web
           Analytics measures visits and page speed without cookies.</li>
         <li><strong>Travel data providers</strong> (such as SerpApi for Google Flights and Hotels results) receive your search details, not your

@@ -1,6 +1,7 @@
 import { Hono, type Context } from "hono";
 import { z } from "zod";
 import { CABINS, FareSchema, nearestAirport, PlanRequestSchema, SearchRequestSchema, type QuotaStatus, type SearchEvent, type TripPlan } from "@farescope/shared";
+import { Analytics, EventBatchSchema, refHost, SurveySchema } from "./analytics.ts";
 import { QueryCache } from "./cache.ts";
 import { PriceHistory, WatchStore } from "./history.ts";
 import { QuotaGuard } from "./quota.ts";
@@ -34,6 +35,8 @@ export interface ApiSettings {
   freeCallCap: number;
   /** Most live lookups one multi-stop plan may spend. */
   perPlanBudget?: number;
+  /** Accounts (Clerk user IDs) that may open the analytics dashboard. */
+  adminUserIds?: string[];
 }
 
 export interface ApiDeps {
@@ -107,7 +110,14 @@ export function createApi(deps: ApiDeps): Hono {
   const cache = new QueryCache(db);
   const subscriptions = new SubscriptionStore(db);
   const billing = deps.verifyUser ? deps.billing : undefined;
+  const analytics = new Analytics(db);
   const quota = new QuotaGuard(db, {
+    // Analytics: credits spent by visitors vs accounts, and how often people hit a limit.
+    observe: (clientId, units, decision) => {
+      const now = new Date();
+      if (decision.ok) analytics.bump("credits", clientId.startsWith("user:") ? "account" : "visitor", units, now);
+      else analytics.bump("limit", decision.reason, 1, now);
+    },
     monthlyBudget: settings.monthlyBudget,
     dailyClientBudget: settings.dailyClientBudget,
     accountMonthlyBudget: settings.accountMonthlyBudget,
@@ -148,7 +158,7 @@ export function createApi(deps: ApiDeps): Hono {
 
   const app = new Hono();
   // Retention: delete IP-keyed counters after 31 days (checked at most once a day).
-  const prune = dailyPruner(db);
+  const prune = dailyPruner(db, undefined, (now) => analytics.prune(now));
   app.use(async (_c, next) => {
     try { prune(); } catch (e) { deps.log?.("prune failed", e); }
     await next();
@@ -163,6 +173,8 @@ export function createApi(deps: ApiDeps): Hono {
       const user = token ? await deps.verifyUser(token) : undefined;
       if (!user) return c.json({ error: "Your sign-in expired. Please sign in again.", signIn: true }, 401);
       users.set(c.req.raw, user);
+      // Sign-ups: an account counts as new the first time it reaches the API.
+      try { analytics.seeUser(user, new Date()); } catch (e) { deps.log?.("analytics seeUser failed", e); }
     }
     await next();
   });
@@ -299,7 +311,54 @@ export function createApi(deps: ApiDeps): Hono {
     if (!user) return c.json({ error: "Sign in first." }, 401);
     if (!browser) return missingOwner(c);
     const owner = `user:${user}`;
-    return c.json({ trips: trips.reassign(browser, owner), watches: watches.reassign(browser, owner) });
+    return c.json({
+      trips: trips.reassign(browser, owner),
+      watches: watches.reassign(browser, owner),
+      // A brand-new account gets two optional questions (how they heard about Tripica, age range).
+      newAccount: analytics.surveyDue(user, new Date()),
+    });
+  });
+
+  /** The optional sign-up questions. */
+  app.post("/api/account/survey", async (c) => {
+    const user = userOf(c);
+    if (!user) return c.json({ error: "Sign in first." }, 401);
+    const parsed = SurveySchema.safeParse(await body(c));
+    if (!parsed.success) return c.json({ error: "Invalid answers" }, 400);
+    analytics.survey(user, parsed.data, new Date());
+    return c.body(null, 204);
+  });
+
+  /**
+   * First-party analytics: batches of page views, engaged time and key actions. No cookies; the
+   * browser ID is hashed and no IP address is stored. Country comes from the host (Cloudflare).
+   */
+  app.post("/api/events", async (c) => {
+    const parsed = EventBatchSchema.safeParse(await body(c));
+    if (!parsed.success) return c.body(null, 204); // never break the page over analytics
+    const own = new URL(c.req.url).hostname;
+    const events = parsed.data.events.map((e) => ({ ...e, ref: refHost(e.ref, own) }));
+    try {
+      await analytics.record({ ...parsed.data, events }, {
+        country: c.req.header("x-visitor-country"),
+        userAgent: c.req.header("user-agent"),
+        signedIn: !!userOf(c),
+        now: new Date(),
+      });
+    } catch (e) {
+      deps.log?.("analytics record failed", e);
+    }
+    return c.body(null, 204);
+  });
+
+  /** Owner-only dashboard numbers. A signed-in non-owner gets their ID back, to add to ADMIN_USER_IDS. */
+  app.get("/api/admin/stats", (c) => {
+    const user = userOf(c);
+    c.header("Cache-Control", "private, no-store");
+    if (!user) return c.json({ error: "Sign in to see analytics.", signIn: true }, 401);
+    if (!settings.adminUserIds?.includes(user)) return c.json({ error: "This account can't see analytics.", userId: user }, 403);
+    const days = [7, 30, 90, 365].includes(Number(c.req.query("days"))) ? Number(c.req.query("days")) : 30;
+    return c.json(analytics.stats(days, new Date()));
   });
 
   app.post("/api/search", async (c) => {

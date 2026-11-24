@@ -20,6 +20,8 @@ import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
 const Globe = lazy(() => import("./components/Globe.tsx").then(({ Globe }) => ({ default: Globe })));
+/** Owner-only analytics, opened with /app/?admin (loaded only then). */
+const AdminView = lazy(() => import("./components/AdminView.tsx").then(({ AdminView }) => ({ default: AdminView })));
 const searchViews = ["List", "Calendar", "Map"] as const;
 
 class MapBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -58,6 +60,7 @@ export function App() {
   useEffect(() => {
     if (urlSearchHandled) return;
     urlSearchHandled = true;
+    if (new URLSearchParams(window.location.search).has("admin")) { setView("admin"); return; }
     const patch = readUrlSearch(window.location.search, todayISO());
     if (!patch) {
       // No search in the link: start from the visitor's nearest airport, unless they already chose one.
@@ -157,6 +160,10 @@ export function App() {
       ) : view === "plan" ? (
         <main className="single">
           <PlanView />
+        </main>
+      ) : view === "admin" ? (
+        <main className="single">
+          <Suspense fallback={<p role="status">Loading analytics…</p>}><AdminView /></Suspense>
         </main>
       ) : (
         <main className="single">

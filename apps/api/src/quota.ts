@@ -9,6 +9,8 @@ export interface QuotaConfig {
   accountMonthlyBudget?: number;
   /** A specific account's monthly budget (Pro, trial), or undefined for the default. */
   accountBudget?: (clientId: string) => number | undefined;
+  /** Told about every reservation and refusal (analytics: credits spent, limit hits). */
+  observe?: (clientId: string, units: number, decision: QuotaDecision) => void;
 }
 
 export type QuotaDecision = { ok: true } | { ok: false; reason: LimitReason };
@@ -84,12 +86,14 @@ export class QuotaGuard {
     if (!Number.isSafeInteger(units) || units < 1) throw new Error("Invalid quota units");
     const { month } = this.periods();
     const c = this.client(clientId);
-    return this.db.transaction((): QuotaDecision => {
+    const decision = this.db.transaction((): QuotaDecision => {
       if (this.read("global", month) + units > this.cfg.monthlyBudget) return { ok: false, reason: "monthly" };
       if (this.read(`client:${clientId}`, c.period) + units > c.budget) return { ok: false, reason: c.reason };
       this.bump("global", month, units);
       this.bump(`client:${clientId}`, c.period, units);
       return { ok: true };
     });
+    try { this.cfg.observe?.(clientId, units, decision); } catch { /* analytics must never block a search */ }
+    return decision;
   }
 }

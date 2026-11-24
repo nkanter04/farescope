@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { track } from "../analytics.ts";
 
 /** Chrome/Edge/Android's install prompt event (not in the DOM typings). */
 interface InstallPromptEvent extends Event {
@@ -30,6 +31,7 @@ export function InstallApp() {
   return <>
     {" · "}
     <button className="link install-app" onClick={async () => {
+      track("install_click", prompt ? "prompt" : "ios-tip");
       if (!prompt) { setTip(!tip); return; }
       await prompt.prompt();
       if ((await prompt.userChoice).outcome === "accepted") setInstalled(true);
