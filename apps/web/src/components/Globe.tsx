@@ -95,7 +95,9 @@ export function Globe() {
     for (const f of destBest.values()) {
       if (filterDest && f.destination !== filterDest) continue;
       const t = (f.price - destMin) / span;
-      for (const leg of f.outbound) {
+      // Date-grid prices (live data) have no legs yet: draw them straight from origin to destination.
+      const legs = f.outbound.length ? f.outbound : [{ from: f.origin, to: f.destination }];
+      for (const leg of legs) {
         const a = AIRPORT_BY_IATA[leg.from];
         const b = AIRPORT_BY_IATA[leg.to];
         if (!a || !b) continue;
@@ -142,7 +144,7 @@ export function Globe() {
       [...destBest.values()]
         .sort((a, b) => a.price - b.price)
         .slice(0, filterDest ? 1 : 8)
-        .filter((f) => !filterDest || f.destination === filterDest)
+        .filter((f) => (!filterDest || f.destination === filterDest) && !!AIRPORT_BY_IATA[f.destination])
         .map((f) => ({ ...AIRPORT_BY_IATA[f.destination], text: `${f.destination} ${money(f.price)}` })),
     [destBest, filterDest],
   );

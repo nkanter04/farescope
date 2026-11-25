@@ -4,6 +4,10 @@ import { App } from "./App.tsx";
 import { applyTheme } from "./theme.ts";
 import { loadAccounts } from "./accountSlots.tsx";
 import { startAnalytics } from "./analytics.ts";
+import { watchForNewBuild } from "./staleBuild.ts";
+
+// After a deploy, a tab opened earlier reloads once instead of failing to load the map or other parts.
+watchForNewBuild();
 
 // First-party analytics: reads the landing URL's source tags before the app tidies the URL.
 startAnalytics();

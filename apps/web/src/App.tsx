@@ -1,4 +1,5 @@
 import { SITE_ROOT } from "./site.ts";
+import { importOrReload } from "./staleBuild.ts";
 import { Component, lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { resolvePlace, todayISO } from "@farescope/shared";
 import { FareDetailsLoader, FarePanel } from "./components/FarePanel.tsx";
@@ -19,16 +20,18 @@ import { InstallApp } from "./components/InstallApp.tsx";
 import { ThemePicker } from "./components/ThemePicker.tsx";
 import { shortDate, travelerCount } from "./format.ts";
 
-const Globe = lazy(() => import("./components/Globe.tsx").then(({ Globe }) => ({ default: Globe })));
+const Globe = lazy(importOrReload(() => import("./components/Globe.tsx").then(({ Globe }) => ({ default: Globe }))));
 /** Owner-only analytics, opened with /app/?admin (loaded only then). */
-const AdminView = lazy(() => import("./components/AdminView.tsx").then(({ AdminView }) => ({ default: AdminView })));
+const AdminView = lazy(importOrReload(() => import("./components/AdminView.tsx").then(({ AdminView }) => ({ default: AdminView }))));
 const searchViews = ["List", "Calendar", "Map"] as const;
 
 class MapBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
   render() {
-    return this.state.failed ? <p role="status">The map could not load. Open List or Calendar to explore these fares.</p> : this.props.children;
+    return this.state.failed
+      ? <p role="status">The map could not load. <button className="link" onClick={() => window.location.reload()}>Reload the page</button> to try again, or open List or Calendar to explore these fares.</p>
+      : this.props.children;
   }
 }
 

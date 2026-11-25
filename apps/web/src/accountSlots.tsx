@@ -1,4 +1,5 @@
 import { ACCOUNTS } from "./auth.ts";
+import { importOrReload } from "./staleBuild.ts";
 
 /**
  * Clerk is only downloaded when accounts are configured: main.tsx loads ./components/Account.tsx
@@ -7,7 +8,7 @@ import { ACCOUNTS } from "./auth.ts";
 let mod: typeof import("./components/Account.tsx") | null = null;
 
 export async function loadAccounts() {
-  if (ACCOUNTS && !mod) mod = await import("./components/Account.tsx");
+  if (ACCOUNTS && !mod) mod = await importOrReload(() => import("./components/Account.tsx"))();
   return mod;
 }
 
